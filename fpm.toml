@@ -1,0 +1,25 @@
+# fpm prepends "lib" to the package name, so this is "fint" and the archive
+# is libfint.a.
+name = "fint"
+version = "6.1.3"
+license = "Apache-2.0"
+description = "General GTO integrals for quantum chemistry, in Fortran"
+categories = ["numerical", "chemistry"]
+
+[build]
+auto-executables = false
+auto-tests = false
+auto-examples = false
+link = ["lapack", "blas"]
+
+[library]
+source-dir = "fpm-src"
+include-dir = ["src"]
+
+# test/ holds the verification suite, which compares against libcint and is
+# driven by CMake.  fpm gets a smoke test of its own instead: auto-tests would
+# try to build every harness in there as an fpm test, and they need the C.
+[[test]]
+name = "smoke"
+source-dir = "fpm-test"
+main = "smoke.f90"

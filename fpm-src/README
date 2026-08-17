@@ -1,0 +1,17 @@
+fpm's [library.source-dir] takes one directory and its scanner does not
+preprocess, so this directory exists to give it exactly the set that always
+compiles:
+
+    ln -s ../src         port
+    ln -s ../include/libfint.f90            .
+    ln -s ../include/libcint_interface.f90  .
+
+f12/ and polyfit/ are deliberately not here.  The F12 sources are guarded by
+COMPILE_F12 and would compile to nothing, but fpm reads `use` statements
+lexically -- it cannot see a preprocessor conditional -- so a guarded
+`use cint_tab_stg_roots` still reads to it as a dependency on a 100 MB table
+that is not in this repository.  The polyfit tables need
+-fmax-array-constructor, and fpm's --flag replaces the profile flags rather
+than adding to them, which would silently drop -fcheck=bounds.
+
+CMake compiles all of them; only fpm needs this.

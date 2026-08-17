@@ -1,0 +1,15 @@
+libfint
+Copyright 2026 Jorge Galvez
+
+This product is a Fortran translation of libcint.
+
+libcint
+Copyright 2013- Qiming Sun <osirpt.sun@gmail.com>
+https://github.com/sunqm/libcint
+Licensed under the Apache License, Version 2.0.
+
+The algorithms, the numeric tables, the code generator that produces most of
+the integral kernels, and the structure of this library are all libcint's.
+This project translates them to Fortran and verifies, on every build, that the
+translation produces bit-identical results.  It is not an independent
+implementation and does not claim to be one.

@@ -1,0 +1,81 @@
+name: linux-multi-compiler-ci
+
+# libfint contains no C, so the broad matrix here needs no C compiler and no
+# BLAS -- it is a pure Fortran build.  The bit-identity suite is a separate
+# workflow (verify-against-libcint.yml) because it does need libcint, and
+# there is no reason to make every compiler in this matrix build it.
+on:
+  push:
+  pull_request:
+  # Weekly, to catch toolchain drift with no code changes.
+  schedule:
+    - cron: '0 12 * * 3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  Build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        toolchain:
+          - {compiler: gcc, version: 11}
+          - {compiler: gcc, version: 12}
+          - {compiler: gcc, version: 13}
+          - {compiler: gcc, version: 14}
+          - {compiler: gcc, version: 15}
+          - {compiler: intel-classic, version: '2021.10'}
+          - {compiler: intel, version: '2024.1'}
+          - {compiler: intel, version: '2025.0'}
+          - {compiler: nvidia-hpc, version: 'latest'}
+          - {compiler: aocc, version: '5.1.0'}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
+
+    - name: Install ninja
+      run: pip install --upgrade ninja
+
+    - name: Setup Fortran compiler
+      uses: fortran-lang/setup-fortran@v1.9.0
+      id: setup-fortran
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+
+    - name: Configure with CMake
+      run: >-
+        cmake -G Ninja
+        -DCMAKE_BUILD_TYPE=Release
+        -S . -B build
+
+    - name: Build
+      run: cmake --build build --parallel
+
+    - name: catch build fail
+      if: ${{ failure() }}
+      run: cmake --build build --verbose --parallel 1
+
+    # The layer checks that need no C: they compare against reference data of
+    # libfint's own rather than against libcint.  Everything that needs the C
+    # lives in verify-against-libcint.yml.
+    - name: Test
+      run: >-
+        ctest
+        --test-dir build
+        --parallel
+        --output-on-failure
+        --no-tests=ignore

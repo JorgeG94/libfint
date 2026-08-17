@@ -1,0 +1,57 @@
+name: fpm
+
+# fpm earns its place here rather than being a packaging convenience: its
+# debug profile builds at -O0 with -fcheck=bounds and -fbacktrace, and that
+# has already caught two bugs the CMake build could not, because CMake only
+# ever builds this optimised.
+#
+#   an `inline` with no `static` linked at -O2 (inlined away) and not at -O0
+#   a `use_opt .and. ws_opt_idx(...)` guard that assumed short-circuit
+#     evaluation, which Fortran does not guarantee -- gfortran short-circuits
+#     at -O2 and does not at -O0
+#
+# So: debug first, release second, and treat a debug-only failure as a real
+# bug rather than an fpm quirk.
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  fpm:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        toolchain:
+          - {compiler: gcc, version: 13}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Fortran compiler
+      uses: fortran-lang/setup-fortran@v1.9.0
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+
+    - name: Setup fpm
+      uses: fortran-lang/setup-fpm@v5
+      with:
+        fpm-version: 'v0.12.0'
+
+    - name: Build and test, debug
+      run: fpm test
+
+    - name: Build and test, release
+      run: fpm test --profile release
