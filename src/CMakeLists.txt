@@ -60,6 +60,9 @@ set(cintFortranSrc
   cint_3c1e.f90
   cint_opt.f90
   cint_breit_gauge.f90
+  # libcint's C entry points under their C names, for consumers that bind
+  # them directly instead of using the module.  See the file for which.
+  cint_c_abi.f90
   # Always listed.  The F12 three are guarded internally by COMPILE_F12 and
   # compile to nothing without it; they sit in fortran/f12 rather than
   # fortran/src because fpm scans `use` statements lexically -- it cannot see
