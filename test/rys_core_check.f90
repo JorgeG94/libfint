@@ -120,6 +120,15 @@ contains
          print '(A,A,A,I0,A,ES9.2,A,I0,A,I0)', "      ", nm(i), " n=", ncmp(i), &
             "  worst=", worst(i), "  differing=", nbad(i), "  err-mismatch=", nerr(i)
       end do
+      ! A count of zero for the quad variant is not a pass by accident: the
+      ! reference omits it when libcint was built without quadmath, which is
+      ! what happens under a compiler that does not ship it -- icx, for one.
+      ! Say so, rather than printing a bare zero that reads like a bug.
+      if (ncmp(2) == 0) then
+         print '(A)', "      quad: not compared -- the reference libcint has" // &
+                      " no quadmath, so there is"
+         print '(A)', "            no binary128 C path to compare against."
+      end if
       ! Variant 1 is the C's 80-bit path; it is not expected to agree.
       if (nbad(0) > 0 .or. nerr(0) > 0) nfail = nfail + 1
       if (nbad(2) > 0 .or. nerr(2) > 0) nfail = nfail + 1

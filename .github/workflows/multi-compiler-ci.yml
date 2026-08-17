@@ -34,8 +34,19 @@ jobs:
           - {compiler: intel-classic, version: '2021.10'}
           - {compiler: intel, version: '2024.1'}
           - {compiler: intel, version: '2025.0'}
-          - {compiler: nvidia-hpc, version: 'latest'}
+          # nvfortran is EXPECTED to fail, and is kept in the matrix for that
+          # reason rather than removed.  iso_fortran_env's real128 is -1 there,
+          # so every `real(qp)` declaration is a hard error -- 68 of them on
+          # nvhpc 26.5, verified locally, not inferred.  The quad kind is the
+          # Rys fallback for the cases double precision cannot resolve, so it
+          # is not something to drop; eight files depend on it.  If nvidia ever
+          # ships real128 this job turns green on its own and tells us.
+          - {compiler: nvidia-hpc, version: 'latest', allow-failure: true}
           - {compiler: aocc, version: '5.1.0'}
+
+    # A red square here is a real finding for every compiler except nvfortran,
+    # which cannot build this library at all -- see the matrix note.
+    continue-on-error: ${{ matrix.toolchain.allow-failure || false }}
 
     steps:
     - name: Checkout code

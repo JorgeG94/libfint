@@ -1,0 +1,91 @@
+name: LFortran
+
+# Thanks to https://github.com/gha3mi/setup-fortran-conda for setting this up.
+# MIT licensed.  Modelled on the same workflow in JorgeG94/pic.
+#
+# LFortran is an alpha compiler and not a production target for this library,
+# so both jobs are continue-on-error: a red square here is information, not a
+# blocked merge.  They are worth running anyway.  LFortran is strict about
+# things gfortran waves through, and this library is 340,000 lines of Fortran
+# that a compiler under development has every reason to want as a test case --
+# the traffic goes both ways.
+#
+# Build only, no ctest.  The verification suite compares against libcint, which
+# needs a C compiler and a working build of it; that is what
+# verify-against-libcint.yml is for.  What is being asked here is narrower and
+# still useful: does this library compile at all.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Weekly, to catch LFortran moving under us with no change here.
+  schedule:
+    - cron: '0 12 * * 3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  fpm:
+    name: ${{ matrix.os }}_lfortran_fpm
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Fortran
+        uses: gha3mi/setup-fortran-conda@v0.17.1
+        with:
+          compiler: lfortran
+          platform: ${{ matrix.os }}
+
+      - name: fpm versioning
+        run: fpm --version
+
+      - name: Set linker if macOS
+        if: matrix.os == 'macos-latest'
+        run: echo "LFORTRAN_LINKER=clang" >> $GITHUB_ENV
+
+      # Debug only.  fpm's --profile release leaks its internal
+      # flag_lfortran_opt name unexpanded to lfortran; the cmake job below
+      # covers the optimised build instead.
+      - name: fpm build
+        run: fpm build --compiler lfortran --profile debug --flag "--cpp"
+
+  cmake:
+    name: ${{ matrix.os }}_lfortran_cmake
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Fortran
+        uses: gha3mi/setup-fortran-conda@v0.17.1
+        with:
+          compiler: lfortran
+          platform: ${{ matrix.os }}
+          extra-packages: "cmake, ninja"
+
+      # Release, which also avoids the -g step that wants llvm-dwarfdump.
+      - name: cmake build
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_Fortran_COMPILER=lfortran
+          cmake --build build

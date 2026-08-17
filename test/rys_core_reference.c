@@ -11,16 +11,35 @@
  * The Fortran quad path is compared against CINTqrys_schmidt, not
  * CINTlrys_schmidt: both are binary128, whereas the C's long double is 80-bit
  * x87 and disagrees for that reason alone.
+ *
+ * That third variant is written only when libcint was built with quadmath.
+ * quadmath is a GCC library, so a libcint built by icx does not have it, and
+ * CINTqrys_schmidt is then not a function at all -- rys_roots.h #defines it to
+ * CINTlrys_schmidt.  Declaring it here by hand, as this file used to, hides
+ * that and the link fails with an undefined reference.
+ *
+ * Emitting nothing for variant 2 is the right answer rather than a shortcut:
+ * with no quadmath there is no binary128 C path to compare the Fortran's
+ * against, and substituting the 80-bit one would compare two different
+ * precisions and call the difference a failure.  The reader dispatches on the
+ * variant field and simply sees none, so it reports on the two that exist.
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+/* for HAVE_QUADMATH_H, which decides whether CINTqrys_schmidt exists */
+#include "cint_config.h"
 #define MXR 32
 int _CINT_polynomial_roots(double *roots, double *cs, int nroots);
 int CINTrys_schmidt(int,double,double,double*,double*);
 int CINTlrys_schmidt(int,double,double,double*,double*);
+#ifdef HAVE_QUADMATH_H
 int CINTqrys_schmidt(int,double,double,double*,double*);
+#define NVARIANTS 3
+#else
+#define NVARIANTS 2
+#endif
 
 
 /* coefficients of prod_{j<k}(x - r_j), ascending order, into c[0..k] */
@@ -80,11 +99,15 @@ int main(int argc, char **argv)
         for (unsigned i = 0; i < sizeof(xs)/sizeof(*xs); i++)
         for (unsigned j = 0; j < sizeof(ls)/sizeof(*ls); j++) {
                 int32_t a[3];
-                for (int variant = 0; variant < 3; variant++) {
+                for (int variant = 0; variant < NVARIANTS; variant++) {
                         memset(u, 0, sizeof(u)); memset(w, 0, sizeof(w));
                         int e = variant == 0 ? CINTrys_schmidt(n, xs[i], ls[j], u, w)
                               : variant == 1 ? CINTlrys_schmidt(n, xs[i], ls[j], u, w)
+#ifdef HAVE_QUADMATH_H
                                              : CINTqrys_schmidt(n, xs[i], ls[j], u, w);
+#else
+                                             : 0;
+#endif
                         a[0] = n; a[1] = variant; a[2] = e;
                         fwrite(a, 4, 3, o2); fwrite(&xs[i], 8, 1, o2); fwrite(&ls[j], 8, 1, o2);
                         fwrite(u, 8, n, o2); fwrite(w, 8, n, o2);

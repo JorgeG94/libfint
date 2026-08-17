@@ -31,6 +31,19 @@ if(LIBFINT_BUILD_TESTS)
       "  scripts/fetch_libcint.sh v6.1.3   # or a specific ref")
   endif()
   enable_language(C)
+
+  # Intel's C compiler defaults to a relaxed floating-point model, and the
+  # Fortran side is already built -fp-model=precise (see src/CMakeLists.txt).
+  # Comparing the two then compares two different arithmetics: on the Rys
+  # Schmidt path that is 6,686 of 7,192 values "differing" with nothing wrong
+  # on either side.  So the reference gets the same model the port has.
+  #
+  # This is set before add_subdirectory so libcint inherits it, and only for
+  # the fetched reference -- it does not follow libfint anywhere.
+  if(CMAKE_C_COMPILER_ID MATCHES "Intel")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fp-model=precise")
+  endif()
+
   add_subdirectory(extern/libcint EXCLUDE_FROM_ALL)
   enable_testing()
   add_subdirectory(test)
