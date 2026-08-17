@@ -42,10 +42,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Python 3.x
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: 3.x
 
@@ -53,14 +53,16 @@ jobs:
       run: pip install --upgrade ninja
 
     - name: Setup Fortran compiler
-      uses: fortran-lang/setup-fortran@v1.9.0
+      uses: fortran-lang/setup-fortran@v1.10.0
       id: setup-fortran
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
 
     - name: Fetch libcint
-      run: scripts/fetch_libcint.sh ${{ github.event_name == 'schedule' && 'master' || 'master' }}
+      # always upstream's master: this workflow is a drift detector, so a pin
+      # here would defeat it.  Pass a ref locally to reproduce an old run.
+      run: scripts/fetch_libcint.sh master
 
     - name: Record which libcint this is
       run: |

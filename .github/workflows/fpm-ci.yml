@@ -37,16 +37,21 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Fortran compiler
-      uses: fortran-lang/setup-fortran@v1.9.0
+      uses: fortran-lang/setup-fortran@v1.10.0
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
 
+    # v10, not v5, and for two reasons.  fpm's release assets grew a compiler
+    # suffix -- fpm-0.12.0-linux-x86_64-gcc-12, where it used to be
+    # fpm-0.12.0-linux-x86_64 -- and v5 does not know to look for it, so it
+    # fails to find EVERY recent release.  v10 tries gcc-10 through gcc-14.
+    # v5 also runs on node20, which GitHub is retiring; v10 is node24.
     - name: Setup fpm
-      uses: fortran-lang/setup-fpm@v5
+      uses: fortran-lang/setup-fpm@v10
       with:
         fpm-version: 'v0.12.0'
 
