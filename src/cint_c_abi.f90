@@ -47,9 +47,7 @@ module cint_c_abi
                               int1e_drinv_cart, int1e_drinv_sph
    use cint_gen_hess,   only: int1e_ipiprinv_cart, int1e_ipiprinv_sph, &
                               int1e_iprinvip_cart, int1e_iprinvip_sph
-   ! int1e_grids has a grid dimension rather than a plain component count and
-   ! is not wrapped here yet; a consumer that binds it will still see a linker
-   ! error, which is the honest outcome until it is done properly.
+   use cint_1e_grids,   only: int1e_grids_cart, int1e_grids_sph
    implicit none
    private
 
@@ -494,5 +492,59 @@ contains
                          int(nbas), penv, ws)
       ret = merge(1_c_int, 0_c_int, hv)
    end function c2_int1e_rrr_sph
+
+   ! int1e_grids_cart.  Not the shape of the others: shls carries FOUR
+   ! entries -- two shells, then the half-open grid range -- and the block is
+   ! di*dj*ngrids rather than a fixed component count.
+   function c_int1e_grids_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                                 cache) result(ret) bind(C, name="int1e_grids_cart")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer(c_int), pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), di, dj, ngrids
+      logical :: hv
+      call c_f_pointer(shls, pshls, [4])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
+      fshls(2) = int(pshls(3)); fshls(3) = int(pshls(4))
+      ngrids = fshls(3) - fshls(2)
+      di = cint_cgto_cart(fshls(0), int(pbas)); dj = cint_cgto_cart(fshls(1), int(pbas))
+      d = [di, dj, ngrids, 1]
+      call c_f_pointer(out, pout, [di*dj*ngrids])
+      call c_f_pointer(env, penv, [env_len(pshls(1:2), 2, int(pbas), int(nbas))])
+      hv = int1e_grids_cart(pout, d, fshls, int(patm), int(natm), int(pbas), &
+                              int(nbas), penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c_int1e_grids_cart
+
+   ! int1e_grids_sph.  Not the shape of the others: shls carries FOUR
+   ! entries -- two shells, then the half-open grid range -- and the block is
+   ! di*dj*ngrids rather than a fixed component count.
+   function c_int1e_grids_sph(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                                 cache) result(ret) bind(C, name="int1e_grids_sph")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer(c_int), pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), di, dj, ngrids
+      logical :: hv
+      call c_f_pointer(shls, pshls, [4])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
+      fshls(2) = int(pshls(3)); fshls(3) = int(pshls(4))
+      ngrids = fshls(3) - fshls(2)
+      di = cint_cgto_spheric(fshls(0), int(pbas)); dj = cint_cgto_spheric(fshls(1), int(pbas))
+      d = [di, dj, ngrids, 1]
+      call c_f_pointer(out, pout, [di*dj*ngrids])
+      call c_f_pointer(env, penv, [env_len(pshls(1:2), 2, int(pbas), int(nbas))])
+      hv = int1e_grids_sph(pout, d, fshls, int(patm), int(natm), int(pbas), &
+                              int(nbas), penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c_int1e_grids_sph
 
 end module cint_c_abi
