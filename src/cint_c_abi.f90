@@ -56,10 +56,17 @@ module cint_c_abi
    integer, parameter :: NPRIM_OF = 2, NCTR_OF = 3, PTR_EXP = 5, PTR_COEFF = 6
    integer, parameter :: PTR_ENV_START = 20
 
-   ! One workspace, reused.  The C reaches for its own stack on every call;
-   ! this grows once and then never allocates again.  Not thread-safe, and
-   ! neither is libcint's optimizer, so the caller owns that either way.
+   ! One workspace per thread, reused.  The C reaches for its own stack on
+   ! every call; this grows once and then never allocates again.
+   !
+   ! THREADPRIVATE is not optional.  Callers drive these from inside
+   ! `!$omp parallel` -- metalquicha's AO evaluation does -- and a shared
+   ! workspace means every thread writing over every other one's scratch.
+   ! That does not fail cleanly: it segfaults somewhere unrelated, which is
+   ! exactly how this was found.  The libcint_fortran module marks its own
+   ! workspace the same way.
    type(cint_ws), save :: ws
+   !$omp threadprivate(ws)
 
 contains
 

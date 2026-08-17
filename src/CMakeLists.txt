@@ -132,6 +132,29 @@ endif()
 # through another to the final consumer, and with WITH_FORTRAN_BACKEND the
 # libcint_fortran module sits in between.
 add_library(fint STATIC ${cintFortranSrc})
+
+# THREAD SAFETY.  libcint is thread-safe -- every call takes its scratch off
+# the C stack -- and this library has to be too, because callers drive it from
+# inside `!$omp parallel`.  It gets there differently: the workspace is a
+# module variable, reused so that a shell quartet costs no allocation, and
+# marked `!$omp threadprivate`.
+#
+# That directive is a COMMENT unless the file is compiled with OpenMP enabled.
+# Without this block the library builds, links, and corrupts the heap the
+# moment two threads evaluate integrals at once -- which is exactly how it was
+# found, as a "double free or corruption" in a caller with no bug in it.
+#
+# So OpenMP is not optional here, and not merely "found if available": if it is
+# missing the threadprivate workspaces are silently shared and the library is
+# quietly wrong under threads.
+find_package(OpenMP COMPONENTS Fortran)
+if(OpenMP_Fortran_FOUND)
+  target_link_libraries(fint PUBLIC OpenMP::OpenMP_Fortran)
+else()
+  message(WARNING
+    "OpenMP not found: the per-thread workspaces become shared, so this build "
+    "is only safe to call from one thread at a time.")
+endif()
 if(WITH_F12)
   target_compile_definitions(fint PRIVATE COMPILE_F12)
 endif()
