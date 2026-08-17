@@ -5,17 +5,10 @@ find_package(Python3 COMPONENTS Interpreter REQUIRED)
 # bit-identical to -- which is what makes that claim checkable rather than
 # asserted.
 
-# The public interface module, over the Fortran engine.  Built first: the
-# test-systems helper USEs libcint_interface for its slot constants.
-add_library(fint_iface OBJECT
-  ${PROJECT_SOURCE_DIR}/include/libcint_interface.f90
-  ${PROJECT_SOURCE_DIR}/include/libfint.f90)
-target_link_libraries(fint_iface PUBLIC fint)
-set_target_properties(fint_iface PROPERTIES
-  Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/include)
-
+# The public interface is part of the library now, so the tests just link it.
 add_library(fint_test_systems OBJECT cint_test_systems.F90)
-target_link_libraries(fint_test_systems PUBLIC fint fint_iface)
+target_link_libraries(fint_test_systems PUBLIC fint)
+target_include_directories(fint_test_systems PRIVATE ${PROJECT_BINARY_DIR}/include)
 target_include_directories(fint_test_systems PRIVATE ${PROJECT_BINARY_DIR}/include)
 set_target_properties(fint_test_systems PROPERTIES
   Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/include)
@@ -47,14 +40,14 @@ set(LIBFINT_CHECKS
   spinor1e_check spinor2e_check spinor3c_check)
 
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
-target_link_libraries(catalogue_check fint fint_test_systems fint_iface cint m)
+target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME catalogue_check COMMAND $<TARGET_FILE:catalogue_check>)
 
 foreach(chk ${LIBFINT_CHECKS})
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${chk}.F90)
     add_executable(${chk} ${chk}.F90)
-    target_link_libraries(${chk} fint fint_test_systems fint_iface cint m)
+    target_link_libraries(${chk} fint fint_test_systems cint m)
     target_include_directories(${chk} PRIVATE ${PROJECT_BINARY_DIR}/include)
     add_test(NAME ${chk} COMMAND $<TARGET_FILE:${chk}>)
   endif()
@@ -114,7 +107,7 @@ endforeach()
 
 if(WITH_F12)
   add_executable(f12_check f12_check.F90)
-  target_link_libraries(f12_check fint fint_test_systems fint_iface cint m)
+  target_link_libraries(f12_check fint fint_test_systems cint m)
   add_test(NAME f12_check COMMAND $<TARGET_FILE:f12_check>)
 endif()
 

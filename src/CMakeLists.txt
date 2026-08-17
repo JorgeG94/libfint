@@ -85,7 +85,14 @@ set(cintFortranSrc
   ../f12/cint_g2e_f12.F90
   ../f12/cint_gen_f12.F90
   ../polyfit/cint_tab_polyfits.f90
-  ../polyfit/cint_tab_sr_roots.f90)
+  ../polyfit/cint_tab_sr_roots.f90
+  # The public API.  It lives in include/ rather than src/ because it is
+  # what a consumer reads, but it has to be IN the library: without it,
+  # find_package(libfint) hands back a target whose headline module --
+  # libcint_fortran, the one every consumer writes `use` for -- was
+  # never compiled.
+  ../include/libcint_interface.f90
+  ../include/libfint.f90)
 
 # The range-separation tables are 91% of all the table data and, like the C
 # they come from, sit behind a switch.  WITH_POLYNOMIAL_FIT selects a fast path
