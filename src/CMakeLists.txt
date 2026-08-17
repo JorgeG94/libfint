@@ -12,7 +12,8 @@ set(cintFortranSrc
   cint_fmt.F90
   cint_find_roots.f90
   cint_schmidt.F90
-  cint_eigh.f90
+  cint_eigh_dstemr.f90
+  cint_eigh.F90
   cint_rys_root_n.f90
   cint_tab_roots_x0.f90
   cint_tab_jacobi.f90
@@ -239,4 +240,10 @@ endif()
 # The C ships a hand-translated copy of that routine (src/eigh.c, 1,477 lines)
 # for builds with no LAPACK; calling the real one instead is what lets that
 # file be dropped.
-target_link_libraries(fint PUBLIC ${LAPACK_LIBRARIES})
+# LAPACK only when the caller asks for it.  By default the port uses its own
+# translation of libcint's eigh.c and links nothing -- see cint_eigh.F90.
+option(WITH_EXTERNAL_LAPACK "Use a system dstemr instead of the translated one" OFF)
+if(WITH_EXTERNAL_LAPACK)
+  target_compile_definitions(fint PRIVATE WITH_EXTERNAL_LAPACK)
+  target_link_libraries(fint PUBLIC ${LAPACK_LIBRARIES})
+endif()

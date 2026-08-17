@@ -246,7 +246,7 @@ def emit(entries, out):
    print '(A,I0)',     "  entry points         : ", nchecked
    print '(A,I0)',     "  values compared      : ", ncmp
    print '(A,ES10.2)', "  worst diff / block   : ", worst
-   print '(A,I0)',     "  inexact at <=5 roots : ", nexact
+   print '(A,I0)',     "  inexact              : ", nexact
    print '(A,I0)',     "  r-poly last-bit      : ", nrpoly
    print '(A,I0)',     "  upstream g76 defect  : ", ng76
    print '(A,I0)',     "  over tolerance       : ", nbad
@@ -284,11 +284,13 @@ contains
       character(len=*), intent(in) :: what
       real(dp) :: tol
       logical :: rpoly
-      if (nr <= 5) then
-         tol = 0.0_dp
-      else
-         tol = 1.0e-11_dp
-      end if
+      ! No tolerance for high Rys-root counts any more.  That one existed
+      ! because the port called a system dstemr where the C runs its own
+      ! translation of DSTEMR; the port now runs a translation of the same
+      ! code, so the two agree exactly at every root count.  See
+      ! cint_eigh_dstemr.  WITH_EXTERNAL_LAPACK reintroduces the difference,
+      ! and with it the need for a tolerance here.
+      tol = 0.0_dp
       ! The ten r-polynomial families are the one place where the C hand-writes
       ! a kernel the generator would otherwise emit (src/cint1e_a.c,
       ! src/cint3c1e_a.c).  The two forms sum the same ten products in the same

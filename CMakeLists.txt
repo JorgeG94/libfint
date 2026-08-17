@@ -5,8 +5,15 @@ include(GNUInstallDirs)
 
 option(LIBFINT_BUILD_TESTS "Build the verification suite (needs libcint)" OFF)
 option(WITH_F12 "Slater-type geminal integrals (generates a 100 MB table)" OFF)
+option(WITH_EXTERNAL_LAPACK "Use a system dstemr instead of the translated one" OFF)
 
-find_package(LAPACK REQUIRED)
+# No LAPACK, and no BLAS.  libfint carries its own translation of libcint's
+# eigh.c, exactly as libcint carries the C of it -- see src/cint_eigh.F90.
+# WITH_EXTERNAL_LAPACK swaps in a system dstemr for callers that would rather
+# have a vendor implementation; it is faster and not bit-identical.
+if(WITH_EXTERNAL_LAPACK)
+  find_package(LAPACK REQUIRED)
+endif()
 
 add_subdirectory(src)
 

@@ -28,10 +28,11 @@ double:
 574 entry points, 2,751,264 values compared against libcint, 0 over tolerance
 ```
 
-Two differences are documented rather than hidden, and both are visible in the
-check's own output.  228 values in the r-polynomial families differ in the last
-bit, because the C folds a coefficient into the product where the generator
-materialises the product and scales afterwards.  And
+There is no tolerance at any Rys-root count. One difference is documented
+rather than hidden, and it is visible in the check's own output: 228 values in
+the r-polynomial families differ in the last bit, because the C folds a
+coefficient into the product where the generator materialises the product and
+scales afterwards. And
 `int3c1e_ip1_r6_origk` differs by rather more against an unpatched libcint,
 because the C reads a `g` block it never writes -- that one is a bug in the C,
 and the patch is offered upstream.
@@ -61,10 +62,16 @@ With CMake:
 cmake -S . -B build && cmake --build build -j
 ```
 
-Requires a Fortran 2008 compiler (gfortran 11+ or ifx) and LAPACK. The only
-external symbol is `dstemr`, for the Wheeler quadrature; libcint carries its
-own translation of that routine and dropping the dependency the same way is
-on the list.
+Requires a Fortran 2008 compiler (gfortran 11+ or ifx). Nothing else -- no
+LAPACK, no BLAS, no C. The undefined symbols in `libfint.a` are `erf`, `erfc`,
+`exp`, `lgamma`, `log` and `pow`, and that is the whole list.
+
+The Wheeler quadrature needs a tridiagonal eigensolver, and libfint carries a
+translation of the one libcint carries -- LAPACK's DSTEMR, which libcint
+vendored and which its build always uses. `-DWITH_EXTERNAL_LAPACK=ON` swaps in
+a system `dstemr` instead, for callers who already link LAPACK and would
+rather have a vendor implementation. It is faster and it is not
+bit-identical.
 
 ## Verifying the claim
 

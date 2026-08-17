@@ -1,25 +1,22 @@
 !
 ! Symmetric tridiagonal eigenproblem for the Wheeler quadrature.
 !
-! This replaces src/eigh.c, and replacing it is the point.  That file is 1,477
-! lines, and reading its header explains why: it is LAPACK's DSTEMR, vendored
-! and hand-translated, used only when the build cannot find a real LAPACK.
-! When LAPACK_FOUND is set the C calls dstemr_ and the 1,477 lines are dead.
-! libcint's CMakeLists never sets it, so the shipped library always runs the
-! copy.
+! This replaces src/eigh.c, and it is now a thin choice between two ways of
+! doing that.  By default it calls cint_eigh_dstemr, which is eigh.c
+! translated -- so the port needs no LAPACK at all, exactly as the C needs
+! none, and is bit-identical here as everywhere else.
 !
-! metalquicha already links LAPACK through pic_lapack_interfaces, so calling
-! dstemr directly costs nothing and deletes the largest single file in the
-! port's dependency closure.
-!
-! ⚠️ This is the one place the port is deliberately not bit-identical to the C.
-! Same algorithm, but a different implementation of it, so agreement is to
-! within the eigensolver's own accuracy rather than to the last bit.  The
-! Wheeler tests therefore check invariants -- that the rule integrates its own
-! moments -- as well as comparing against the C.
+! WITH_EXTERNAL_LAPACK swaps in a real dstemr instead.  That is a supported
+! configuration rather than a fallback: a caller that already links LAPACK
+! (metalquicha does, through pic_lapack_interfaces) may prefer a vendor
+! implementation, which will be faster and may be more accurate.  It is not
+! the default because it is not bit-identical -- same algorithm, different
+! implementation -- and the catalogue check then needs a tolerance above 5
+! Rys roots.
 !
 module cint_eigh
    use cint_const, only: dp
+   use cint_eigh_dstemr, only: dstemr_diagonalize
    implicit none
    private
 
@@ -27,6 +24,7 @@ module cint_eigh
 
    integer, parameter :: MXRYSROOTS = 32
 
+#ifdef WITH_EXTERNAL_LAPACK
    interface
       subroutine dstemr(jobz, range, n, d, e, vl, vu, il, iu, m, w, z, ldz, &
                         nzc, isuppz, tryrac, work, lwork, iwork, liwork, info)
@@ -40,6 +38,7 @@ module cint_eigh
          logical,    intent(inout) :: tryrac
       end subroutine dstemr
    end interface
+#endif
 
 contains
 
@@ -54,6 +53,7 @@ contains
       real(dp), intent(out)   :: eig(0:), vec(0:)
       integer :: info
 
+#ifdef WITH_EXTERNAL_LAPACK
       real(dp) :: vl, vu
       integer  :: il, iu, m
       integer  :: isuppz(2*MXRYSROOTS)
@@ -77,6 +77,14 @@ contains
       call dstemr('V', 'A', n, diag, offd, vl, vu, il, iu, m, &
                   eig, vec, n, n, isuppz, tryrac, &
                   work, size(work), iwork, size(iwork), info)
+#else
+      info = 0
+      if (n <= 0) return
+      ! the C reads n entries of the off-diagonal though only n-1 mean
+      ! anything, and its own eigh.c zeroes the last one on the way in
+      offd(n-1) = 0.0_dp
+      info = dstemr_diagonalize(n, diag, offd, eig, vec)
+#endif
    end function cint_diagonalize
 
 end module cint_eigh

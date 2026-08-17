@@ -10,7 +10,7 @@ categories = ["numerical", "chemistry"]
 auto-executables = false
 auto-tests = false
 auto-examples = false
-link = ["lapack", "blas"]
+link = []
 
 [library]
 source-dir = "fpm-src"
