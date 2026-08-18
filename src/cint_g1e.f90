@@ -301,19 +301,34 @@ contains
       real(dp), intent(in)    :: coeff(0:)
       integer,  intent(in)    :: gcoff, gpoff, coff, nf, blk, nprim, nctr
       integer  :: ic, m, n, o, gcb
-      real(dp) :: cs, cp
+      real(dp) :: cs, cp, c4(0:3)
       do ic = 0, nctr - 1
          cs = coeff(coff + nprim*ic)        * FAC_SP_S
          cp = coeff(coff + nprim*(nctr+ic)) * FAC_SP_P
          gcb = gcoff + nf*ic
-         do o = 0, nf - 1, 4*blk
-            do n = 0, blk - 1
-               buf(gcb + o + n) = cs * buf(gpoff + o + n)
+         if (blk == 1) then
+            ! THE INNERMOST INDEX, and the only one that matters.  This
+            ! routine runs once per surviving primitive quartet for i and
+            ! i_prim, i_prim*j_prim, i_prim*j_prim*k_prim times less often
+            ! for j, k and l -- so blk = 1 is where nearly all of the calls
+            ! land, and there the general form above degenerates into a
+            ! one-trip loop and a three-trip loop nested in a stride-four
+            ! one.  Written out, it is a four-wide multiply by a vector
+            ! gfortran can put in one register and keep there.
+            c4 = [cs, cp, cp, cp]
+            do o = 0, nf - 1, 4
+               buf(gcb+o : gcb+o+3) = c4 * buf(gpoff+o : gpoff+o+3)
             end do
-            do m = blk, 4*blk - 1
-               buf(gcb + o + m) = cp * buf(gpoff + o + m)
+         else
+            do o = 0, nf - 1, 4*blk
+               do n = 0, blk - 1
+                  buf(gcb + o + n) = cs * buf(gpoff + o + n)
+               end do
+               do m = blk, 4*blk - 1
+                  buf(gcb + o + m) = cp * buf(gpoff + o + m)
+               end do
             end do
-         end do
+         end if
       end do
    end subroutine cint_prim_to_ctr_sp_0
 
@@ -330,19 +345,30 @@ contains
       real(dp), intent(in)    :: coeff(0:)
       integer,  intent(in)    :: gcoff, gpoff, coff, nf, blk, nprim, nctr
       integer  :: ic, m, n, o, gcb
-      real(dp) :: cs, cp
+      real(dp) :: cs, cp, c4(0:3)
       do ic = 0, nctr - 1
          cs = coeff(coff + nprim*ic)        * FAC_SP_S
          cp = coeff(coff + nprim*(nctr+ic)) * FAC_SP_P
          gcb = gcoff + nf*ic
-         do o = 0, nf - 1, 4*blk
-            do n = 0, blk - 1
-               buf(gcb + o + n) = buf(gcb + o + n) + cs * buf(gpoff + o + n)
+         if (blk == 1) then
+            ! See the note in cint_prim_to_ctr_sp_0: this is where the calls
+            ! are, and the general form below is three nested loops to move
+            ! four doubles.
+            c4 = [cs, cp, cp, cp]
+            do o = 0, nf - 1, 4
+               buf(gcb+o : gcb+o+3) = buf(gcb+o : gcb+o+3) &
+                                    + c4 * buf(gpoff+o : gpoff+o+3)
             end do
-            do m = blk, 4*blk - 1
-               buf(gcb + o + m) = buf(gcb + o + m) + cp * buf(gpoff + o + m)
+         else
+            do o = 0, nf - 1, 4*blk
+               do n = 0, blk - 1
+                  buf(gcb + o + n) = buf(gcb + o + n) + cs * buf(gpoff + o + n)
+               end do
+               do m = blk, 4*blk - 1
+                  buf(gcb + o + m) = buf(gcb + o + m) + cp * buf(gpoff + o + m)
+               end do
             end do
-         end do
+         end if
       end do
    end subroutine cint_prim_to_ctr_sp_1
 
