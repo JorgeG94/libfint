@@ -119,3 +119,13 @@ if(Python3_Interpreter_FOUND)
            COMMAND ${Python3_EXECUTABLE}
                    ${PROJECT_SOURCE_DIR}/scripts/check_f90_integral_coverage.py)
 endif()
+
+# The C ABI, driven from C.  Deliberately links `fint` and NOT `cint`: the
+# point is that libfint alone resolves libcint's own entry-point names, so a
+# missing or misnamed bind(C) fails here at link time instead of at a
+# consumer's.  That also means it cannot compare against libcint at runtime --
+# both define these symbols -- so its reference values are recorded in the
+# source, taken from this same program built against upstream.
+add_executable(c_abi_check c_abi_check.c)
+target_link_libraries(c_abi_check fint m)
+add_test(NAME c_abi_check COMMAND $<TARGET_FILE:c_abi_check>)

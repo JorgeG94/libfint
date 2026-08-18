@@ -87,8 +87,6 @@ set(cintFortranSrc
   ../f12/cint_stg_roots.F90
   ../f12/cint_g2e_f12.F90
   ../f12/cint_gen_f12.F90
-  ../polyfit/cint_tab_polyfits.f90
-  ../polyfit/cint_tab_sr_roots.f90
   # The public API.  It lives in include/ rather than src/ because it is
   # what a consumer reads, but it has to be IN the library: without it,
   # find_package(libfint) hands back a target whose headline module --
@@ -105,6 +103,28 @@ set(cintFortranSrc
 #
 # The cost is worth knowing: with it on, these tables take ~27 s and ~1.5 GB to
 # compile; without, the whole set is ~1.9 s and ~134 MB.
+#
+# That was the intent; until now it was only the comment.  WITH_POLYNOMIAL_FIT
+# was never declared and both tables were listed unconditionally above, so the
+# switch described here has never existed and the tables have always been
+# compiled.  cint_tab_sr_roots.f90 alone is 29.6 MB of source and 49.5 MB of
+# the 65.4 MB archive.
+#
+# Note what the switch does *not* do yet.  Nothing under src/ or include/ uses
+# either module -- cint_rys_roots_sr (src/cint_rys_roots.f90:156) goes to
+# Schmidt, Jacobi and Laguerre for every root count, and never consults a
+# fitted table.  So the fast path these tables exist to serve is not wired up
+# on the Fortran side, and turning this ON today buys compile time and archive
+# size and nothing else.  It is declared anyway, and defaulted OFF to match
+# upstream, so that the day CINTsr_rys_roots grows its fitted path the tables
+# are already gated the way the C gates them.
+option(WITH_POLYNOMIAL_FIT
+       "Range-separated Rys root tables (29.6 MB of source; no consumer yet)" OFF)
+if(WITH_POLYNOMIAL_FIT)
+  list(APPEND cintFortranSrc
+       ../polyfit/cint_tab_polyfits.f90
+       ../polyfit/cint_tab_sr_roots.f90)
+endif()
 # F12: the Yukawa potential and the Slater-type geminal, off by default here
 # because they are off by default upstream.
 #

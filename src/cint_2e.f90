@@ -465,6 +465,83 @@ contains
          idxp(0:) => ws%i(oidx:oidx+nf*3-1)
       end if
 
+      if (i_ctr == 1 .and. j_ctr == 1 .and. k_ctr == 1 .and. l_ctr == 1) then
+      ! Segmented shells: the C's CINT2e_1111_loop.
+      !
+      ! When every contraction count is one, the whole apparatus below
+      ! collapses.  The five `ogctr*` buffers alias onto one another and onto
+      ! `gctr` (see the chain above, each `== 1` branch folding the next), so
+      ! `f_gout` already writes where the answer belongs; the six `flag`
+      ! entries alias onto one -- `ig`, whichever that turned out to be -- so
+      ! there is one empty flag rather than six; and every `prim_to_ctr` is
+      ! guarded by a `> 1` that is false.
+      !
+      ! `n_comp` is deliberately not part of the test.  It only decides which
+      ! flag the chain lands on and whether the transpose after the loop runs;
+      ! the aliasing is driven by the four contraction counts alone.  Writing
+      ! `flag(ig)` rather than naming a flag keeps that true, and the
+      ! transpose below is left to the guard it already has -- which is what
+      ! lets this cover the derivative integrals, where n_comp is 3 and the
+      ! gradient spends most of its time.
+      !
+      ! The generic nest still executes all of it -- four branches per
+      ! primitive level, an aliased-index store per surviving quartet, and
+      ! four epilogue tests per level -- to reach that conclusion every time.
+      ! On a Pople basis it reaches it for every shell in the molecule, since
+      ! 6-31G is segmented throughout.
+      !
+      ! Bit-identical by construction rather than by measurement: this is the
+      ! same products in the same order, with the branches that cannot be
+      ! taken removed.  `catalogue_check` still holds it to the last bit.
+      !
+      ! Two loops, not one, is what libcint does here too, and for the same
+      ! reason: the general one has to stay for generally-contracted bases,
+      ! where the contraction is the whole point.  Deleting it is what makes
+      ! qcint slower than libcint on exactly this case.
+      do lp = 0, l_prim - 1
+         envs%al = alp(lp)
+         fac1l = envs%common_factor * clp(lp)
+
+         do kp = 0, k_prim - 1
+            akl = akp(kp) + alp(lp)
+            ekl = rr_kl * akp(kp) * alp(lp) / akl
+            ccekl = ekl - log_rr_kl - lmkp(kp) - lmlp(lp)
+            if (ccekl > expcutoff) cycle
+            envs%ak = akp(kp)
+            rkl(0) = (akp(kp)*envs%rk(0) + alp(lp)*envs%rl(0)) / akl
+            rkl(1) = (akp(kp)*envs%rk(1) + alp(lp)*envs%rl(1)) / akl
+            rkl(2) = (akp(kp)*envs%rk(2) + alp(lp)*envs%rl(2)) / akl
+            eijcutoff = expcutoff - ccekl
+            ekl = exp(-ekl)
+            fac1k = fac1l * ckp(kp)
+
+            do jp = 0, j_prim - 1
+               envs%aj = ajp(jp)
+               fac1j = fac1k * cjp(jp)
+
+               kijb = jp * i_prim
+               do ip = 0, i_prim - 1
+                  kij = kijb + ip
+                  if (pdp(kij)%cceij > eijcutoff) cycle
+                  envs%ai = aip(ip)
+                  cutoff = eijcutoff - pdp(kij)%cceij
+                  expijkl = pdp(kij)%eij * ekl
+                  fac1i = fac1j * cip(ip) * expijkl
+                  envs%fac = fac1i
+                  if (use_f12) then
+                     g0ok = f12_hook(gp, pdp(kij)%rij, rkl, cutoff, envs)
+                  else
+                     g0ok = cint_g0_2e(gp, pdp(kij)%rij, rkl, cutoff, envs)
+                  end if
+                  if (g0ok /= 0) then
+                     call envs%f_gout(goutp, gp, idxp, envs, merge(1, 0, flag(ig)))
+                     flag(ig) = .false.
+                  end if
+               end do
+            end do
+         end do
+      end do
+      else
       do lp = 0, l_prim - 1
          envs%al = alp(lp)
          if (l_ctr == 1) then
@@ -582,6 +659,7 @@ contains
             flag(il) = .false.
          end if
       end do
+      end if
 
       if (n_comp > 1 .and. .not. flag(il)) then
          if (flag(im)) then

@@ -3,6 +3,29 @@ project(libfint VERSION 6.1.3 LANGUAGES Fortran)
 
 include(GNUInstallDirs)
 
+# A default build type, because CMake has none and every flag this project
+# tunes lives in a per-configuration variable.
+#
+# Without this the command the README gives -- `cmake -S . -B build` -- leaves
+# CMAKE_BUILD_TYPE empty, and then no -O reaches the compiler at all.  Not -O0
+# by request: -O0 by omission.  On the 6-31G quartet sweep that is 11.71G
+# instructions against 4.97G, so the documented way to build the library was
+# 2.4x slower than the one every CI job uses.
+#
+# It survived for exactly that reason.  Every workflow under .github/ passes
+# -DCMAKE_BUILD_TYPE=Release explicitly, so no automated build has ever taken
+# the path a reader of the README takes.
+#
+# Guarded on CMAKE_CONFIGURATION_TYPES as well: a multi-config generator picks
+# its configuration at build time, where setting this would mean nothing.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Build type; Release unless the caller asks for another" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY
+               STRINGS Debug Release RelWithDebInfo MinSizeRel)
+  message(STATUS "CMAKE_BUILD_TYPE was not set; defaulting to Release")
+endif()
+
 option(LIBFINT_BUILD_TESTS "Build the verification suite (needs libcint)" OFF)
 option(WITH_F12 "Slater-type geminal integrals (generates a 100 MB table)" OFF)
 option(WITH_EXTERNAL_LAPACK "Use a system dstemr instead of the translated one" OFF)
