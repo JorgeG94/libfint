@@ -139,13 +139,27 @@ contains
       integer,  intent(in) :: ng(0:), atm(0:), bas(0:), nbas
       real(dp), intent(in) :: env(0:)
       integer  :: i, j, ip, jp, iprim, jprim, li, lj, tot, off, o_ij, ijkl_inc
-      real(dp) :: expcutoff, rr, ri(0:2), rj(0:2)
+      real(dp) :: expcut, rr, ri(0:2), rj(0:2)
       logical  :: empty
 
+      ! `expcut`, not `expcutoff`.  Fortran is case-insensitive, so a local
+      ! named `expcutoff` *is* the EXPCUTOFF that `use cint_envs` brings in --
+      ! the local declaration shadows the parameter, and `expcutoff = EXPCUTOFF`
+      ! becomes a self-assignment reading an undefined variable.  It compiles
+      ! without a word (gfortran only says so under -Wall, which this build did
+      ! not pass) and leaves 0.0 rather than 60.0, so every pair looks
+      ! infinitely screenable: 1024 of 3364 primitive pairs on C2H6/cc-pVDZ took
+      ! the screening sentinel where the driver computes a live value, and 10
+      ! shell pairs were marked wholly negligible that are not.
+      !
+      ! It has never produced a wrong integral, because the table this fills is
+      ! not read by anything yet -- see the note in cint_2e.f90 about opt%pd.
+      ! It would have, the moment that changed.  The driver was never affected:
+      ! it assigns to a component, `envs%expcutoff`, which cannot be shadowed.
       if (env(PTR_EXPCUTOFF) == 0.0_dp) then
-         expcutoff = EXPCUTOFF
+         expcut = EXPCUTOFF
       else
-         expcutoff = max(MIN_EXPCUTOFF, env(PTR_EXPCUTOFF))
+         expcut = max(MIN_EXPCUTOFF, env(PTR_EXPCUTOFF))
       end if
       if (.not. allocated(opt%log_maxc)) call opt_set_log_maxc(opt, bas, nbas, env)
 
@@ -184,7 +198,7 @@ contains
                                       opt%log_maxc(opt%log_maxc_off(i):), &
                                       opt%log_maxc(opt%log_maxc_off(j):), &
                                       li + ijkl_inc, lj, iprim, jprim, rr, &
-                                      expcutoff, env(PTR_RANGE_OMEGA))
+                                      expcut, env(PTR_RANGE_OMEGA))
             ! The C keeps shell pair (0,0) whether or not it is empty -- the
             ! buffer head has to point somewhere -- and that asymmetry is
             ! inherited rather than tidied, because the driver's fallback
