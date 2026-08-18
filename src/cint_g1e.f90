@@ -278,13 +278,16 @@ contains
    ! it sits: the s function wants cs, the three p want cp.
    !
    ! That position is not something the block has to be told.  gout is laid
-   ! out (i,k,l,j) with i fastest, so the component index of whichever shell
+   ! out (comp,i,k,l,j) with the tensor component fastest -- gout(n*n_comp+m)
+   ! until the final transpose -- so the component index of whichever shell
    ! is being contracted holds still for `blk` entries and cycles every
-   ! 4*blk: blk = 1 for i, nfi for k, nfi*nfk for l, nfi*nfk*nfl for j.  The
-   ! lengths these are called with -- len0, leni, lenj, lenk -- are all
-   ! multiples of nf, and 4*blk divides nf whenever the shell is an L shell,
-   ! so the pattern tiles the block exactly and no index arithmetic per
-   ! element is needed.
+   ! 4*blk: blk = n_comp for i, n_comp*nfi for k, and so on up the strides.
+   ! The lengths these are called with -- len0, leni, lenj, lenk -- are all
+   ! multiples of nf*n_comp, and 4*blk divides nf*n_comp whenever the shell
+   ! is an L shell, so the pattern tiles the block exactly and no index
+   ! arithmetic per element is needed.  For a plain integral n_comp = 1 and
+   ! blk is what it reads as; dropping the factor is invisible to int2e and
+   ! scrambles every derivative, which is what l_shell_grad_check guards.
    !
    ! The two shell-normalisation factors ride here rather than in
    ! common_factor (see sp_split_fac in cint_g2e), so the s and p sub-blocks

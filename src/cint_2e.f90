@@ -287,7 +287,12 @@ contains
       ! the quartet the two are the same predicate on the same value.
       !
       ! `blk_x` is the stride at which that index's component changes within
-      ! the (i,k,l,j) block -- see cint_prim_to_ctr_sp_0.
+      ! the contraction buffers -- see cint_prim_to_ctr_sp_0.  A derivative
+      ! integral's tensor component rides FASTEST there, gout(n*n_comp+m)
+      ! until cint_dmat_transpose at the bottom, so every blk carries a
+      ! factor n_comp; a plain integral has n_comp = 1 and the factor
+      ! vanishes.  Without it int2e passed and int2e_ip1 scrambled an L
+      ! shell's s and p coefficients across the three components.
       logical :: sp_i, sp_j, sp_k, sp_l, any_sp
       logical :: ctr_i, ctr_j, ctr_k, ctr_l
       integer :: blk_i, blk_j, blk_k, blk_l
@@ -336,16 +341,18 @@ contains
       sp_k = btest(envs%sp_mask, 2); sp_l = btest(envs%sp_mask, 3)
       ctr_i = i_ctr > 1 .or. sp_i; ctr_j = j_ctr > 1 .or. sp_j
       ctr_k = k_ctr > 1 .or. sp_k; ctr_l = l_ctr > 1 .or. sp_l
-      blk_i = 1
-      blk_k = envs%nfi
-      blk_l = envs%nfi * envs%nfk
-      blk_j = envs%nfi * envs%nfk * envs%nfl
+      ! n_comp, not 1: the component index of the gout block sits inside
+      ! every one of these strides -- see the note on blk_x above.
+      n_comp = envs%ncomp_e1 * envs%ncomp_e2 * envs%ncomp_tensor
+      blk_i = n_comp
+      blk_k = n_comp * envs%nfi
+      blk_l = n_comp * envs%nfi * envs%nfk
+      blk_j = n_comp * envs%nfi * envs%nfk * envs%nfl
 
       expcutoff = envs%expcutoff
       rr_ij = sum(envs%rirj * envs%rirj)
       rr_kl = sum(envs%rkrl * envs%rkrl)
       nf = envs%nf
-      n_comp = envs%ncomp_e1 * envs%ncomp_e2 * envs%ncomp_tensor
 
       use_opt = .false.
       if (associated(ws%opt)) use_opt = cint_opt_usable(ws%opt, 4, envs)
