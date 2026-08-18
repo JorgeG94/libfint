@@ -49,6 +49,15 @@ program l_shell_grad_check
 
    call build_basis()
 
+   ! Fail on what is actually wrong rather than three lines later on a
+   ! quantity derived from it: a bad shell count surfaces as an absurd `nao`,
+   ! which says nothing about where it came from.
+   if (npbas <= 0 .or. npbas > MAXBAS .or. nsbas <= 0 .or. nsbas > MAXBAS) then
+      print "(A,I0,A,I0,A,I0)", "  FAIL: shell counts out of range -- packed ", &
+         npbas, ", split ", nsbas, ", limit ", MAXBAS
+      stop 1
+   end if
+
    nbad = 0
    do sph = 1, 0, -1
       nao_p = nao_of(pbas, npbas, sph)
@@ -78,6 +87,15 @@ contains
       real(dp) :: e3(3), c3(3), e2(2), c22(2,4), e1(1), c1(1)
       real(dp) :: cL3(3,2), cL1(1,2)
 
+      ! The bas tables, not just their counters.  `put` writes seven of the
+      ! eight BAS_SLOTS per shell -- slot 7 is libcint's unused padding -- so
+      ! without this the padding of every shell is whatever was on the stack.
+      ! Harmless on a compiler that hands back zeroed memory, and not a thing
+      ! to depend on: Intel 2025.0 fails these checks with an `nao` near 1e9,
+      ! which is what reading uninitialised memory looks like, and the same
+      ! value appearing twice means it is deterministic rather than noise.
+      pbas = 0
+      sbas = 0
       atm = 0
       call set_atom(0, 6, [0.0_dp, 0.0_dp, 0.0_dp])
       call set_atom(1, 1, [0.0_dp, 0.0_dp, 1.9_dp])
