@@ -17,7 +17,8 @@
 module cint_g2e
    use cint_const,  only: dp
    use cint_envs
-   use cint_bas,    only: cint_cart_comp, ANG_OF, NCTR_OF, ATOM_OF, PTR_COORD
+   use cint_bas,    only: cint_cart_comp, cint_cart_comp_sp, cint_bas_is_sp, &
+                          NF_SP, ANG_OF, NCTR_OF, ATOM_OF, PTR_COORD
    use cint_g1e,    only: cint_common_fac_sp, cint_g1e_index_xyz
    use cint_rys_roots, only: cint_rys_roots_lr, cint_rys_roots_sr
    use cint_g2e_unrolled, only: cint_g0_2e_2d4d_unrolled, cint_srg0_2e_2d4d_unrolled
@@ -72,10 +73,26 @@ contains
       envs%x_ctr(1) = bas_of(envs, NCTR_OF, j_sh)
       envs%x_ctr(2) = bas_of(envs, NCTR_OF, k_sh)
       envs%x_ctr(3) = bas_of(envs, NCTR_OF, l_sh)
+      ! L SHELLS.  ANG_OF already gave i_l = 1 for one, so every ceiling,
+      ! stride and Rys order below is the p sub-block's and needs no change
+      ! -- the g tensor at li_ceil = 1 holds both components already, index 0
+      ! being the s function and the x/y/z blocks at index 1 the p.  What
+      ! does change is the component count: four, not three.
+      envs%sp_mask = 0
+      if (cint_bas_is_sp(i_sh, bas)) envs%sp_mask = ibset(envs%sp_mask, 0)
+      if (cint_bas_is_sp(j_sh, bas)) envs%sp_mask = ibset(envs%sp_mask, 1)
+      if (cint_bas_is_sp(k_sh, bas)) envs%sp_mask = ibset(envs%sp_mask, 2)
+      if (cint_bas_is_sp(l_sh, bas)) envs%sp_mask = ibset(envs%sp_mask, 3)
       envs%nfi = (envs%i_l+1)*(envs%i_l+2)/2
       envs%nfj = (envs%j_l+1)*(envs%j_l+2)/2
       envs%nfk = (envs%k_l+1)*(envs%k_l+2)/2
       envs%nfl = (envs%l_l+1)*(envs%l_l+2)/2
+      if (envs%sp_mask /= 0) then
+         if (btest(envs%sp_mask, 0)) envs%nfi = NF_SP
+         if (btest(envs%sp_mask, 1)) envs%nfj = NF_SP
+         if (btest(envs%sp_mask, 2)) envs%nfk = NF_SP
+         if (btest(envs%sp_mask, 3)) envs%nfl = NF_SP
+      end if
       ! note the order: i, k, l, j -- the g array is laid out (i,k,l,j)
       envs%nf = envs%nfi * envs%nfk * envs%nfl * envs%nfj
 
@@ -89,8 +106,8 @@ contains
       envs%rl(0) = env(ip); envs%rl(1) = env(ip+1); envs%rl(2) = env(ip+2)
 
       envs%common_factor = (PI*PI*PI) * 2.0_dp / SQRTPI &
-         * cint_common_fac_sp(envs%i_l) * cint_common_fac_sp(envs%j_l) &
-         * cint_common_fac_sp(envs%k_l) * cint_common_fac_sp(envs%l_l)
+         * sp_split_fac(envs, 0, envs%i_l) * sp_split_fac(envs, 1, envs%j_l) &
+         * sp_split_fac(envs, 2, envs%k_l) * sp_split_fac(envs, 3, envs%l_l)
       if (env(PTR_EXPCUTOFF) == 0.0_dp) then
          envs%expcutoff = EXPCUTOFF
       else
@@ -397,6 +414,93 @@ contains
       envs%g_stride_j = envs%g_stride_k
    end subroutine cint_init_int2c2e_envvars
 
+   ! The shell-normalisation factor common_factor carries for one index.
+   !
+   ! An L shell's two sub-blocks want different ones -- 1/sqrt(4pi) for the
+   ! s, sqrt(3/4pi) for the p -- and common_factor is a single scalar for the
+   ! whole quartet, so it cannot carry either.  It carries 1 instead and the
+   ! per-component factor rides on the contraction coefficient, in
+   ! cint_prim_to_ctr_sp_0/_1, which is the only other place a per-component
+   ! scalar can be applied without touching the g tensor.
+   pure function sp_split_fac(envs, x, l) result(f)
+      type(cint_env_vars), intent(in) :: envs
+      integer,             intent(in) :: x, l
+      real(dp) :: f
+      if (btest(envs%sp_mask, x)) then
+         f = 1.0_dp
+      else
+         f = cint_common_fac_sp(l)
+      end if
+   end function sp_split_fac
+
+   ! Cartesian component powers for one index of a quartet, L shell or not.
+   pure subroutine sp_cart_comp(nx, ny, nz, envs, x, l)
+      integer, intent(out) :: nx(0:), ny(0:), nz(0:)
+      type(cint_env_vars), intent(in) :: envs
+      integer, intent(in) :: x, l
+      if (btest(envs%sp_mask, x)) then
+         call cint_cart_comp_sp(nx, ny, nz)
+      else
+         call cint_cart_comp(nx, ny, nz, l)
+      end if
+   end subroutine sp_cart_comp
+
+   ! The index map when at least one of the four shells is an L shell.
+   !
+   ! Structurally the routine below with the unrolling taken out -- and a
+   ! separate routine for exactly that reason.  The i_l select there writes
+   ! the s, p and d offsets as immediates because that is what every basis
+   ! set is made of; threading a fifth case through it would put a test in
+   ! front of the case that matters.  An L shell's four components are the
+   ! l = 1 map with (0,0,0) prepended, which the general form already
+   ! produces once cint_cart_comp_sp supplies the table.
+   subroutine g2e_index_xyz_sp(idx, envs)
+      integer, intent(out) :: idx(0:)
+      type(cint_env_vars), intent(in) :: envs
+
+      integer :: i, j, k, l, n, di, dj, dk, dl, ofx, ofy, ofz
+      integer :: ofkx, ofky, ofkz, oflx, ofly, oflz, ofjx, ofjy, ofjz
+      integer :: i_nx(0:CART_MAX-1), i_ny(0:CART_MAX-1), i_nz(0:CART_MAX-1)
+      integer :: j_nx(0:CART_MAX-1), j_ny(0:CART_MAX-1), j_nz(0:CART_MAX-1)
+      integer :: k_nx(0:CART_MAX-1), k_ny(0:CART_MAX-1), k_nz(0:CART_MAX-1)
+      integer :: l_nx(0:CART_MAX-1), l_ny(0:CART_MAX-1), l_nz(0:CART_MAX-1)
+
+      di = envs%g_stride_i
+      dk = envs%g_stride_k
+      dl = envs%g_stride_l
+      dj = envs%g_stride_j
+      call sp_cart_comp(i_nx, i_ny, i_nz, envs, 0, envs%i_l)
+      call sp_cart_comp(j_nx, j_ny, j_nz, envs, 1, envs%j_l)
+      call sp_cart_comp(k_nx, k_ny, k_nz, envs, 2, envs%k_l)
+      call sp_cart_comp(l_nx, l_ny, l_nz, envs, 3, envs%l_l)
+
+      ofx = 0
+      ofy = envs%g_size
+      ofz = envs%g_size * 2
+      n = 0
+      do j = 0, envs%nfj - 1
+         ofjx = ofx + dj * j_nx(j)
+         ofjy = ofy + dj * j_ny(j)
+         ofjz = ofz + dj * j_nz(j)
+         do l = 0, envs%nfl - 1
+            oflx = ofjx + dl * l_nx(l)
+            ofly = ofjy + dl * l_ny(l)
+            oflz = ofjz + dl * l_nz(l)
+            do k = 0, envs%nfk - 1
+               ofkx = oflx + dk * k_nx(k)
+               ofky = ofly + dk * k_ny(k)
+               ofkz = oflz + dk * k_nz(k)
+               do i = 0, envs%nfi - 1
+                  idx(n+0) = ofkx + di * i_nx(i)
+                  idx(n+1) = ofky + di * i_ny(i)
+                  idx(n+2) = ofkz + di * i_nz(i)
+                  n = n + 3
+               end do
+            end do
+         end do
+      end do
+   end subroutine g2e_index_xyz_sp
+
    ! For each (i,k,l,j) Cartesian component, the three offsets into g.
    subroutine cint_g2e_index_xyz(idx, envs)
       integer, intent(out) :: idx(0:)
@@ -408,6 +512,11 @@ contains
       integer :: j_nx(0:CART_MAX-1), j_ny(0:CART_MAX-1), j_nz(0:CART_MAX-1)
       integer :: k_nx(0:CART_MAX-1), k_ny(0:CART_MAX-1), k_nz(0:CART_MAX-1)
       integer :: l_nx(0:CART_MAX-1), l_ny(0:CART_MAX-1), l_nz(0:CART_MAX-1)
+
+      if (envs%sp_mask /= 0) then
+         call g2e_index_xyz_sp(idx, envs)
+         return
+      end if
 
       di = envs%g_stride_i
       dk = envs%g_stride_k

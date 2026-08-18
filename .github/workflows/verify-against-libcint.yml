@@ -36,9 +36,28 @@ jobs:
         # Two compiler families, because a bit-identity claim that only holds
         # under one compiler is not much of a claim.  Both need -fp-model or
         # equivalent: see src/CMakeLists.txt, where the Intel flags live.
+        #
+        # 2026.0 and not 2025.0, which miscompiles l_shell_check and
+        # l_shell_grad_check.  The symptom is a shell count that reads back as
+        # an `nao` near 1e9; instrumenting it shows every argument arriving at
+        # the table writer correctly and the scalar shell counter ending up
+        # right, while the writes into the table itself never land.  It
+        # survives an explicit-shape dummy, removing the array dummy entirely
+        # so the writes go to the host-associated array, and -O0.  gfortran
+        # under -fcheck=all is clean, and four minimal reproductions of the
+        # pattern all pass under Intel, so there is no small case to report.
+        #
+        # What says this is the compiler and not the library: on 2025.0 the
+        # other 27 checks pass, catalogue_check and int2e_check among them, and
+        # those are the ones that hold every integral to libcint bit for bit.
+        # Two test harnesses miscompile; the integrals do not.  ifx 2026.0
+        # produces numbers identical to gfortran's to the last digit.
+        #
+        # 2025.0 keeps its place in multi-compiler-ci.yml, which builds without
+        # running, so the library is still known to compile there.
         toolchain:
           - {compiler: gcc, version: 13}
-          - {compiler: intel, version: '2025.0'}
+          - {compiler: intel, version: '2026.0'}
 
     steps:
     - name: Checkout code

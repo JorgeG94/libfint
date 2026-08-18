@@ -186,6 +186,20 @@ module cint_envs
       ! different: it has no C counterpart, it selects the F12 kernel, and
       ! only the F12 setup assigns it, so every other path reads the default.
       integer :: g0_kind = G0_COULOMB
+      ! WHICH OF THE FOUR SHELLS IS AN L SHELL -- s and p on shared
+      ! exponents, see KAPPA_SP_SHELL in cint_bas -- as a bitmask, bit x for
+      ! shls(x).
+      !
+      ! THE SECOND COMPONENT THAT KEEPS A DEFAULT, and for g0_kind's reason:
+      ! only cint_init_int2e_envvars ever assigns it, so every other init
+      ! routine -- 1e, 3c1e, 3c2e, 2c2e, the spinor ones, the 620 generated
+      ! entry points that go through them -- reads the default and behaves
+      ! exactly as it did before L shells existed.
+      !
+      ! One integer rather than four logicals because the question the hot
+      ! paths ask is "is any of them an L shell?", and that is one compare
+      ! against zero instead of four loads and three ors.
+      integer :: sp_mask = 0
 
       procedure(gout_iface), nopass, pointer :: f_gout => null()
    end type cint_env_vars
@@ -327,6 +341,13 @@ contains
                          + envs%l_l
       end select
    end function cint_opt_idx_key
+
+   ! Is shls(x) an L shell?  x is 0..3 in the i, j, k, l order of shls.
+   pure logical function envs_is_sp(envs, x) result(yes)
+      type(cint_env_vars), intent(in) :: envs
+      integer,             intent(in) :: x
+      yes = btest(envs%sp_mask, x)
+   end function envs_is_sp
 
    ! bas(SLOT, I) and atm(SLOT, I), in the C's spelling.
    pure function bas_of(envs, slot, i) result(v)

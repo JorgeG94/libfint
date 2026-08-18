@@ -96,6 +96,15 @@ add_test(NAME rys_check
   COMMAND $<TARGET_FILE:rys_check> ${PROJECT_BINARY_DIR}/rys_golden.bin)
 set_tests_properties(rys_check PROPERTIES FIXTURES_REQUIRED fint_rys)
 
+# L shells, which libcint cannot express and so cannot be compared against.
+# The reference is libfint's own split-shell path, which int2e_check holds to
+# the last bit against the C -- so this is a comparison with libcint by one
+# more step than the others.  Links `fint` alone for that reason.
+add_executable(l_shell_check l_shell_check.f90)
+target_link_libraries(l_shell_check fint m)
+target_include_directories(l_shell_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME l_shell_check COMMAND $<TARGET_FILE:l_shell_check>)
+
 # .f90 rather than .F90, but still compared against the C.
 foreach(chk spinor_check)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${chk}.f90)

@@ -516,3 +516,82 @@ One other named lead, still not chased:
 9. Re-measure per arity before claiming the fix generalised. §3c is the worked
    counter-example: the same hoist was worth 15% on one loop and 0.005% on
    another.
+
+## 9. L shells — the one lever that is not a kernel
+
+Everything above is about executing the same work in fewer instructions.
+This section is about doing less work, and it is the larger number.
+
+**The decomposition.** A "6-31G" Fock build on a 17-atom molecule takes
+GAMESS 0.40 s and libfint 1.87 s. Running GAMESS four ways — `$CONTRL
+INTTYP=` selects the integral package, and a hand-written 6-31G with S
+and P split apart gives it the 55 shells libcint has rather than its own
+41 — separates the two causes:
+
+| 6-31G, first Fock build | shells | time |
+|---|---:|---:|
+| GAMESS BEST, L shells | 41 | 0.40 s |
+| GAMESS RYSQUAD, L shells | 41 | 1.00 s |
+| GAMESS BEST, split S/P | 55 | 1.0 s |
+| GAMESS RYSQUAD, split S/P | 55 | 2.1 s |
+| libfint / libcint | 55 | 1.87 s |
+
+L shells are worth 2.1–2.5×, rotated-axis is worth ~2.1×, and **libfint's
+Rys is already 1.12× faster than GAMESS's at equal shell structure** (1.66×
+on cc-pVDZ). 2.5 × 2.1 / 1.12 = 4.7, the observed gap. There is no
+kernel-quality problem in the 4.7×; there is a shell-count problem.
+
+**What it cost to fix.** Almost nothing in the machinery that matters. At
+`li_ceil = 1` the `g` tensor already holds both components — index 0 is
+the s function, the x/y/z blocks at index 1 are the p — so `cint_g0_2e`,
+the unrolled 2d4d kernels and the `g` layout are untouched. Nor is there
+a cart-to-spherical transform to write: s and p are exactly the two `l`
+for which the spherical functions *are* the Cartesian ones, which is why
+`cint_c2s_*_sph` return `RESULT_IN_GCART` below `l = 2`. The whole change
+is bookkeeping plus one contraction routine.
+
+**Measured**, gly3 in 6-31G, 24 atoms, 61 packed shells against 87 split,
+139 spherical functions either way, every unique quartet through
+`int2e_sph`, minimum of four pinned runs: **2.15×** with an optimizer,
+**2.27×** without.
+
+**The one place it costs anything** is the primitive-to-contracted step,
+and not for the obvious reason. The obvious one is that an L shell's
+coefficient is a vector over the four components rather than a scalar.
+The consequential one is upstream of that: at *one* contraction the loop
+does not call `prim_to_ctr` at all, it folds the coefficient into `fac`
+— and a vector cannot ride in `fac`. So a *segmented* L shell needs a
+contraction step where a segmented plain shell needs none, and cannot
+take the `CINT2e_1111_loop`. With that routine stubbed out entirely the
+packed run is 2.485×, so it is now about 11% of the packed path.
+
+**Two shapes that look right and are slower** (§7 discipline: record the
+number):
+
+- *Collapse the four contraction levels into one pass at the innermost
+  level.* The four coefficient vectors multiply, so one nest can apply
+  all of them and the three outer buffers alias again. 6.277 s → 6.760 s.
+  The outer levels were never the cost — they run `i_prim`,
+  `i_prim*j_prim` and `i_prim*j_prim*k_prim` times less often than the
+  innermost one. Only the innermost pass is the cost, and collapsing does
+  not remove it.
+- *Fold the coefficient into the gout kernel*, so no contraction step
+  exists at any level and gout writes straight into `gctr`. This is the
+  shape that removes the pass rather than moving it, and it should win.
+  It cost 637M instructions against the 432M of the plain gout plus the
+  two contraction routines it replaced. A four-deep coefficient nest with
+  the root-count `select` inside it is not the flat loop over `nf` that
+  `cint_gout2e` is, and gcc vectorises the one and not the other. **The
+  multiply was never the cost; the loop shape was** — which is §2 again,
+  from the other side.
+
+What did work was writing the general form out at `blk = 1`, the stride
+the innermost index has, as a four-wide multiply by a vector that stays
+in a register: 191M instructions to 107M, and the packed run 1,040M to
+953M. Closing the remaining 11% means a fused kernel that keeps gout's
+flat inner loop. That is still on the table.
+
+**Scope.** `int2e_cart` and `int2e_sph` only. The derivative entry points
+go through the same `cint_init_int2e_envvars` and would need their own
+`li_ceil` work; nothing marks a shell composite unless a caller means to,
+and `sp_mask` defaults to zero, so every other path is bit-identical.

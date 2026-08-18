@@ -22,8 +22,9 @@ module cint_bas
    public :: cint_tot_cgto_cart, cint_tot_cgto_spheric, cint_tot_cgto_spinor
    public :: cint_shells_cart_offset, cint_shells_spheric_offset
    public :: cint_shells_spinor_offset
-   public :: cint_cart_comp
+   public :: cint_cart_comp, cint_cart_comp_sp
    public :: cint_square_dist, cint_gto_norm
+   public :: cint_bas_is_sp
 
    ! Slot offsets, 0-based, as in include/cint.h.in.
    integer, parameter, public :: ATOM_OF   = 0
@@ -34,6 +35,32 @@ module cint_bas
    integer, parameter, public :: PTR_EXP   = 5
    integer, parameter, public :: PTR_COEFF = 6
    integer, parameter, public :: BAS_SLOTS = 8
+
+   ! L SHELLS.  A shell that carries both s and p on one set of exponents,
+   ! with a separate contraction column for each -- what GAMESS calls an L
+   ! shell and what every Pople basis is written in.  `bas` has one ANG_OF
+   ! slot, so libcint cannot say it and splits such a shell in two at the
+   ! packing boundary; this marker says it instead.
+   !
+   ! The convention, and it is checked nowhere because `bas` is the caller's:
+   !
+   !   ANG_OF    = 1          -- the highest l present, so every ceiling,
+   !                             stride and Rys order the machinery derives
+   !                             is the one the p sub-block needs.  The s
+   !                             sub-block is then computed with more roots
+   !                             than it needs, which is exact: Rys is exact
+   !                             to degree 2n-1.
+   !   KAPPA_OF  = KAPPA_SP_SHELL
+   !   PTR_COEFF = nprim*nctr s coefficients, then nprim*nctr p ones -- the
+   !               same block a plain shell with 2*nctr contractions would
+   !               have, which is why no packer has to move anything.
+   !
+   ! KAPPA_OF is the relativistic kappa, zero on every non-relativistic
+   ! shell and within +-(ANG_MAX+1) on every spinor one, so a value outside
+   ! that range cannot collide with a real kappa.
+   integer, parameter, public :: KAPPA_SP_SHELL = 64
+   ! s plus p: one component then three, in that order.
+   integer, parameter, public :: NF_SP = 4
 
    integer, parameter, public :: CHARGE_OF       = 0
    integer, parameter, public :: PTR_COORD       = 1
@@ -81,16 +108,36 @@ contains
       end if
    end function cint_len_spinor
 
+   ! Does this shell carry both s and p on one set of exponents?  See the
+   ! note on KAPPA_SP_SHELL above.
+   pure function cint_bas_is_sp(bas_id, bas) result(yes)
+      integer, intent(in) :: bas_id, bas(0:)
+      logical :: yes
+      yes = basval(bas, KAPPA_OF, bas_id) == KAPPA_SP_SHELL
+   end function cint_bas_is_sp
+
    pure function cint_cgto_cart(bas_id, bas) result(n)
       integer, intent(in) :: bas_id, bas(0:)
       integer :: n, l
+      if (cint_bas_is_sp(bas_id, bas)) then
+         n = NF_SP * basval(bas, NCTR_OF, bas_id)
+         return
+      end if
       l = basval(bas, ANG_OF, bas_id)
       n = (l+1)*(l+2)/2 * basval(bas, NCTR_OF, bas_id)
    end function cint_cgto_cart
 
+   ! s and p are the two l for which the spherical functions ARE the
+   ! Cartesian ones, in the same order -- which is why cint_c2s_*_sph return
+   ! RESULT_IN_GCART below l = 2.  An L shell is therefore four functions
+   ! either way, and needs no transform at all.
    pure function cint_cgto_spheric(bas_id, bas) result(n)
       integer, intent(in) :: bas_id, bas(0:)
       integer :: n
+      if (cint_bas_is_sp(bas_id, bas)) then
+         n = NF_SP * basval(bas, NCTR_OF, bas_id)
+         return
+      end if
       n = (basval(bas, ANG_OF, bas_id) * 2 + 1) * basval(bas, NCTR_OF, bas_id)
    end function cint_cgto_spheric
 
@@ -198,6 +245,17 @@ contains
          end do
       end do
    end subroutine cint_cart_comp
+
+   ! The same, for an L shell: the s function first, then the three p in the
+   ! order a plain l = 1 shell has them.  That order is what makes the sp
+   ! index map below the l = 1 map with one entry prepended, and what lets
+   ! the cart-to-spherical stage stay the identity.
+   pure subroutine cint_cart_comp_sp(nx, ny, nz)
+      integer, intent(out) :: nx(0:), ny(0:), nz(0:)
+      nx(0:3) = [0, 1, 0, 0]
+      ny(0:3) = [0, 0, 1, 0]
+      nz(0:3) = [0, 0, 0, 1]
+   end subroutine cint_cart_comp_sp
 
    pure function cint_square_dist(r1, r2) result(d)
       real(dp), intent(in) :: r1(0:), r2(0:)
