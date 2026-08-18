@@ -31,6 +31,7 @@ module cint_opt
                              cint_log_max_pgto_coeff, cint_non0coeff_byshell, &
                              OPT_NOVALUE, LMAX1, MAX_PGTO_FOR_PAIRDATA
    use cint_bas,       only: ANG_OF, NPRIM_OF, NCTR_OF, PTR_EXP, PTR_COEFF, &
+                             cint_bas_is_sp, &
                              ATOM_OF, PTR_COORD
    implicit none
    private
@@ -97,6 +98,12 @@ contains
       do i = 0, nbas - 1
          iprim = bas(8*i + NPRIM_OF)
          ictr  = bas(8*i + NCTR_OF)
+         ! An L shell's coefficient block is 2*nctr columns wide -- the s
+         ! ones then the p ones -- and the bound has to see both, or a
+         ! primitive whose p contraction dominates gets screened on its s
+         ! coefficient.  Taking the max over more columns is the safe
+         ! direction in any case: the bound only ever loosens.
+         if (cint_bas_is_sp(i, bas)) ictr = ictr * 2
          opt%log_maxc_off(i) = off
          call cint_log_max_pgto_coeff(opt%log_maxc(off:), env, &
                                       bas(8*i + PTR_COEFF), iprim, ictr)

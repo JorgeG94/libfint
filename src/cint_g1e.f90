@@ -23,6 +23,7 @@ module cint_g1e
    public :: cint_init_int1e_envvars, cint_g1e_index_xyz, cint_g1e_ovlp
    public :: cint_g1e_nuc, cint_nuc_mod
    public :: cint_common_fac_sp, cint_prim_to_ctr_0, cint_prim_to_ctr_1
+   public :: cint_prim_to_ctr_sp_0, cint_prim_to_ctr_sp_1
    ! The G1E_* operations the generated gout kernels reach through.  In the C
    ! these hide behind macros in g1e.h; the macros split into two kinds --
    ! calls like G1E_D_J, and offset assignments like G1E_R_I -- which is the
@@ -33,6 +34,12 @@ module cint_g1e
 
    real(dp), parameter :: SQRTPI = 1.7724538509055160272981674833411451_dp
    real(dp), parameter :: PI     = 3.1415926535897932384626433832795029_dp
+
+   ! The shell-normalisation factors cint_common_fac_sp returns, named
+   ! because the L-shell contraction below needs them as constants and two
+   ! copies of a literal is two things to keep in step.
+   real(dp), parameter :: FAC_SP_S = 0.282094791773878143_dp
+   real(dp), parameter :: FAC_SP_P = 0.488602511902919921_dp
 
 contains
 
@@ -212,8 +219,8 @@ contains
       integer, intent(in) :: l
       real(dp) :: f
       select case (l)
-      case (0); f = 0.282094791773878143_dp
-      case (1); f = 0.488602511902919921_dp
+      case (0); f = FAC_SP_S
+      case (1); f = FAC_SP_P
       case default; f = 1.0_dp
       end select
    end function cint_common_fac_sp
@@ -261,6 +268,83 @@ contains
          end do
       end do
    end subroutine cint_prim_to_ctr_1
+
+   ! Primitive -> contracted for an L shell, assigning.
+   !
+   ! THE ONE PLACE AN L SHELL COSTS ANYTHING.  The two routines above apply
+   ! ONE coefficient per (primitive, contraction) across the whole nf block,
+   ! because a shell has one angular momentum and so one coefficient column.
+   ! An L shell has two, and which one a given entry wants depends on where
+   ! it sits: the s function wants cs, the three p want cp.
+   !
+   ! That position is not something the block has to be told.  gout is laid
+   ! out (i,k,l,j) with i fastest, so the component index of whichever shell
+   ! is being contracted holds still for `blk` entries and cycles every
+   ! 4*blk: blk = 1 for i, nfi for k, nfi*nfk for l, nfi*nfk*nfl for j.  The
+   ! lengths these are called with -- len0, leni, lenj, lenk -- are all
+   ! multiples of nf, and 4*blk divides nf whenever the shell is an L shell,
+   ! so the pattern tiles the block exactly and no index arithmetic per
+   ! element is needed.
+   !
+   ! The two shell-normalisation factors ride here rather than in
+   ! common_factor (see sp_split_fac in cint_g2e), so the s and p sub-blocks
+   ! each get the fac_sp they would have had as separate shells.
+   !
+   ! WRITTEN BESIDE THE SCALAR ROUTINES, NOT IN PLACE OF THEM.  Those two are
+   ! 7.2% of a Fock build, and the coefficient there is loop-invariant --
+   ! hoisted into a register once per contraction.  Generalising them to a
+   ! length-nf coefficient vector would make every basis without an L shell
+   ! in it pay for the ones that have them.
+   pure subroutine cint_prim_to_ctr_sp_0(buf, gcoff, gpoff, coeff, coff, nf, &
+                                         blk, nprim, nctr)
+      real(dp), intent(inout) :: buf(0:)
+      real(dp), intent(in)    :: coeff(0:)
+      integer,  intent(in)    :: gcoff, gpoff, coff, nf, blk, nprim, nctr
+      integer  :: ic, m, n, o, gcb
+      real(dp) :: cs, cp
+      do ic = 0, nctr - 1
+         cs = coeff(coff + nprim*ic)        * FAC_SP_S
+         cp = coeff(coff + nprim*(nctr+ic)) * FAC_SP_P
+         gcb = gcoff + nf*ic
+         do o = 0, nf - 1, 4*blk
+            do n = 0, blk - 1
+               buf(gcb + o + n) = cs * buf(gpoff + o + n)
+            end do
+            do m = blk, 4*blk - 1
+               buf(gcb + o + m) = cp * buf(gpoff + o + m)
+            end do
+         end do
+      end do
+   end subroutine cint_prim_to_ctr_sp_0
+
+   ! The same, accumulating.
+   !
+   ! No sortedidx here, unlike cint_prim_to_ctr_1.  That map is built from
+   ! the first nctr coefficient columns alone, and an L shell has 2*nctr --
+   ! a contraction whose s column is zero and whose p column is not would be
+   ! dropped.  Walking every contraction is what the map saves, and for the
+   ! segmented shells L shells actually appear in there is exactly one.
+   pure subroutine cint_prim_to_ctr_sp_1(buf, gcoff, gpoff, coeff, coff, nf, &
+                                         blk, nprim, nctr)
+      real(dp), intent(inout) :: buf(0:)
+      real(dp), intent(in)    :: coeff(0:)
+      integer,  intent(in)    :: gcoff, gpoff, coff, nf, blk, nprim, nctr
+      integer  :: ic, m, n, o, gcb
+      real(dp) :: cs, cp
+      do ic = 0, nctr - 1
+         cs = coeff(coff + nprim*ic)        * FAC_SP_S
+         cp = coeff(coff + nprim*(nctr+ic)) * FAC_SP_P
+         gcb = gcoff + nf*ic
+         do o = 0, nf - 1, 4*blk
+            do n = 0, blk - 1
+               buf(gcb + o + n) = buf(gcb + o + n) + cs * buf(gpoff + o + n)
+            end do
+            do m = blk, 4*blk - 1
+               buf(gcb + o + m) = buf(gcb + o + m) + cp * buf(gpoff + o + m)
+            end do
+         end do
+      end do
+   end subroutine cint_prim_to_ctr_sp_1
 
    ! d/dx on the bra: f(i) = i*g(i-1) - 2*ai*g(i+1)
    subroutine cint_nabla1i_1e(g, foff, goff, li, lj, lk, envs)

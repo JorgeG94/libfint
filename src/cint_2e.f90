@@ -21,9 +21,10 @@ module cint_2e
                              ws_mark, ws_rewind, ws_opt_log_maxc, ws_opt_non0
    use cint_screen,    only: pair_data, cint_set_pairdata, &
                              cint_log_max_pgto_coeff, cint_non0coeff_byshell
-   use cint_g1e,       only: cint_prim_to_ctr_0, cint_prim_to_ctr_1
+   use cint_g1e,       only: cint_prim_to_ctr_0, cint_prim_to_ctr_1, &
+                             cint_prim_to_ctr_sp_0, cint_prim_to_ctr_sp_1
    use cint_g2e
-   use cint_bas,       only: NPRIM_OF, PTR_EXP, PTR_COEFF
+   use cint_bas,       only: NPRIM_OF, PTR_EXP, PTR_COEFF, NF_SP
    use cint_blas,      only: cint_dmat_transpose, cint_dplus_transpose
    use cint_cart2sph,  only: cint_c2s_bra_sph, cint_c2s_ket_sph, &
                                 RESULT_IN_GCART, RESULT_IN_GSPH
@@ -277,6 +278,19 @@ contains
       ! built with a different angular bound and would change which
       ! primitives survive screening.
       logical :: use_opt, use_f12
+      ! L SHELLS.  `sp_x` is "this index carries s and p together"; `ctr_x`
+      ! is "this index needs an explicit primitive-to-contracted step", which
+      ! is the question the loop below actually asks and which an L shell
+      ! answers yes to even at one contraction -- its coefficient is not a
+      ! scalar and so cannot be folded into `fac`.  Every `x_ctr == 1` test
+      ! the loop used to make is now `.not. ctr_x`, and with no L shell in
+      ! the quartet the two are the same predicate on the same value.
+      !
+      ! `blk_x` is the stride at which that index's component changes within
+      ! the (i,k,l,j) block -- see cint_prim_to_ctr_sp_0.
+      logical :: sp_i, sp_j, sp_k, sp_l, any_sp
+      logical :: ctr_i, ctr_j, ctr_k, ctr_l
+      integer :: blk_i, blk_j, blk_k, blk_l
       integer :: okey, g0ok
       integer, parameter :: E_I = 0, E_J = 1, E_K = 2, E_L = 3, E_G = 4, E_M = 5
       logical :: flag(0:5)
@@ -317,6 +331,16 @@ contains
       ci_o = bas_of(envs, PTR_COEFF, i_sh); cj_o = bas_of(envs, PTR_COEFF, j_sh)
       ck_o = bas_of(envs, PTR_COEFF, k_sh); cl_o = bas_of(envs, PTR_COEFF, l_sh)
 
+      any_sp = envs%sp_mask /= 0
+      sp_i = btest(envs%sp_mask, 0); sp_j = btest(envs%sp_mask, 1)
+      sp_k = btest(envs%sp_mask, 2); sp_l = btest(envs%sp_mask, 3)
+      ctr_i = i_ctr > 1 .or. sp_i; ctr_j = j_ctr > 1 .or. sp_j
+      ctr_k = k_ctr > 1 .or. sp_k; ctr_l = l_ctr > 1 .or. sp_l
+      blk_i = 1
+      blk_k = envs%nfi
+      blk_l = envs%nfi * envs%nfk
+      blk_j = envs%nfi * envs%nfk * envs%nfl
+
       expcutoff = envs%expcutoff
       rr_ij = sum(envs%rirj * envs%rirj)
       rr_kl = sum(envs%rkrl * envs%rkrl)
@@ -332,8 +356,13 @@ contains
          call ws_opt_log_maxc(ws, olm,          i_sh, i_prim)
          call ws_opt_log_maxc(ws, olm + i_prim, j_sh, j_prim)
       else
-      call cint_log_max_pgto_coeff(ws%d(olm:),                        envs%env, ci_o, i_prim, i_ctr)
-      call cint_log_max_pgto_coeff(ws%d(olm+i_prim:),                 envs%env, cj_o, j_prim, j_ctr)
+      ! merge(2,1,sp_*): an L shell's coefficient block is 2*nctr columns
+      ! wide, and the bound this builds has to see the p ones too or a pair
+      ! whose p contraction dominates gets screened on its s coefficient.
+      call cint_log_max_pgto_coeff(ws%d(olm:), envs%env, ci_o, i_prim, &
+                                   i_ctr*merge(2, 1, sp_i))
+      call cint_log_max_pgto_coeff(ws%d(olm+i_prim:), envs%env, cj_o, j_prim, &
+                                   j_ctr*merge(2, 1, sp_j))
       end if
 
       call ws_ensure_pd(ws, i_prim*j_prim)
@@ -347,8 +376,10 @@ contains
          call ws_opt_log_maxc(ws, olm + i_prim + j_prim,          k_sh, k_prim)
          call ws_opt_log_maxc(ws, olm + i_prim + j_prim + k_prim, l_sh, l_prim)
       else
-      call cint_log_max_pgto_coeff(ws%d(olm+i_prim+j_prim:),          envs%env, ck_o, k_prim, k_ctr)
-      call cint_log_max_pgto_coeff(ws%d(olm+i_prim+j_prim+k_prim:),   envs%env, cl_o, l_prim, l_ctr)
+      call cint_log_max_pgto_coeff(ws%d(olm+i_prim+j_prim:), envs%env, ck_o, k_prim, &
+                                   k_ctr*merge(2, 1, sp_k))
+      call cint_log_max_pgto_coeff(ws%d(olm+i_prim+j_prim+k_prim:), envs%env, cl_o, l_prim, &
+                                   l_ctr*merge(2, 1, sp_l))
       end if
 
       lkl = envs%lk_ceil + envs%ll_ceil
@@ -378,7 +409,12 @@ contains
       end if
 
       okey = -1
-      if (use_opt) then
+      if (use_opt .and. .not. any_sp) then
+         ! NOT FOR L SHELLS.  The cache is keyed on the four angular momenta
+         ! and built from a fake basis that has one shell per l, so it has no
+         ! way to hold a second map for the same l with an s prepended.  The
+         ! map is built here instead, which is what the unoptimised path does
+         ! for every quartet anyway.
          okey = ws%opt%idx_off(cint_opt_idx_key(envs, 4))
          ! l above the l_allow gen_idx was built with leaves a hole in the
          ! table.  The C indexes into it anyway and dereferences NULL; here
@@ -428,22 +464,25 @@ contains
       else
          call ws_alloc_d(ws, lenl, ogctrl)
       end if
-      if (l_ctr == 1) then
+      ! ctr_x, not x_ctr == 1: a level that has a contraction step to do
+      ! cannot share its successor's buffer, and an L shell has one whatever
+      ! its contraction count.
+      if (.not. ctr_l) then
          ogctrk = ogctrl; ik = il
       else
          call ws_alloc_d(ws, lenk, ogctrk)
       end if
-      if (k_ctr == 1) then
+      if (.not. ctr_k) then
          ogctrj = ogctrk; ij = ik
       else
          call ws_alloc_d(ws, lenj, ogctrj)
       end if
-      if (j_ctr == 1) then
+      if (.not. ctr_j) then
          ogctri = ogctrj; ii = ij
       else
          call ws_alloc_d(ws, leni, ogctri)
       end if
-      if (i_ctr == 1) then
+      if (.not. ctr_i) then
          ogout = ogctri; ig = ii
       else
          call ws_alloc_d(ws, len0, ogout)
@@ -465,7 +504,7 @@ contains
          idxp(0:) => ws%i(oidx:oidx+nf*3-1)
       end if
 
-      if (i_ctr == 1 .and. j_ctr == 1 .and. k_ctr == 1 .and. l_ctr == 1) then
+      if (.not. (ctr_i .or. ctr_j .or. ctr_k .or. ctr_l)) then
       ! Segmented shells: the C's CINT2e_1111_loop.
       !
       ! When every contraction count is one, the whole apparatus below
@@ -475,6 +514,12 @@ contains
       ! entries alias onto one -- `ig`, whichever that turned out to be -- so
       ! there is one empty flag rather than six; and every `prim_to_ctr` is
       ! guarded by a `> 1` that is false.
+      !
+      ! The test is `ctr_*` rather than `x_ctr == 1` for the L shells: one of
+      ! those has a real contraction step at every level whatever its
+      ! contraction count, because its coefficient is a vector over the four
+      ! components and cannot be folded into `fac`.  With no L shell in the
+      ! quartet the two predicates are the same.
       !
       ! `n_comp` is deliberately not part of the test.  It only decides which
       ! flag the chain lands on and whether the transpose after the loop runs;
@@ -544,7 +589,7 @@ contains
       else
       do lp = 0, l_prim - 1
          envs%al = alp(lp)
-         if (l_ctr == 1) then
+         if (.not. ctr_l) then
             fac1l = envs%common_factor * clp(lp)
          else
             fac1l = envs%common_factor
@@ -562,7 +607,7 @@ contains
             rkl(2) = (akp(kp)*envs%rk(2) + alp(lp)*envs%rl(2)) / akl
             eijcutoff = expcutoff - ccekl
             ekl = exp(-ekl)
-            if (k_ctr == 1) then
+            if (.not. ctr_k) then
                fac1k = fac1l * ckp(kp)
             else
                fac1k = fac1l
@@ -571,7 +616,7 @@ contains
 
             do jp = 0, j_prim - 1
                envs%aj = ajp(jp)
-               if (j_ctr == 1) then
+               if (.not. ctr_j) then
                   fac1j = fac1k * cjp(jp)
                else
                   fac1j = fac1k
@@ -588,7 +633,7 @@ contains
                   envs%ai = aip(ip)
                   cutoff = eijcutoff - pdp(kij)%cceij
                   expijkl = pdp(kij)%eij * ekl
-                  if (i_ctr == 1) then
+                  if (.not. ctr_i) then
                      fac1i = fac1j * cip(ip) * expijkl
                   else
                      fac1i = fac1j * expijkl
@@ -603,8 +648,16 @@ contains
                   end if
                   if (g0ok /= 0) then
                      call envs%f_gout(goutp, gp, idxp, envs, merge(1, 0, flag(ig)))
-                     if (i_ctr > 1) then
-                        if (flag(ii)) then
+                     if (ctr_i) then
+                        if (sp_i) then
+                           if (flag(ii)) then
+                              call cint_prim_to_ctr_sp_0(ws%d, ogctri, ogout, envs%env, ci_o+ip, &
+                                                         len0, blk_i, i_prim, i_ctr)
+                           else
+                              call cint_prim_to_ctr_sp_1(ws%d, ogctri, ogout, envs%env, ci_o+ip, &
+                                                         len0, blk_i, i_prim, i_ctr)
+                           end if
+                        else if (flag(ii)) then
                            call cint_prim_to_ctr_0(ws%d, ogctri, ogout, envs%env, ci_o+ip, &
                                                    len0, i_prim, i_ctr)
                         else
@@ -617,8 +670,16 @@ contains
                end do
 
                if (.not. flag(ii)) then
-                  if (j_ctr > 1) then
-                     if (flag(ij)) then
+                  if (ctr_j) then
+                     if (sp_j) then
+                        if (flag(ij)) then
+                           call cint_prim_to_ctr_sp_0(ws%d, ogctrj, ogctri, envs%env, cj_o+jp, &
+                                                      leni, blk_j, j_prim, j_ctr)
+                        else
+                           call cint_prim_to_ctr_sp_1(ws%d, ogctrj, ogctri, envs%env, cj_o+jp, &
+                                                      leni, blk_j, j_prim, j_ctr)
+                        end if
+                     else if (flag(ij)) then
                         call cint_prim_to_ctr_0(ws%d, ogctrj, ogctri, envs%env, cj_o+jp, &
                                                 leni, j_prim, j_ctr)
                      else
@@ -631,8 +692,16 @@ contains
             end do
 
             if (.not. flag(ij)) then
-               if (k_ctr > 1) then
-                  if (flag(ik)) then
+               if (ctr_k) then
+                  if (sp_k) then
+                     if (flag(ik)) then
+                        call cint_prim_to_ctr_sp_0(ws%d, ogctrk, ogctrj, envs%env, ck_o+kp, &
+                                                   lenj, blk_k, k_prim, k_ctr)
+                     else
+                        call cint_prim_to_ctr_sp_1(ws%d, ogctrk, ogctrj, envs%env, ck_o+kp, &
+                                                   lenj, blk_k, k_prim, k_ctr)
+                     end if
+                  else if (flag(ik)) then
                      call cint_prim_to_ctr_0(ws%d, ogctrk, ogctrj, envs%env, ck_o+kp, &
                                              lenj, k_prim, k_ctr)
                   else
@@ -646,8 +715,16 @@ contains
          end do
 
          if (.not. flag(ik)) then
-            if (l_ctr > 1) then
-               if (flag(il)) then
+            if (ctr_l) then
+               if (sp_l) then
+                  if (flag(il)) then
+                     call cint_prim_to_ctr_sp_0(ws%d, ogctrl, ogctrk, envs%env, cl_o+lp, &
+                                                lenk, blk_l, l_prim, l_ctr)
+                  else
+                     call cint_prim_to_ctr_sp_1(ws%d, ogctrl, ogctrk, envs%env, cl_o+lp, &
+                                                lenk, blk_l, l_prim, l_ctr)
+                  end if
+               else if (flag(il)) then
                   call cint_prim_to_ctr_0(ws%d, ogctrl, ogctrk, envs%env, cl_o+lp, &
                                           lenk, l_prim, l_ctr)
                else
@@ -678,6 +755,23 @@ contains
    ! alone -- prologue, the empty-flag test, epilogue -- cost 32 million
    ! instructions across 350,616 calls, none of which the C pays.
 
+   ! How many spherical functions one index of the quartet contributes.
+   !
+   ! An L shell contributes four -- one s and three p -- and they ARE the
+   ! Cartesian four, in the same order, because cint_c2s_bra_sph and
+   ! cint_c2s_ket_sph both return RESULT_IN_GCART below l = 2.  So an L shell
+   ! needs no cart-to-spherical transform at all, and the only thing the four
+   ! transform stages below have to be told about one is its dimension.
+   pure integer function sph_dim(envs, x, l) result(d)
+      type(cint_env_vars), intent(in) :: envs
+      integer,             intent(in) :: x, l
+      if (btest(envs%sp_mask, x)) then
+         d = NF_SP
+      else
+         d = l*2 + 1
+      end if
+   end function sph_dim
+
    pure subroutine int2e_cache_size(envs, nd, ni)
       type(cint_env_vars), intent(in) :: envs
       integer, intent(out) :: nd, ni
@@ -701,7 +795,7 @@ contains
       leni = nf * ic * n_comp
       len0 = nf * n_comp
       ! the four c2s_sph_2e1 scratch blocks
-      buflen = envs%nfi * envs%nfk * envs%nfl * (2*envs%j_l + 1)
+      buflen = envs%nfi * envs%nfk * envs%nfl * sph_dim(envs, 1, envs%j_l)
 
       nd = nf*nc*n_comp + ip+jp+kp+lp &
          + leng + lenl + lenk + lenj + leni + len0 &
@@ -740,10 +834,10 @@ contains
 
       select case (c2s_kind)
       case (C2S_SPH_2E1)
-         counts(0) = (envs%i_l*2+1) * envs%x_ctr(0)
-         counts(1) = (envs%j_l*2+1) * envs%x_ctr(1)
-         counts(2) = (envs%k_l*2+1) * envs%x_ctr(2)
-         counts(3) = (envs%l_l*2+1) * envs%x_ctr(3)
+         counts(0) = sph_dim(envs, 0, envs%i_l) * envs%x_ctr(0)
+         counts(1) = sph_dim(envs, 1, envs%j_l) * envs%x_ctr(1)
+         counts(2) = sph_dim(envs, 2, envs%k_l) * envs%x_ctr(2)
+         counts(3) = sph_dim(envs, 3, envs%l_l) * envs%x_ctr(3)
       case default
          counts(0) = envs%nfi * envs%x_ctr(0)
          counts(1) = envs%nfj * envs%x_ctr(1)
@@ -804,6 +898,23 @@ contains
                   fijkl(fb + k*nij + ni*j + 0) = gctr(gb + k*mi + mikl*j + 0)
                   fijkl(fb + k*nij + ni*j + 1) = gctr(gb + k*mi + mikl*j + 1)
                   fijkl(fb + k*nij + ni*j + 2) = gctr(gb + k*mi + mikl*j + 2)
+               end do
+            end do
+            fb = fb + nijk
+            gb = gb + mik
+         end do
+      case (4)
+         ! An L shell's bra dimension, which the C has no case for because it
+         ! cannot express one.  The general loop below produces it correctly
+         ! and gfortran turns it into a memcpy call, for the same handful of
+         ! doubles the other cases are unrolled to avoid.
+         do l = 0, ml - 1
+            do k = 0, mk - 1
+               do j = 0, mj - 1
+                  fijkl(fb + k*nij + ni*j + 0) = gctr(gb + k*mi + mikl*j + 0)
+                  fijkl(fb + k*nij + ni*j + 1) = gctr(gb + k*mi + mikl*j + 1)
+                  fijkl(fb + k*nij + ni*j + 2) = gctr(gb + k*mi + mikl*j + 2)
+                  fijkl(fb + k*nij + ni*j + 3) = gctr(gb + k*mi + mikl*j + 3)
                end do
             end do
             fb = fb + nijk
@@ -932,7 +1043,8 @@ contains
       integer :: o1, o2, o3, o4, gb, base, cur, loc
 
       i_l = envs%i_l; j_l = envs%j_l; k_l = envs%k_l; l_l = envs%l_l
-      di = i_l*2+1; dj = j_l*2+1; dk = k_l*2+1; dl = l_l*2+1
+      di = sph_dim(envs, 0, i_l); dj = sph_dim(envs, 1, j_l)
+      dk = sph_dim(envs, 2, k_l); dl = sph_dim(envs, 3, l_l)
       ni = dims(0); nj = dims(1); nk = dims(2)
       nfi = envs%nfi; nfk = envs%nfk; nfl = envs%nfl
       nfik = nfi*nfk; nfikl = nfik*nfl; dlj = dl*dj
