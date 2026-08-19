@@ -25,6 +25,8 @@ module cint_3c2e
    use cint_g1e,       only: cint_prim_to_ctr_0, cint_prim_to_ctr_1, &
                              cint_g1e_index_xyz
    use cint_g2e
+   ! The optimizer builder comes in with the bare `use cint_g2e` above; naming
+   ! it again here adds no visibility and ifx says so, remark #6536.
    use cint_2e,        only: cint_gout2e
    use cint_1e,        only: int1e_cache_size, apply_c2s_cart_1e, &
                              apply_c2s_sph_1e, apply_c2s_dset0
@@ -32,7 +34,6 @@ module cint_3c2e
    use cint_blas,      only: cint_dmat_transpose, cint_dplus_transpose
    use cint_cart2sph,  only: cint_c2s_bra_sph, cint_c2s_ket_sph, &
                                 RESULT_IN_GCART, RESULT_IN_GSPH
-   use cint_g2e,       only: cint_all_3c2e_optimizer, cint_all_2c2e_optimizer
    implicit none
    private
 

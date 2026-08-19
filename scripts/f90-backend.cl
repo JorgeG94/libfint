@@ -1399,10 +1399,13 @@
     ;; Each arity's optimizer builder lives in the module that owns its envs
     ;; init, because cint_opt has to stay underneath all of them.
     (format fout "   use cint_opt,       only: cint_del_optimizer~%")
-    (format fout "   use cint_g1e,       only: cint_all_1e_optimizer~%")
-    (format fout "   use cint_g2e,       only: cint_all_2e_optimizer, &~%")
-    (format fout "                             cint_all_3c2e_optimizer, &~%")
-    (format fout "                             cint_all_2c2e_optimizer~%")
+    ;; cint_g1e and cint_g2e are already used bare above, so naming their
+    ;; optimizer builders again in an ONLY clause adds no visibility -- the
+    ;; bare use has already brought in everything those modules export.  ifx
+    ;; says so out loud, remark #6536, once per module per generated file:
+    ;; seventeen files, two modules each, thirty-four lines of noise in every
+    ;; Intel build.  The builders stay reachable through the bare use; only
+    ;; the redundant second mention goes.
     (format fout "   use cint_3c1e,      only: cint_all_3c1e_optimizer~%")
     (format fout "   use cint_1e_grids,  only: cint_all_1e_grids_optimizer~%")
     (format fout "   use cint_1e_grids_spinor, only: cint_1e_grids_spinor_drv~%")

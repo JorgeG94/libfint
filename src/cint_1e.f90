@@ -25,11 +25,12 @@ module cint_1e
    use cint_screen,    only: pair_data, cint_set_pairdata, &
                              cint_log_max_pgto_coeff, cint_non0coeff_byshell
    use cint_g1e
+   ! The optimizer builder comes in with the bare `use cint_g1e` above; naming
+   ! it again here adds no visibility and ifx says so, remark #6536.
    use cint_bas,       only: cint_square_dist, &
                              NPRIM_OF, PTR_EXP, PTR_COEFF
    use cint_blas,      only: cint_dmat_transpose
    use cint_cart2sph,  only: cint_c2s_bra_sph, cint_c2s_ket_sph, RESULT_IN_GCART
-      use cint_g1e,       only: cint_all_1e_optimizer
    implicit none
    private
 
