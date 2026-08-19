@@ -21,10 +21,6 @@ module cint_gen_int3c1e
    use cint_3c2e,      only: cint_3c2e_drv, cint_2c2e_drv
    use cint_3c2e_spinor, only: cint_3c2e_spinor_drv
    use cint_opt,       only: cint_del_optimizer
-   use cint_g1e,       only: cint_all_1e_optimizer
-   use cint_g2e,       only: cint_all_2e_optimizer, &
-                             cint_all_3c2e_optimizer, &
-                             cint_all_2c2e_optimizer
    use cint_3c1e,      only: cint_all_3c1e_optimizer
    use cint_1e_grids,  only: cint_all_1e_grids_optimizer
    use cint_1e_grids_spinor, only: cint_1e_grids_spinor_drv

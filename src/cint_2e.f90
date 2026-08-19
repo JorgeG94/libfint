@@ -24,11 +24,12 @@ module cint_2e
    use cint_g1e,       only: cint_prim_to_ctr_0, cint_prim_to_ctr_1, &
                              cint_prim_to_ctr_sp_0, cint_prim_to_ctr_sp_1
    use cint_g2e
+   ! The optimizer builder comes in with the bare `use cint_g2e` above; naming
+   ! it again here adds no visibility and ifx says so, remark #6536.
    use cint_bas,       only: NPRIM_OF, PTR_EXP, PTR_COEFF, NF_SP
    use cint_blas,      only: cint_dmat_transpose, cint_dplus_transpose
    use cint_cart2sph,  only: cint_c2s_bra_sph, cint_c2s_ket_sph, &
                                 RESULT_IN_GCART, RESULT_IN_GSPH
-   use cint_g2e,       only: cint_all_2e_optimizer
    implicit none
    private
 
