@@ -2405,6 +2405,114 @@ contains
       ret = merge(1_c_int, 0_c_int, hv)
    end function c2_int1e_ipipnuc_sph
 
+   ! int1e_ipiprinv_cart, 2 shells, 9 component(s)
+   function c2_int1e_ipiprinv_cart(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_ipiprinv_cart")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_cart(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_ipiprinv_cart(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_ipiprinv_cart
+
+   ! int1e_ipiprinv_sph, 2 shells, 9 component(s)
+   function c2_int1e_ipiprinv_sph(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_ipiprinv_sph")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_spheric(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_ipiprinv_sph(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_ipiprinv_sph
+
+   ! int1e_iprinvip_cart, 2 shells, 9 component(s)
+   function c2_int1e_iprinvip_cart(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_iprinvip_cart")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_cart(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_iprinvip_cart(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_iprinvip_cart
+
+   ! int1e_iprinvip_sph, 2 shells, 9 component(s)
+   function c2_int1e_iprinvip_sph(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_iprinvip_sph")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_spheric(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_iprinvip_sph(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_iprinvip_sph
+
    ! int1e_ipnucip_cart, 2 shells, 9 component(s)
    function c_int1e_ipnucip_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
                             cache) result(ret) bind(C, name="int1e_ipnucip_cart")
