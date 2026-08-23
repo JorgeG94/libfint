@@ -135,8 +135,7 @@ endif()
 # of generating and compiling it is real and measured: about 10 s to emit and
 # a minute and 3.5 GB to compile, on top of a 108 MB intermediate.
 if(WITH_F12)
-  find_package(PythonInterp REQUIRED)
-
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
   # The table is read out of libcint's copy, which is fetched rather than
   # vendored -- the same copy LIBFINT_BUILD_TESTS compares against, and gitignored
   # for the same reason the generated Fortran is not committed: 100 MB.
