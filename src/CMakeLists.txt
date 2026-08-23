@@ -128,24 +128,26 @@ endif()
 # F12: the Yukawa potential and the Slater-type geminal, off by default here
 # because they are off by default upstream.
 #
-# The quadrature table is generated rather than committed.  src/roots_xw.dat
-# is 100 MB of C holding 3,567,200 doubles, and a Fortran copy would double
-# that in the repository for a feature nobody gets unless they ask.  The cost
-# of generating and compiling it is real and measured: about 10 s to emit and
-# a minute and 3.5 GB to compile, on top of a 108 MB intermediate.
 if(WITH_F12)
-  find_package(PythonInterp REQUIRED)
-  set(STG_TAB ${CMAKE_CURRENT_BINARY_DIR}/cint_tab_stg_roots.f90)
-  add_custom_command(OUTPUT ${STG_TAB}
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
-            --dat ${PROJECT_SOURCE_DIR}/src/roots_xw.dat
-            --out ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
-            ${PROJECT_SOURCE_DIR}/src/roots_xw.dat
-    COMMENT "Generating the Slater-type-geminal quadrature table")
-  # Only the table is conditional now; the three sources are always compiled
-  # and COMPILE_F12 decides whether they contain anything.
-  list(APPEND cintFortranSrc ${STG_TAB})
+  # The quadrature table is committed, in f12/, and split across two files
+  # because together they are 108 MB of Fortran and GitHub refuses any single
+  # file over 100 MB. `cint_tab_stg_roots` is a facade over the two so that
+  # `cint_stg_roots` needs one name and does not care about the split.
+  #
+  # It used to be generated at build time from libcint's roots_xw.dat, which
+  # made WITH_F12 unbuildable for anyone who had libfint without libcint --
+  # every consumer that fetches this project, since libcint is only ever
+  # fetched to validate against in CI. scripts/stg_roots_to_fortran.py still
+  # exists and still regenerates these three files; nothing calls it during a
+  # build.
+  #
+  # The cost is real and measured: 106 s and 3.46 GB to compile, taking
+  # libfint.a from 13.5 MB to 93.5 MB. That is why the option is off by
+  # default rather than merely available.
+  list(APPEND cintFortranSrc
+    ${PROJECT_SOURCE_DIR}/f12/cint_tab_stg_x.f90
+    ${PROJECT_SOURCE_DIR}/f12/cint_tab_stg_w.f90
+    ${PROJECT_SOURCE_DIR}/f12/cint_tab_stg_roots.f90)
 endif()
 
 # STATIC, not OBJECT: CMake does not propagate one OBJECT library's objects
