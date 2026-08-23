@@ -160,7 +160,7 @@ if(WITH_F12)
 
   set(STG_TAB ${CMAKE_CURRENT_BINARY_DIR}/cint_tab_stg_roots.f90)
   add_custom_command(OUTPUT ${STG_TAB}
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
             --dat ${STG_DAT}
             --out ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py ${STG_DAT}
