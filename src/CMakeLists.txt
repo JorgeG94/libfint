@@ -128,20 +128,43 @@ endif()
 # F12: the Yukawa potential and the Slater-type geminal, off by default here
 # because they are off by default upstream.
 #
-# The quadrature table is generated rather than committed.  src/roots_xw.dat
+# The quadrature table is generated rather than committed.  libcint's
+# roots_xw.dat
 # is 100 MB of C holding 3,567,200 doubles, and a Fortran copy would double
 # that in the repository for a feature nobody gets unless they ask.  The cost
 # of generating and compiling it is real and measured: about 10 s to emit and
 # a minute and 3.5 GB to compile, on top of a 108 MB intermediate.
 if(WITH_F12)
   find_package(PythonInterp REQUIRED)
+
+  # The table is read out of libcint's copy, which is fetched rather than
+  # vendored -- the same copy LIBFINT_BUILD_TESTS compares against, and gitignored
+  # for the same reason the generated Fortran is not committed: 100 MB.
+  #
+  # Checked here rather than left to the build. `add_custom_command` does not
+  # validate DEPENDS at configure time, so a missing file configures cleanly and
+  # then fails minutes later with "No rule to make target", naming a path that
+  # was never going to exist.
+  set(STG_DAT ${PROJECT_SOURCE_DIR}/extern/libcint/src/roots_xw.dat)
+  if(NOT EXISTS ${STG_DAT})
+    message(FATAL_ERROR
+      "WITH_F12 needs libcint's Slater-geminal quadrature table, which is fetched
+"
+      "  rather than vendored:
+"
+      "    scripts/fetch_libcint.sh          # upstream master
+"
+      "    scripts/fetch_libcint.sh v6.1.3   # or a specific ref
+"
+      "  Expected at ${STG_DAT}")
+  endif()
+
   set(STG_TAB ${CMAKE_CURRENT_BINARY_DIR}/cint_tab_stg_roots.f90)
   add_custom_command(OUTPUT ${STG_TAB}
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
-            --dat ${PROJECT_SOURCE_DIR}/src/roots_xw.dat
+            --dat ${STG_DAT}
             --out ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py
-            ${PROJECT_SOURCE_DIR}/src/roots_xw.dat
+    DEPENDS ${PROJECT_SOURCE_DIR}/scripts/stg_roots_to_fortran.py ${STG_DAT}
     COMMENT "Generating the Slater-type-geminal quadrature table")
   # Only the table is conditional now; the three sources are always compiled
   # and COMPILE_F12 decides whether they contain anything.
