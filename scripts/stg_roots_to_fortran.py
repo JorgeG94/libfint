@@ -87,6 +87,20 @@ def emit(fh, name, vals, per_line=4):
     fh.write(" ]\n\n")
 
 
+FACADE = """! One name for the two tables below, so `cint_stg_roots` needs only this
+! module and does not care that the data is split across two files.
+!
+! The split is GitHub's 100 MB per-file limit and nothing deeper: the two
+! arrays together are 108 MB of source, and separately they are 54 MB each.
+module cint_tab_stg_roots
+   use cint_tab_stg_x, only: STG_X
+   use cint_tab_stg_w, only: STG_W
+   implicit none
+   public :: STG_X, STG_W
+end module cint_tab_stg_roots
+"""
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="fortran/src")
@@ -98,14 +112,21 @@ def main():
         if key not in arrays:
             sys.exit("%s: no %s found" % (args.dat, key))
 
+    # One array per file. Together they are 108 MB of Fortran and GitHub
+    # refuses any single file over 100 MB, so they cannot share one.
+    for mod, key, arr in (("cint_tab_stg_x", "STG_X", "DATA_X"),
+                          ("cint_tab_stg_w", "STG_W", "DATA_W")):
+        path = os.path.join(args.out, mod + ".f90")
+        with open(path, "w") as fh:
+            fh.write(HEADER.replace("cint_tab_stg_roots", mod))
+            emit(fh, key, arrays[arr])
+            fh.write("end module %s\n" % mod)
+        print("%s: %s %d" % (path, key, len(arrays[arr])))
+
     path = os.path.join(args.out, "cint_tab_stg_roots.f90")
     with open(path, "w") as fh:
-        fh.write(HEADER)
-        emit(fh, "STG_X", arrays["DATA_X"])
-        emit(fh, "STG_W", arrays["DATA_W"])
-        fh.write("end module cint_tab_stg_roots\n")
-    print("%s: STG_X %d, STG_W %d" %
-          (path, len(arrays["DATA_X"]), len(arrays["DATA_W"])))
+        fh.write(FACADE)
+    print("%s: facade" % path)
 
 
 if __name__ == "__main__":
