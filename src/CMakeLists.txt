@@ -145,8 +145,8 @@ if(WITH_F12)
   # validate DEPENDS at configure time, so a missing file configures cleanly and
   # then fails minutes later with "No rule to make target", naming a path that
   # was never going to exist.
-  set(STG_DAT ${PROJECT_SOURCE_DIR}/extern/libcint/src/roots_xw.dat)
-  if(NOT EXISTS ${STG_DAT})
+  set(STG_DAT "${PROJECT_SOURCE_DIR}/extern/libcint/src/roots_xw.dat")
+  if(NOT EXISTS "${STG_DAT}")
     message(FATAL_ERROR
       "WITH_F12 needs libcint's Slater-geminal quadrature table, which is fetched
 "
