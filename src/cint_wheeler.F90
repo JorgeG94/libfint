@@ -16,7 +16,11 @@
 module cint_wheeler_dp
    use cint_const,       only: dp, rk => dp
 #undef RKTYPE
+#undef TO_RK
+#undef TO_DP
 #define RKTYPE real(rk)
+#define TO_RK(x) real(x, rk)
+#define TO_DP(x) real(x, dp)
    use cint_fmt_dp,      only: fmt_erfc_like
    use cint_eigh,        only: cint_diagonalize
    use cint_tab_jacobi,  only: jacobi_coef       => JACOBI_COEF, &
@@ -42,9 +46,17 @@ contains
 end module cint_wheeler_dp
 
 module cint_wheeler_qp
-   use cint_const,          only: dp, rk => qp
+   use cint_const,          only: dp, rk => dp
+   use cint_dd, only: dd, operator(+), operator(-), operator(*), operator(/), &
+                      operator(<), operator(>), operator(<=), operator(>=), &
+                      operator(==), operator(**), assignment(=), dd_from, dd_to_dp, &
+                      sqrt, abs, exp, erf, erfc
 #undef RKTYPE
-#define RKTYPE real(rk)
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE type(dd)
+#define TO_RK(x) dd_from(real(x, dp))
+#define TO_DP(x) dd_to_dp(x)
    use cint_fmt_qp,         only: fmt_erfc_like
    use cint_eigh,           only: cint_diagonalize
    use cint_tab_jacobi,     only: jacobi_coef_order => JACOBI_COEF_ORDER

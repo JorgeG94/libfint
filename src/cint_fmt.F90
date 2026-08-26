@@ -36,9 +36,13 @@ module cint_fmt_tab
 end module cint_fmt_tab
 
 module cint_fmt_dp
-   use cint_const,  only: rk => dp
+   use cint_const,  only: dp, rk => dp
 #undef RKTYPE
+#undef TO_RK
+#undef TO_DP
 #define RKTYPE real(rk)
+#define TO_RK(x) real(x, rk)
+#define TO_DP(x) real(x, dp)
    use cint_fmt_tab, only: turnover_point
    implicit none
    private
@@ -57,9 +61,17 @@ contains
 end module cint_fmt_dp
 
 module cint_fmt_qp
-   use cint_const,  only: rk => qp
+   use cint_const,  only: dp, rk => dp
+   use cint_dd, only: dd, operator(+), operator(-), operator(*), operator(/), &
+                      operator(<), operator(>), operator(<=), operator(>=), &
+                      operator(==), operator(**), assignment(=), dd_from, dd_to_dp, &
+                      sqrt, abs, exp, erf, erfc
 #undef RKTYPE
-#define RKTYPE real(rk)
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE type(dd)
+#define TO_RK(x) dd_from(real(x, dp))
+#define TO_DP(x) dd_to_dp(x)
    use cint_fmt_tab, only: turnover_point_qp => turnover_point
    implicit none
    private

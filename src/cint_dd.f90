@@ -64,6 +64,14 @@ module cint_dd
    public :: operator(+), operator(-), operator(*), operator(/)
    public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
    public :: sqrt, abs
+   public :: assignment(=), operator(**)
+
+   interface assignment(=)
+      module procedure dd_assign_r
+   end interface
+   interface operator(**)
+      module procedure dd_pow_i
+   end interface
    public :: dd_exp, dd_erf, dd_erfc
    public :: exp, erf, erfc
 
@@ -727,5 +735,41 @@ contains
 
       if (a%hi < 0.0_dp) r = dd_sub(dd_from(2.0_dp), r)
    end function dd_erfc
+
+   elemental subroutine dd_assign_r(out, in)
+      !! `x = 0.5_dp` where x is a dd. Needed because the shared bodies assign
+      !! plain literals to working variables, and without this every one is
+      !! "Cannot convert REAL(8) to TYPE(dd)".
+      type(dd), intent(out) :: out
+      real(dp), intent(in) :: in
+      out%hi = in
+      out%lo = 0.0_dp
+   end subroutine dd_assign_r
+
+   pure type(dd) function dd_pow_i(a, n) result(r)
+      !! Integer power by repeated squaring.
+      !!
+      !! Squaring rather than exp(n log a): it is exact for the small n the
+      !! bodies use, and it keeps a negative base working, which the log form
+      !! does not.
+      type(dd), intent(in) :: a
+      integer, intent(in) :: n
+      type(dd) :: base
+      integer :: k
+
+      if (n == 0) then
+         r = dd_from(1.0_dp)
+         return
+      end if
+      base = a
+      k = abs(n)
+      r = dd_from(1.0_dp)
+      do while (k > 0)
+         if (mod(k, 2) == 1) r = dd_mul(r, base)
+         base = dd_mul(base, base)
+         k = k/2
+      end do
+      if (n < 0) r = dd_div(dd_from(1.0_dp), r)
+   end function dd_pow_i
 
 end module cint_dd
