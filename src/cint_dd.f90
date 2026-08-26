@@ -39,6 +39,49 @@ module cint_dd
    end type dd
 
    public :: dd_from, dd_to_dp, two_sum, two_prod, dd_add, dd_mul
+   public :: dd_sub, dd_div, dd_sqrt
+   public :: operator(+), operator(-), operator(*), operator(/)
+   public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
+   public :: sqrt, abs
+
+   ! **Overloaded so the shared bodies do not change.** cint_fmt_body.inc and
+   ! cint_wheeler_body.inc are included once per precision with `rk` bound to a
+   ! kind; binding a derived type instead only works if `a*b - c/d` still reads
+   ! as arithmetic. Everything below exists so that the algorithm text stays
+   ! one copy rather than becoming two that must be kept in step.
+   interface operator(+)
+      module procedure dd_add, dd_add_r, dd_r_add
+   end interface
+   interface operator(-)
+      module procedure dd_sub, dd_sub_r, dd_r_sub, dd_neg
+   end interface
+   interface operator(*)
+      module procedure dd_mul, dd_mul_r, dd_r_mul
+   end interface
+   interface operator(/)
+      module procedure dd_div, dd_div_r, dd_r_div
+   end interface
+   interface operator(<)
+      module procedure dd_lt, dd_lt_r
+   end interface
+   interface operator(>)
+      module procedure dd_gt, dd_gt_r
+   end interface
+   interface operator(<=)
+      module procedure dd_le, dd_le_r
+   end interface
+   interface operator(>=)
+      module procedure dd_ge, dd_ge_r
+   end interface
+   interface operator(==)
+      module procedure dd_eq, dd_eq_r
+   end interface
+   interface sqrt
+      module procedure dd_sqrt
+   end interface
+   interface abs
+      module procedure dd_abs
+   end interface
 
    ! Dekker's splitting constant, 2**27 + 1: splits a 53-bit significand into
    ! two 26-bit halves whose product is exact.
@@ -123,5 +166,171 @@ contains
       p2 = p2 + a%hi * b%lo + a%lo * b%hi
       call two_sum(p1, p2, r%hi, r%lo)
    end function dd_mul
+
+   pure type(dd) function dd_neg(a) result(r)
+      type(dd), intent(in) :: a
+      r%hi = -a%hi; r%lo = -a%lo
+   end function dd_neg
+
+   pure type(dd) function dd_sub(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = dd_add(a, dd_neg(b))
+   end function dd_sub
+
+   pure type(dd) function dd_div(a, b) result(r)
+      !! Long division: a double-precision quotient, then one correction pass
+      !! against the exact remainder.
+      !!
+      !! The remainder is what makes it work. `a - q1*b` is computed in
+      !! double-double, so the leading terms cancel exactly rather than to
+      !! within a rounding, and what survives is the part the first quotient
+      !! missed.
+      type(dd), intent(in) :: a, b
+      real(dp) :: q1, q2
+      type(dd) :: r1, prod
+
+      q1 = a%hi / b%hi
+      prod = dd_mul(b, dd_from(q1))
+      r1 = dd_sub(a, prod)
+      q2 = (r1%hi + r1%lo) / b%hi
+      call two_sum(q1, q2, r%hi, r%lo)
+   end function dd_div
+
+   pure type(dd) function dd_sqrt(a) result(r)
+      !! One Newton step on a double-precision square root.
+      !!
+      !! x1 = x0 + (a - x0^2) / (2 x0) doubles the correct digits, so a
+      !! 53-bit seed lands at the ~106 the type carries. The residual `a - x0^2`
+      !! is formed in double-double for the same reason as in the division:
+      !! computed in double it would be pure rounding noise.
+      type(dd), intent(in) :: a
+      real(dp) :: x0
+      type(dd) :: resid, corr
+
+      if (a%hi <= 0.0_dp) then
+         r%hi = 0.0_dp; r%lo = 0.0_dp
+         return
+      end if
+      x0 = sqrt(a%hi)
+      resid = dd_sub(a, dd_mul(dd_from(x0), dd_from(x0)))
+      corr = dd_div(resid, dd_from(2.0_dp * x0))
+      r = dd_add(dd_from(x0), corr)
+   end function dd_sqrt
+
+   pure type(dd) function dd_abs(a) result(r)
+      type(dd), intent(in) :: a
+      if (a%hi < 0.0_dp) then
+         r = dd_neg(a)
+      else
+         r = a
+      end if
+   end function dd_abs
+
+   ! Mixed dd/real64 forms, so a literal in the shared bodies needs no wrapper.
+   pure type(dd) function dd_add_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_add(a, dd_from(b))
+   end function dd_add_r
+
+   pure type(dd) function dd_r_add(a, b) result(r)
+      real(dp), intent(in) :: a
+      type(dd), intent(in) :: b
+      r = dd_add(dd_from(a), b)
+   end function dd_r_add
+
+   pure type(dd) function dd_sub_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_sub(a, dd_from(b))
+   end function dd_sub_r
+
+   pure type(dd) function dd_r_sub(a, b) result(r)
+      real(dp), intent(in) :: a
+      type(dd), intent(in) :: b
+      r = dd_sub(dd_from(a), b)
+   end function dd_r_sub
+
+   pure type(dd) function dd_mul_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_mul(a, dd_from(b))
+   end function dd_mul_r
+
+   pure type(dd) function dd_r_mul(a, b) result(r)
+      real(dp), intent(in) :: a
+      type(dd), intent(in) :: b
+      r = dd_mul(dd_from(a), b)
+   end function dd_r_mul
+
+   pure type(dd) function dd_div_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_div(a, dd_from(b))
+   end function dd_div_r
+
+   pure type(dd) function dd_r_div(a, b) result(r)
+      real(dp), intent(in) :: a
+      type(dd), intent(in) :: b
+      r = dd_div(dd_from(a), b)
+   end function dd_r_div
+
+   ! Comparisons go through the full value, not just `hi`: two numbers can share
+   ! a leading double and differ in the tail, which is the entire reason for the
+   ! type.
+   pure logical function dd_lt(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = (a%hi < b%hi) .or. (a%hi == b%hi .and. a%lo < b%lo)
+   end function dd_lt
+
+   pure logical function dd_lt_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_lt(a, dd_from(b))
+   end function dd_lt_r
+
+   pure logical function dd_gt(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = (a%hi > b%hi) .or. (a%hi == b%hi .and. a%lo > b%lo)
+   end function dd_gt
+
+   pure logical function dd_gt_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_gt(a, dd_from(b))
+   end function dd_gt_r
+
+   pure logical function dd_le(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = .not. dd_gt(a, b)
+   end function dd_le
+
+   pure logical function dd_le_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_le(a, dd_from(b))
+   end function dd_le_r
+
+   pure logical function dd_ge(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = .not. dd_lt(a, b)
+   end function dd_ge
+
+   pure logical function dd_ge_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_ge(a, dd_from(b))
+   end function dd_ge_r
+
+   pure logical function dd_eq(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = (a%hi == b%hi) .and. (a%lo == b%lo)
+   end function dd_eq
+
+   pure logical function dd_eq_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_eq(a, dd_from(b))
+   end function dd_eq_r
 
 end module cint_dd
