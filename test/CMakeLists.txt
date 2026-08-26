@@ -74,6 +74,10 @@ add_executable(dd_ops_check dd_ops_check.f90)
 target_link_libraries(dd_ops_check fint)
 add_test(NAME dd_ops_check COMMAND $<TARGET_FILE:dd_ops_check>)
 
+add_executable(dd_fn_check dd_fn_check.f90)
+target_link_libraries(dd_fn_check fint)
+add_test(NAME dd_fn_check COMMAND $<TARGET_FILE:dd_fn_check>)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)

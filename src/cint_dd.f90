@@ -43,6 +43,30 @@ module cint_dd
    public :: operator(+), operator(-), operator(*), operator(/)
    public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
    public :: sqrt, abs
+   public :: dd_exp, dd_erf
+   public :: exp, erf
+
+   interface exp
+      module procedure dd_exp
+   end interface
+   interface erf
+      module procedure dd_erf
+   end interface
+
+   ! Split so `hi + lo` reproduces the constant to ~1e-33. Hard-coded rather
+   ! than derived from real128 at startup, because real128 is precisely what
+   ! this module exists to avoid needing.
+   !
+   ! **`lo` is the remainder against the exact binary value of `hi`, not against
+   ! its printed form.** Generating these from `repr(hi)` -- the shortest decimal
+   ! that round-trips -- leaves `lo` wrong by the gap between the two, about
+   ! 2e-17. The first version did exactly that, and the symptom was oddly
+   ! specific: exp was accurate to 1e-29 while the range reduction chose k = 0
+   ! and fell to 1.4e-17 the moment it chose anything else, because that is when
+   ! LN2 first enters the arithmetic.
+   type(dd), parameter :: DD_LN2 = dd(0.6931471805599453_dp, 2.3190468138462996e-17_dp)
+   type(dd), parameter :: DD_INV_LN2 = dd(1.4426950408889634_dp, 2.0355273740931033e-17_dp)
+   type(dd), parameter :: DD_2_SQRTPI = dd(1.1283791670955126_dp, 1.533545961316588e-17_dp)
 
    ! **Overloaded so the shared bodies do not change.** cint_fmt_body.inc and
    ! cint_wheeler_body.inc are included once per precision with `rk` bound to a
@@ -332,5 +356,96 @@ contains
       real(dp), intent(in) :: b
       r = dd_eq(a, dd_from(b))
    end function dd_eq_r
+
+   pure type(dd) function dd_exp(a) result(r)
+      !! exp for double-double, by range reduction and a Taylor series.
+      !!
+      !! Two reductions. First `a = k ln2 + t` puts `t` in [-ln2/2, ln2/2]; then
+      !! `t` is halved NSQ more times and the result squared back up.
+      !!
+      !! **NSQ is a trade, and it was measured rather than guessed.** Each
+      !! squaring doubles the relative error, so NSQ of 16 puts a floor of
+      !! 2^16 * 1e-32 under the answer -- 2.3e-27, measured. Fewer squarings
+      !! mean a larger series argument and more terms. Over [-35, 35]: NSQ 16
+      !! gives 2.3e-27, NSQ 8 gives 1.4e-29, NSQ 6 gives 3.3e-30. Below 6 the
+      !! twelve terms below stop converging and it gets worse again.
+      type(dd), intent(in) :: a
+      integer, parameter :: NSQ = 6
+      type(dd) :: t, term, sum, sq
+      real(dp) :: k
+      integer :: i
+
+      if (a%hi < -700.0_dp) then
+         r = dd_from(0.0_dp)
+         return
+      end if
+
+      k = anint(dd_to_dp(dd_mul(a, DD_INV_LN2)))
+      t = dd_sub(a, dd_mul(DD_LN2, dd_from(k)))
+      ! Halve NSQ times: exp(t) = exp(t/2^NSQ)^(2^NSQ)
+      t = dd_mul(t, dd_from(2.0_dp**(-NSQ)))
+
+      ! 1 + t + t^2/2! + ...
+      sum = dd_add(dd_from(1.0_dp), t)
+      term = t
+      do i = 2, 12
+         term = dd_mul(term, t)
+         term = dd_div(term, dd_from(real(i, dp)))
+         sum = dd_add(sum, term)
+      end do
+
+      do i = 1, NSQ
+         sum = dd_mul(sum, sum)
+      end do
+
+      r = dd_mul(sum, dd_from(2.0_dp**int(k)))
+   end function dd_exp
+
+   pure type(dd) function dd_erf(a) result(r)
+      !! erf for double-double.
+      !!
+      !! Below the crossover this uses the *confluent* series
+      !!
+      !!     erf(x) = (2x/sqrt(pi)) exp(-x^2) sum_n (2x^2)^n / (1.3.5...(2n+1))
+      !!
+      !! rather than the textbook alternating one. Every term is positive, so
+      !! there is no cancellation; the alternating series loses roughly x^2/ln10
+      !! digits to it and is useless here by x = 4, which is inside the range
+      !! the Boys function asks for.
+      type(dd), intent(in) :: a
+      type(dd) :: x, x2, term, sum, two_x2
+      real(dp) :: den
+      integer :: n
+
+      x = dd_abs(a)
+      if (x%hi > 6.5_dp) then
+         r = dd_from(1.0_dp)
+         if (a%hi < 0.0_dp) r = dd_neg(r)
+         return
+      end if
+
+      x2 = dd_mul(x, x)
+      two_x2 = dd_mul(x2, dd_from(2.0_dp))
+      term = dd_from(1.0_dp)
+      sum = dd_from(1.0_dp)
+      do n = 1, 200
+         den = real(2*n + 1, dp)
+         term = dd_div(dd_mul(term, two_x2), dd_from(den))
+         sum = dd_add(sum, term)
+         if (abs(term%hi) < 1.0e-36_dp * abs(sum%hi)) exit
+      end do
+
+      r = dd_mul(dd_mul(DD_2_SQRTPI, x), dd_mul(dd_exp(dd_neg(x2)), sum))
+      if (a%hi < 0.0_dp) r = dd_neg(r)
+   end function dd_erf
+
+   ! dd_erfc is deliberately absent: Jorge has a bitwise-reproducible erfc that
+   ! should be the reference here, and guessing at an asymptotic series before
+   ! seeing it would mean writing something that has to agree with libcint bit
+   ! for bit without ever having been compared to it.
+   !
+   ! The two call sites that need it are both `erfc(a) - erfc(b)` -- in
+   ! cint_fmt_body.inc and cint_wheeler_body.inc -- so whatever lands has to be
+   ! accurate in the tail, where `1 - erf(x)` is not.
 
 end module cint_dd
