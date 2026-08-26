@@ -22,7 +22,7 @@
 !
 program ecp_num_check
    use cint_const, only: dp
-   use cint_ecp_num, only: ecp_sph_ine, ecp_gauss_chebyshev
+   use cint_ecp_num, only: ecp_sph_ine, ecp_gauss_chebyshev, ECP_NRS
    implicit none
 
    integer, parameter :: ORDER = 7
@@ -71,6 +71,11 @@ program ecp_num_check
 
    integer, parameter :: NS(NGRID) = [31, 127, 2047]
 
+   ! The size the production path actually generates.  Asserted, not assumed:
+   ! a check that validates a grid size nothing calls proves nothing, and this
+   ! one did exactly that until ECP_NRS existed.
+   integer, parameter :: EXPECTED_NRS = 2047
+
    ! Per grid: r(1), w(1), r(mid), w(mid), r(n), w(n), sum(w)
    real(dp), parameter :: GRID_REF(7, NGRID) = reshape([ &
       2.22346268607953590e-06_dp, 1.10969102399982944e-05_dp, 1.00000000000000067e+00_dp, &
@@ -86,6 +91,12 @@ program ecp_num_check
    integer :: iz, ig, l, n, bad
 
    bad = 0
+
+   if (ECP_NRS /= EXPECTED_NRS) then
+      write (*, '(a,i0,a,i0)') "FAIL ECP_NRS is ", ECP_NRS, ", expected ", EXPECTED_NRS
+      write (*, '(a)') "     the reference values below are for a 2047-point grid"
+      bad = bad + 1
+   end if
 
    do iz = 1, NZ
       call ecp_sph_ine(out, ORDER, ZS(iz))

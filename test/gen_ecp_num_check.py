@@ -29,8 +29,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ZS = [1e-9, 5e-8, 1e-7, 1e-6, 0.25, 1.0, 4.0, 15.999, 16.0, 16.001, 40.0, 300.0]
 ORDER = 7
 
-# The three grid sizes an ECP evaluation actually asks for: LEVEL0 = 5 gives
-# 31 points, and the refinement doubles to LEVEL_MAX = 11 at 2047.
+# The grid sizes an ECP evaluation actually asks for.  2047 is the one that
+# matters: it is ECP_NRS, the size the production path generates.
+#
+# This list used to be right while the code was wrong, which is the failure
+# mode a test like this has.  cint_ecp generated 2048 points -- `1 << 11`,
+# which in the C is the *allocation* size and not the grid -- so every
+# abscissa differed from the C's and the check sailed past it, validating a
+# size nothing called.  The Fortran side now asserts against ECP_NRS itself
+# rather than a literal, so the two cannot drift apart again.
 NS = [31, 127, 2047]
 
 
@@ -120,7 +127,7 @@ TEMPLATE = '''!
 !
 program ecp_num_check
    use cint_const, only: dp
-   use cint_ecp_num, only: ecp_sph_ine, ecp_gauss_chebyshev
+   use cint_ecp_num, only: ecp_sph_ine, ecp_gauss_chebyshev, ECP_NRS
    implicit none
 
    integer, parameter :: ORDER = %(order)d
@@ -135,6 +142,11 @@ program ecp_num_check
 
    integer, parameter :: NS(NGRID) = [%(ns)s]
 
+   ! The size the production path actually generates.  Asserted, not assumed:
+   ! a check that validates a grid size nothing calls proves nothing, and this
+   ! one did exactly that until ECP_NRS existed.
+   integer, parameter :: EXPECTED_NRS = 2047
+
    ! Per grid: r(1), w(1), r(mid), w(mid), r(n), w(n), sum(w)
    real(dp), parameter :: GRID_REF(7, NGRID) = reshape([ &
 %(grid)s], [7, NGRID])
@@ -144,6 +156,12 @@ program ecp_num_check
    integer :: iz, ig, l, n, bad
 
    bad = 0
+
+   if (ECP_NRS /= EXPECTED_NRS) then
+      write (*, '(a,i0,a,i0)') "FAIL ECP_NRS is ", ECP_NRS, ", expected ", EXPECTED_NRS
+      write (*, '(a)') "     the reference values below are for a 2047-point grid"
+      bad = bad + 1
+   end if
 
    do iz = 1, NZ
       call ecp_sph_ine(out, ORDER, ZS(iz))

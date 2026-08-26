@@ -26,7 +26,7 @@ module cint_ecp_num
    implicit none
    private
 
-   public :: ECP_LMAX, ECP_LEVEL0, ECP_LEVEL_MAX
+   public :: ECP_LMAX, ECP_LEVEL0, ECP_LEVEL_MAX, ECP_NRS
    public :: ECP_SIM_ZERO, ECP_EXPCUTOFF, ECP_CUTOFF
    public :: RADI_POWER, SO_TYPE_OF
    public :: AS_RINV_ORIG_ATOM, AS_ECPBAS_OFFSET, AS_NECPBAS
@@ -69,7 +69,24 @@ module cint_ecp_num
 
    !> Radial grid sizes, 2**(level+1) - 1 points.
    integer, parameter :: ECP_LEVEL0 = 5
-   integer, parameter :: ECP_LEVEL_MAX = 11      ! 2047 points
+   integer, parameter :: ECP_LEVEL_MAX = 11
+
+   !> Points in the finest radial grid: 2047, not 2048.
+   !>
+   !> The C spells these two quantities the same way and they are not the
+   !> same. `1 << LEVEL_MAX` is 2048 and is the size it *allocates* for the
+   !> potential; the grid it integrates on is the table
+   !> `rs_gauss_chebyshev2047`, which has 2047 points because the whole
+   !> refinement scheme needs n+1 to be a power of two -- a strided subset of
+   !> a (2^L - 1)-point rule is exactly the (2^(L-1) - 1)-point rule, which is
+   !> what makes reusing the previous level's points valid and `wtscale`
+   !> exact.
+   !>
+   !> Generating 2048 points instead gives step = 1/2049, every abscissa
+   !> differs, the nesting stops being exact, and the last weight is a NaN
+   !> because 1 + xi goes negative there. It converges to the same integrals
+   !> anyway, which is exactly why it is worth naming rather than open-coding.
+   integer, parameter :: ECP_NRS = 2**ECP_LEVEL_MAX - 1
 
    ! ---------------------------------------------------------------------
    ! Small tables.  Kept as data because they are exact integers up to the

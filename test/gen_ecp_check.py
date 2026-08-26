@@ -28,14 +28,19 @@ the last two or three bits and that difference propagates.
 The tolerance is stated against the largest element of the matrix rather than
 element by element, because that is how the error actually behaves.  Measured
 across seven ECP systems -- Cu, Au and W in LANL2DZ, I and Ba in def2-SVP, Pt
-and Hg in def2-TZVP -- the disagreement was between 2.2e-14 and 7.8e-14 of the
-largest element, whose own magnitude ranged from 3 to 308.  In absolute terms
-that is 1.7e-13 on the smallest of those systems and 7.2e-12 on the largest,
-which is why a fixed absolute bound would be either wrong or useless.
+and Hg in def2-TZVP -- the disagreement runs between 7.8e-17 and 1.8e-14 of
+the largest element, whose own magnitude ranges from 3 to 308.  In absolute
+terms that is 5.6e-16 on the smallest of those systems and 2.0e-13 on the
+largest, which is why a fixed absolute bound would be either wrong or useless.
+
+TOL is set at 1e-11, about three orders above the worst measured value.  The
+slack is deliberate: the radial refinement stops on a convergence test, so a
+pair that sits near that threshold can take a different number of levels here
+than in the C and land further out than the systems below ever do.
 
 A purely element-wise relative test would be the wrong instrument.  On Au2 one
-element of magnitude 2.6e-5 carries an absolute error of 2.5e-13, which is a
-relative error of 9.5e-09 -- meaningless as an accuracy claim, and enough to
+element of magnitude 5e-6 carries an absolute error of 5e-14, which reads as a
+relative error of 1.1e-08 -- meaningless as an accuracy claim, and enough to
 fail any relative bound tight enough to be worth setting.
 """
 import os
@@ -108,11 +113,11 @@ TEMPLATE = '''!
 ! bits.
 !
 ! It is stated against the largest element rather than element by element,
-! because that is how the error behaves: across seven ECP systems it ran
-! between 2.2e-14 and 7.8e-14 of the largest element, which was itself
-! between 3 and 308 depending on the basis.  An element-wise relative bound
-! would instead be dominated by near-zero elements, where an absolute error
-! of 2.5e-13 on a value of 2.6e-5 reads as 9.5e-09 and means nothing.
+! because that is how the error behaves: across seven ECP systems it runs
+! between 7.8e-17 and 1.8e-14 of the largest element, which is itself between
+! 3 and 308 depending on the basis.  An element-wise relative bound would
+! instead be dominated by near-zero elements, where 5e-14 of absolute error
+! on a value of 5e-6 reads as 1.1e-08 and means nothing.
 !
 ! What the system covers: a local channel and three projected ones, so both
 ! ECP terms; s, p and d shells, so the spherical transform is not an

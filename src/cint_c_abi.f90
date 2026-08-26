@@ -3335,14 +3335,20 @@ contains
    pure integer function ecp_env_len(shls, bas, nbas, ecpoff, necpbas) result(n)
       integer(c_int), intent(in) :: shls(:), bas(0:)
       integer,        intent(in) :: nbas, ecpoff, necpbas
-      integer :: i, sh, np, nc
+      integer :: i, sh, np
       n = env_len(shls, 2, bas, nbas)
       do i = 0, necpbas - 1
          sh = ecpoff + i
          np = bas(BAS_SLOTS*sh + NPRIM_OF)
-         nc = bas(BAS_SLOTS*sh + NCTR_OF)
          n = max(n, bas(BAS_SLOTS*sh + PTR_EXP)   + np)
-         n = max(n, bas(BAS_SLOTS*sh + PTR_COEFF) + np*nc)
+         ! An ECP shell's coefficients are one per primitive, so `np` and not
+         ! `np*nc` as it would be for an orbital shell.  Slot 3 of an ecpbas
+         ! row is RADI_POWER, the r exponent -- it occupies the position
+         ! NCTR_OF has in a basis row and means something else entirely, so
+         ! reading it as a contraction count gives `ptr_coeff` for an r^0 term
+         ! (short, excluding the coefficient) and `ptr_coeff + 2*np` for an
+         ! r^2 one (long, past the caller's buffer).
+         n = max(n, bas(BAS_SLOTS*sh + PTR_COEFF) + np)
       end do
    end function ecp_env_len
 
@@ -3359,7 +3365,10 @@ contains
       call c_f_pointer(env,  penv,  [PTR_ENV_START])
       ecpoff  = int(penv(AS_ECPBAS_OFFSET + 1))
       necpbas = int(penv(AS_NECPBAS + 1))
-      nb_all  = int(nbas) + necpbas
+      ! Not nbas + necpbas: nothing requires the ECP rows to begin exactly
+      ! where the orbital ones end.  PySCF stacks them that way, the C never
+      ! assumes it, and neither does this.
+      nb_all  = max(int(nbas), ecpoff + necpbas)
       call c_f_pointer(bas, pbas, [BAS_SLOTS*nb_all])
       fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
       di = cint_cgto_spheric(fshls(0), int(pbas)); dj = cint_cgto_spheric(fshls(1), int(pbas))
@@ -3389,7 +3398,10 @@ contains
       call c_f_pointer(env,  penv,  [PTR_ENV_START])
       ecpoff  = int(penv(AS_ECPBAS_OFFSET + 1))
       necpbas = int(penv(AS_NECPBAS + 1))
-      nb_all  = int(nbas) + necpbas
+      ! Not nbas + necpbas: nothing requires the ECP rows to begin exactly
+      ! where the orbital ones end.  PySCF stacks them that way, the C never
+      ! assumes it, and neither does this.
+      nb_all  = max(int(nbas), ecpoff + necpbas)
       call c_f_pointer(bas, pbas, [BAS_SLOTS*nb_all])
       fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
       di = cint_cgto_cart(fshls(0), int(pbas)); dj = cint_cgto_cart(fshls(1), int(pbas))

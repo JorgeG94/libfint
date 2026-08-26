@@ -16,11 +16,11 @@
 ! bits.
 !
 ! It is stated against the largest element rather than element by element,
-! because that is how the error behaves: across seven ECP systems it ran
-! between 2.2e-14 and 7.8e-14 of the largest element, which was itself
-! between 3 and 308 depending on the basis.  An element-wise relative bound
-! would instead be dominated by near-zero elements, where an absolute error
-! of 2.5e-13 on a value of 2.6e-5 reads as 9.5e-09 and means nothing.
+! because that is how the error behaves: across seven ECP systems it runs
+! between 7.8e-17 and 1.8e-14 of the largest element, which is itself between
+! 3 and 308 depending on the basis.  An element-wise relative bound would
+! instead be dominated by near-zero elements, where 5e-14 of absolute error
+! on a value of 5e-6 reads as 1.1e-08 and means nothing.
 !
 ! What the system covers: a local channel and three projected ones, so both
 ! ECP terms; s, p and d shells, so the spherical transform is not an
