@@ -21,6 +21,7 @@ module cint_cart2sph
    private
 
    public :: cint_c2s_bra_sph, cint_c2s_ket_sph, cint_c2s_ket_sph_copy
+   public :: cint_s2c_bra_sph
    public :: RESULT_IN_GCART, RESULT_IN_GSPH
 
    ! The C returns a pointer, and for s and p in the default px,py,pz order it
@@ -35,6 +36,41 @@ module cint_cart2sph
       0, 1, 10, 40, 110, 245, 476, 840, 1380, 2145, 3190, 4576, 6370, 8645, 11480, 14960 ]
 
 contains
+
+   ! The back transformation: 2l+1 spherical components to nf Cartesian ones.
+   !
+   ! CINTs2c_bra_sph in the C, where it is one dgemm against the same
+   ! coefficient block the forward direction reads.  Written as a loop rather
+   ! than unrolled per l, unlike cint_c2s_bra_sph above: this is called once
+   ! per angular momentum when an ECP shell pair is set up and never in an
+   ! inner loop, so the unrolling that earns its keep there would only be
+   ! more code to get wrong here.
+   !
+   ! The coefficient block is indexed (m, f) at C2S_OFFSET(l) + m*nf + f,
+   ! which is the same layout the forward transform reads -- the two
+   ! directions differ in which index is summed over, not in the storage.
+   subroutine cint_s2c_bra_sph(gsph, nket, gcart, l)
+      real(dp), intent(in)  :: gsph(0:)
+      real(dp), intent(out) :: gcart(0:)
+      integer,  intent(in)  :: nket, l
+
+      integer :: i, f, m, nf, nd, co
+      real(dp) :: acc
+
+      nf = cint_len_cart(l)
+      nd = 2*l + 1
+      co = C2S_OFFSET(l)
+
+      do i = 0, nket - 1
+         do f = 0, nf - 1
+            acc = 0.0_dp
+            do m = 0, nd - 1
+               acc = acc + g_trans_cart2sph(co + m*nf + f) * gsph(i*nd + m)
+            end do
+            gcart(i*nf + f) = acc
+         end do
+      end do
+   end subroutine cint_s2c_bra_sph
 
    ! Transform a bra-side block: nket columns, each of nf Cartesian
    ! components, into 2l+1 spherical ones.

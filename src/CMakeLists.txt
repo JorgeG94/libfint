@@ -7,6 +7,7 @@
 
 set(cintFortranSrc
   cint_const.f90
+  cint_ecp_num.f90
   cint_bas.f90
   cint_blas.f90
   cint_fmt.F90
@@ -23,6 +24,10 @@ set(cintFortranSrc
   cint_tab_cart2sph.f90
   cint_cart2sph.f90
   cint_cart2spinor.f90
+  cint_ecp_ang.f90
+  cint_ecp_rad.f90
+  cint_ecp.f90
+  cint_ecp_drv.f90
   cint_envs.f90
   cint_screen.f90
   cint_workspace.f90

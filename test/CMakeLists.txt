@@ -34,6 +34,7 @@ add_custom_command(
 # each integral's ng array out of the generated modules rather than trusting a
 # hand-written interface block.
 set(LIBFINT_CHECKS
+  ecp_num_check ecp_check
   backend_check spinor_grids_check opt_check
   int1e_check int2e_check int3c1e_check int3c2e_check
   gen1e_check gen2e_check gen3c_check grids_check rel2e_check
