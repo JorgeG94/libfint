@@ -88,10 +88,19 @@ contains
                s = s + env(pcoeff + kp)*exp(-env(pexp + kp)*r2(i))
             end do
             ubuf(i) = s
-            if (i > 2 .and. abs(ubuf(i)) < ECP_SIM_ZERO &
-                .and. abs(ubuf(i - 1)) < ECP_SIM_ZERO) then
-               nrs_now = i
-               exit
+            ! Nested rather than one `.and.` chain, and that is not style.
+            ! The C is `i > 2 && ... && fabs(ubuf[i-1]) < SIM_ZERO`, which
+            ! short-circuits; Fortran's `.and.` is not required to, so a
+            ! single expression evaluates `ubuf(i-1)` at i = 0 and reads one
+            ! element below the array. Harmless to the result -- the
+            ! conjunction is false either way -- but it is out of bounds, and
+            ! -fcheck=bounds aborts on the first shell pair of every run.
+            if (i > 2) then
+               if (abs(ubuf(i)) < ECP_SIM_ZERO .and. &
+                   abs(ubuf(i - 1)) < ECP_SIM_ZERO) then
+                  nrs_now = i
+                  exit
+               end if
             end if
          end do
 
