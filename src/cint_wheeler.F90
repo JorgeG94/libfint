@@ -15,6 +15,8 @@
 !
 module cint_wheeler_dp
    use cint_const,       only: dp, rk => dp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_dp,      only: fmt_erfc_like
    use cint_eigh,        only: cint_diagonalize
    use cint_tab_jacobi,  only: jacobi_coef       => JACOBI_COEF, &
@@ -41,6 +43,8 @@ end module cint_wheeler_dp
 
 module cint_wheeler_qp
    use cint_const,          only: dp, rk => qp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_qp,         only: fmt_erfc_like
    use cint_eigh,           only: cint_diagonalize
    use cint_tab_jacobi,     only: jacobi_coef_order => JACOBI_COEF_ORDER

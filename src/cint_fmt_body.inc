@@ -18,12 +18,12 @@
    ! F_m(t) by the ascending series.  Used below the turnover point, where
    ! the recursion downward from F_m is stable and the closed form is not.
    subroutine fmt1_gamma_inc_like(f, t, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: b, bi, e, x, s, tol
+      RKTYPE :: b, bi, e, x, s, tol
 
       b = real(m, rk) + 0.5_rk
       e = 0.5_rk * exp(-t)
@@ -44,12 +44,12 @@
    end subroutine fmt1_gamma_inc_like
 
    subroutine gamma_inc_like(f, t, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: tt, e, b
+      RKTYPE :: tt, e, b
 
       if (t == 0.0_rk) then
          f(0) = 1.0_rk
@@ -74,12 +74,12 @@
    ! approaches 1, which is why the C documents this whole path as unstable
    ! for x*lower**2 above about 40.
    subroutine fmt1_erfc_like(f, t, lower, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t, lower
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t, lower
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: lower2, b, bi, e, e1, x, x1, s, div, delta, tol, val
+      RKTYPE :: lower2, b, bi, e, e1, x, x1, s, div, delta, tol, val
 
       lower2 = lower * lower
       b = real(m, rk) + 0.5_rk
@@ -111,12 +111,12 @@
    end subroutine fmt1_erfc_like
 
    subroutine fmt_erfc_like(f, t, lower, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t, lower
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t, lower
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: lower2, e1, tt, val, e, b
+      RKTYPE :: lower2, e1, tt, val, e, b
 
       if (lower == 0.0_rk) then
          call gamma_inc_like(f, t, m)

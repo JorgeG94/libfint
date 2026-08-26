@@ -18,14 +18,14 @@
    ! enough precision that the higher Rys polynomials are meaningless, and the
    ! caller treats their contribution as zero.
    function r_smit(cs, fmt_ints, n) result(err)
-      real(rk), intent(inout) :: cs(0:)
-      real(rk), intent(in)    :: fmt_ints(0:)
+      RKTYPE, intent(inout) :: cs(0:)
+      RKTYPE, intent(in)    :: fmt_ints(0:)
       integer,  intent(in)    :: n
       integer :: err
 
       integer  :: i, j, k
-      real(rk) :: fac, dot, tmp
-      real(rk) :: v(0:MXRYSROOTS-1)
+      RKTYPE :: fac, dot, tmp
+      RKTYPE :: v(0:MXRYSROOTS-1)
 
       err = 0
       fac = -fmt_ints(1) / fmt_ints(0)
@@ -74,7 +74,7 @@
    end function r_smit
 
    pure subroutine set_zero(a, n, start)
-      real(rk), intent(inout) :: a(0:)
+      RKTYPE, intent(inout) :: a(0:)
       integer,  intent(in)    :: n, start
       integer :: i, k
       do k = start, n - 1
@@ -97,8 +97,8 @@
       real(dp), intent(out) :: roots(0:), weights(0:)
       integer :: err
 
-      real(rk) :: fmt_ints(0:2*MXRYSROOTS-1)
-      real(rk) :: qcs(0:MXRYSROOTS*MXRYSROOTS-1)
+      RKTYPE :: fmt_ints(0:2*MXRYSROOTS-1)
+      RKTYPE :: qcs(0:MXRYSROOTS*MXRYSROOTS-1)
       real(dp) :: rt(0:MXRYSROOTS-1)
       real(dp) :: cs(0:MXRYSROOTS*MXRYSROOTS-1)
       real(dp) :: root, poly, dum, dum0

@@ -29,6 +29,8 @@
 !
 module cint_schmidt_dp
    use cint_const,      only: dp, rk => dp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_dp,     only: gamma_inc_like, fmt_erfc_like
    use cint_find_roots, only: cint_polynomial_roots, poly_value1
    implicit none
@@ -47,6 +49,8 @@ end module cint_schmidt_dp
 
 module cint_schmidt_qp
    use cint_const,      only: dp, rk => qp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_qp,     only: gamma_inc_like, fmt_erfc_like
    use cint_find_roots, only: cint_polynomial_roots, poly_value1
    implicit none

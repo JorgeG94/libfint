@@ -37,6 +37,8 @@ end module cint_fmt_tab
 
 module cint_fmt_dp
    use cint_const,  only: rk => dp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_tab, only: turnover_point
    implicit none
    private
@@ -56,6 +58,8 @@ end module cint_fmt_dp
 
 module cint_fmt_qp
    use cint_const,  only: rk => qp
+#undef RKTYPE
+#define RKTYPE real(rk)
    use cint_fmt_tab, only: turnover_point_qp => turnover_point
    implicit none
    private
