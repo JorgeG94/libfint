@@ -81,6 +81,10 @@ add_test(NAME dd_fn_check COMMAND $<TARGET_FILE:dd_fn_check>)
 # Not a pass/fail test: it prints a bit fold for comparing one compiler's build
 # against another's. Reproducibility is a property of a *set* of builds, so no
 # single run can assert it.
+add_executable(dd_erfc_check dd_erfc_check.f90)
+target_link_libraries(dd_erfc_check fint)
+add_test(NAME dd_erfc_check COMMAND $<TARGET_FILE:dd_erfc_check>)
+
 add_executable(dd_crossbit dd_crossbit.f90)
 target_link_libraries(dd_crossbit fint)
 

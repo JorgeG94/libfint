@@ -64,14 +64,17 @@ module cint_dd
    public :: operator(+), operator(-), operator(*), operator(/)
    public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
    public :: sqrt, abs
-   public :: dd_exp, dd_erf
-   public :: exp, erf
+   public :: dd_exp, dd_erf, dd_erfc
+   public :: exp, erf, erfc
 
    interface exp
       module procedure dd_exp
    end interface
    interface erf
       module procedure dd_erf
+   end interface
+   interface erfc
+      module procedure dd_erfc
    end interface
 
    ! Split so `hi + lo` reproduces the constant to ~1e-33. Hard-coded rather
@@ -88,6 +91,187 @@ module cint_dd
    type(dd), parameter :: DD_LN2 = dd(0.6931471805599453_dp, 2.3190468138462996e-17_dp)
    type(dd), parameter :: DD_INV_LN2 = dd(1.4426950408889634_dp, 2.0355273740931033e-17_dp)
    type(dd), parameter :: DD_2_SQRTPI = dd(1.1283791670955126_dp, 1.533545961316588e-17_dp)
+
+   ! ERF_MAC: 23 terms, every pair verified to <1e-31
+   type(dd), parameter :: ERF_MAC(0:22) = [ &
+      dd(1.1283791670955126_dp, 1.533545961316588e-17_dp), &
+      dd(-0.37612638903183754_dp, 1.3391897206030649e-17_dp), &
+      dd(0.11283791670955126_dp, -4.017569161809194e-18_dp), &
+      dd(-0.026866170645131252_dp, 4.6092880729453e-19_dp), &
+      dd(0.005223977625442188_dp, -8.962504586282528e-20_dp), &
+      dd(-0.0008548327023450853_dp, 5.0148896786169737e-20_dp), &
+      dd(0.00012055332981789664_dp, 6.480246840070509e-21_dp), &
+      dd(-1.492565035840625e-05_dp, -6.248427055364001e-22_dp), &
+      dd(1.6462114365889248e-06_dp, -1.0547266132407653e-22_dp), &
+      dd(-1.6365844691234924e-07_dp, 1.5075323135139275e-24_dp), &
+      dd(1.4807192815879218e-08_dp, -3.254656350443331e-25_dp), &
+      dd(-1.2290555301717928e-09_dp, 9.976105519856072e-26_dp), &
+      dd(9.422759064650411e-11_dp, -2.8231273253303265e-27_dp), &
+      dd(-6.7113668551641105e-12_dp, 1.0441838553137576e-28_dp), &
+      dd(4.4632242632864775e-13_dp, -1.415652238799887e-29_dp), &
+      dd(-2.7835162072109215e-14_dp, 1.4189660114017355e-30_dp), &
+      dd(1.6342614095367152e-15_dp, -1.159587670993415e-32_dp), &
+      dd(-9.063970842808673e-17_dp, 3.004743561097066e-33_dp), &
+      dd(4.763348040515068e-18_dp, -1.856680962530252e-34_dp), &
+      dd(-2.3784598852774293e-19_dp, -1.5875374697145176e-35_dp), &
+      dd(1.131218725924631e-20_dp, 7.245880865990418e-38_dp), &
+      dd(-5.136209054585811e-22_dp, -1.4537189752115876e-38_dp), &
+      dd(2.2308786802746453e-23_dp, -4.7283897669065125e-40_dp) ]
+
+   ! CXB: 35 terms, every pair verified to <1e-31
+   type(dd), parameter :: CXB(0:34) = [ &
+      dd(0.4062917348653128_dp, 1.6774286231500304e-17_dp), &
+      dd(-0.18151089830658812_dp, 2.8324875440536554e-18_dp), &
+      dd(0.036282977131463424_dp, -5.19682203063749e-19_dp), &
+      dd(-0.0066414453256516195_dp, -4.137921097469651e-19_dp), &
+      dd(0.0011300743535714113_dp, 2.4209042235881436e-20_dp), &
+      dd(-0.0001806468989853791_dp, 5.023431378875334e-21_dp), &
+      dd(2.7342880285563356e-05_dp, -1.1536720979841184e-21_dp), &
+      dd(-3.942598196325111e-06_dp, -1.7419782678376548e-22_dp), &
+      dd(5.441792670106758e-07_dp, 4.3459190761630427e-23_dp), &
+      dd(-7.218251070104982e-08_dp, -3.991412939068519e-24_dp), &
+      dd(9.231522167631464e-09_dp, -4.580877483699805e-25_dp), &
+      dd(-1.1414743168430211e-09_dp, 6.461005232597751e-26_dp), &
+      dd(1.367848537001346e-10_dp, 8.118746762064914e-27_dp), &
+      dd(-1.591764656641901e-11_dp, 2.9914364538568396e-28_dp), &
+      dd(1.802051255167746e-12_dp, -7.603268739698745e-29_dp), &
+      dd(-1.9878778583973728e-13_dp, -9.170148516580802e-30_dp), &
+      dd(2.1397210370699588e-14_dp, -1.1486646817682185e-30_dp), &
+      dd(-2.2501737469358202e-15_dp, -1.2232136570604997e-31_dp), &
+      dd(2.3145069843923556e-16_dp, 1.897108841112813e-32_dp), &
+      dd(-2.3309339983129675e-17_dp, 1.874019689098029e-34_dp), &
+      dd(2.300571581031184e-18_dp, -7.201050728147661e-35_dp), &
+      dd(-2.227132705200476e-19_dp, 3.1205341724755424e-38_dp), &
+      dd(2.1164143036953425e-20_dp, 1.3860885668884489e-36_dp), &
+      dd(-1.9756603241087112e-21_dp, 1.4944673632591166e-37_dp), &
+      dd(1.8128830779636716e-22_dp, -4.825825454946206e-39_dp), &
+      dd(-1.6362173358385416e-23_dp, -5.996760949246596e-40_dp), &
+      dd(1.4533650095800887e-24_dp, 6.063035670947172e-42_dp), &
+      dd(-1.2711675650832093e-25_dp, -5.078494822192844e-42_dp), &
+      dd(1.0953222350192672e-26_dp, -3.5199034868300316e-43_dp), &
+      dd(-9.30239572291492e-28_dp, -6.364304823177461e-44_dp), &
+      dd(7.790257611782451e-29_dp, -1.0256863555859985e-45_dp), &
+      dd(-6.435641585129341e-30_dp, 6.287428151470075e-46_dp), &
+      dd(5.246666253200263e-31_dp, -3.245655691359941e-47_dp), &
+      dd(-4.222655315980911e-32_dp, 1.0771661635863134e-48_dp), &
+      dd(3.356207203483348e-33_dp, 3.1244013848598736e-49_dp) ]
+
+   ! CXC: 55 terms, every pair verified to <1e-31
+   type(dd), parameter :: CXC(0:54) = [ &
+      dd(0.12688864224726762_dp, 6.096112571785444e-18_dp), &
+      dd(-0.08616200556789433_dp, 1.9525289463403056e-18_dp), &
+      dd(0.028651053925305044_dp, -1.0724557642268018e-18_dp), &
+      dd(-0.009343253046868725_dp, 8.210245882909174e-19_dp), &
+      dd(0.0029914732487633434_dp, -8.923089771810032e-20_dp), &
+      dd(-0.0009413219492765497_dp, -3.9559059104691374e-20_dp), &
+      dd(0.0002913695785780654_dp, -1.0677164842276307e-21_dp), &
+      dd(-8.878685953005519e-05_dp, -1.2701922743970771e-21_dp), &
+      dd(2.6653991769316863e-05_dp, -1.6379342055070324e-21_dp), &
+      dd(-7.887979843277031e-06_dp, 7.121423128999653e-22_dp), &
+      dd(2.3025797005119897e-06_dp, -6.772738881748809e-23_dp), &
+      dd(-6.633491767511841e-07_dp, -2.5831546778501326e-23_dp), &
+      dd(1.886958777670757e-07_dp, 6.5373445953276504e-24_dp), &
+      dd(-5.3024001301092376e-08_dp, -1.699429663716183e-24_dp), &
+      dd(1.472498041089986e-08_dp, 6.839847001650318e-25_dp), &
+      dd(-4.042761890680327e-09_dp, 1.8941433719554816e-25_dp), &
+      dd(1.0977415380095793e-09_dp, 1.2475571165348304e-26_dp), &
+      dd(-2.948949070772245e-10_dp, -1.802669604524215e-26_dp), &
+      dd(7.840015906100578e-11_dp, 6.399200391900076e-27_dp), &
+      dd(-2.0633733117411154e-11_dp, 1.3696865200671105e-27_dp), &
+      dd(5.377380977005958e-12_dp, 3.681924529764916e-29_dp), &
+      dd(-1.3880650612558013e-12_dp, -6.215359053087517e-29_dp), &
+      dd(3.5497871470216253e-13_dp, -4.673795806694174e-31_dp), &
+      dd(-8.99600830079053e-14_dp, -3.622539201200953e-31_dp), &
+      dd(2.259688643949653e-14_dp, 6.5210406597575405e-31_dp), &
+      dd(-5.627166849574083e-15_dp, -9.194990545971325e-32_dp), &
+      dd(1.3895048089718878e-15_dp, 7.623956382873621e-32_dp), &
+      dd(-3.402842116683346e-16_dp, 1.4770039164568218e-32_dp), &
+      dd(8.266344962636707e-17_dp, -4.415142842117253e-33_dp), &
+      dd(-1.992278713386956e-17_dp, -1.2996166017484405e-33_dp), &
+      dd(4.764562143034114e-18_dp, 2.268711800854185e-34_dp), &
+      dd(-1.1308384542322735e-18_dp, -2.536028064459608e-35_dp), &
+      dd(2.6640858570727695e-19_dp, 1.0059960525788455e-35_dp), &
+      dd(-6.230581799329958e-20_dp, 1.944129704378642e-36_dp), &
+      dd(1.4467777281769567e-20_dp, -6.11950203038403e-37_dp), &
+      dd(-3.335996114738264e-21_dp, 5.458501083031246e-38_dp), &
+      dd(7.639328513634148e-22_dp, -9.295238706310079e-39_dp), &
+      dd(-1.7375769923301635e-22_dp, 3.482765204452262e-39_dp), &
+      dd(3.9259380127289167e-23_dp, -1.6048481611351936e-40_dp), &
+      dd(-8.812573037525616e-24_dp, 3.389742917957844e-40_dp), &
+      dd(1.9654841633846056e-24_dp, 1.4081903068057502e-41_dp), &
+      dd(-4.356019646633917e-25_dp, 3.7327668115650966e-41_dp), &
+      dd(9.594181088393498e-26_dp, -2.3189348250990255e-42_dp), &
+      dd(-2.1002288654274108e-26_dp, 1.4697630641453873e-43_dp), &
+      dd(4.569907008967642e-27_dp, -3.8523599497099677e-44_dp), &
+      dd(-9.884851977740967e-28_dp, -8.223967100177135e-44_dp), &
+      dd(2.1256599704494173e-28_dp, 5.673899828989284e-46_dp), &
+      dd(-4.544810254409559e-29_dp, -2.0839826268359592e-45_dp), &
+      dd(9.662119621544905e-30_dp, 1.4194433662743134e-46_dp), &
+      dd(-2.042673696891575e-30_dp, 1.4195722915996438e-46_dp), &
+      dd(4.294668991731172e-31_dp, 4.301198376361296e-47_dp), &
+      dd(-8.980441293737488e-32_dp, 1.7993125474452967e-48_dp), &
+      dd(1.8678205255238366e-32_dp, 5.8415455231002554e-49_dp), &
+      dd(-3.864322569078916e-33_dp, 3.2732264522113656e-49_dp), &
+      dd(7.95321562979717e-34_dp, 1.5994817461838743e-50_dp) ]
+
+   ! ASY_D: 56 terms; largest |coef| = 9.64e+71
+   type(dd), parameter :: ASY_D(0:55) = [ &
+      dd(1.0_dp, 0.0_dp), &
+      dd(-0.5_dp, 0.0_dp), &
+      dd(0.75_dp, 0.0_dp), &
+      dd(-1.875_dp, 0.0_dp), &
+      dd(6.5625_dp, 0.0_dp), &
+      dd(-29.53125_dp, 0.0_dp), &
+      dd(162.421875_dp, 0.0_dp), &
+      dd(-1055.7421875_dp, 0.0_dp), &
+      dd(7918.06640625_dp, 0.0_dp), &
+      dd(-67303.564453125_dp, 0.0_dp), &
+      dd(639383.8623046875_dp, 0.0_dp), &
+      dd(-6713530.554199219_dp, 0.0_dp), &
+      dd(77205601.37329102_dp, 0.0_dp), &
+      dd(-965070017.1661377_dp, 0.0_dp), &
+      dd(13028445231.742859_dp, 0.0_dp), &
+      dd(-188912455860.27145_dp, 0.0_dp), &
+      dd(2928143065834.2075_dp, 1.52587890625e-05_dp), &
+      dd(-48314360586264.42_dp, -0.00244903564453125_dp), &
+      dd(845501310259627.4_dp, 0.050670623779296875_dp), &
+      dd(-1.5641774239803108e+16_dp, 0.6250934600830078_dp), &
+      dd(3.050145976761606e+17_dp, 17.810677528381348_dp), &
+      dd(-6.252799252361292e+18_dp, -397.1188893318176_dp), &
+      dd(1.3443518392576778e+20_dp, -677.943879365921_dp), &
+      dd(-3.024791638329775e+21_dp, -255082.26271426678_dp), &
+      dd(7.108260350074972e+22_dp, -2918462.8262147307_dp), &
+      dd(-1.741523785768368e+24_dp, -37549564.7577391_dp), &
+      dd(4.440885653709338e+25_dp, 2299691181.322347_dp), &
+      dd(-1.1768346982329746e+27_dp, -60941816305.0422_dp), &
+      dd(3.2362954201406804e+28_dp, -110806446747.33965_dp), &
+      dd(-9.223441947400939e+29_dp, -45220527889844.82_dp), &
+      dd(2.720915374483277e+31_dp, -1832587915244457.8_dp), &
+      dd(-8.298791892173995e+32_dp, 5.364213160127071e+16_dp), &
+      dd(2.6141194460348083e+34_dp, 1.2646342101150177e+18_dp), &
+      dd(-8.495888199613127e+35_dp, 2.710405346322105e+18_dp), &
+      dd(2.8461225468703976e+37_dp, 8.684321127311062e+20_dp), &
+      dd(-9.819122786702872e+38_dp, 1.0179207215168822e+22_dp), &
+      dd(3.4857885892795196e+40_dp, -5.8803544731623615e+23_dp), &
+      dd(-1.2723128350870246e+42_dp, -2.6893738957542547e+25_dp), &
+      dd(4.771173131576342e+43_dp, 3.40702403702327e+27_dp), &
+      dd(-1.8369016556568918e+45_dp, 1.7382379288849744e+28_dp), &
+      dd(7.255761539844723e+46_dp, -5.27786817954502e+28_dp), &
+      dd(-2.9385834236371126e+48_dp, -8.003668189110103e+30_dp), &
+      dd(1.2195121208094018e+50_dp, -1.6149590921024911e+33_dp), &
+      dd(-5.1829265134399576e+51_dp, 1.9325088601919174e+35_dp), &
+      dd(2.2545730333463817e+53_dp, -1.9040237508114167e+37_dp), &
+      dd(-1.0032849998391398e+55_dp, 4.857405542575833e+38_dp), &
+      dd(4.564946749268086e+56_dp, 1.6690994610266944e+40_dp), &
+      dd(-2.12270023840966e+58_dp, 8.354460403601517e+41_dp), &
+      dd(1.0082826132445884e+60_dp, 3.279373497811732e+43_dp), &
+      dd(-4.890170674236254e+61_dp, 1.5316081813555972e+45_dp), &
+      dd(2.4206344837469458e+63_dp, 3.265621966855089e+46_dp), &
+      dd(-1.2224204142922075e+65_dp, -9.504710393915423e+48_dp), &
+      dd(6.295465133604869e+66_dp, 4.519608753804979e+49_dp), &
+      dd(-3.305119195142556e+68_dp, -1.4345416008762372e+52_dp), &
+      dd(1.7682387694012676e+70_dp, 7.914249992948164e+53_dp), &
+      dd(-9.636901293236909e+71_dp, -1.8612733807713268e+55_dp) ]
 
    ! **Overloaded so the shared bodies do not change.** cint_fmt_body.inc and
    ! cint_wheeler_body.inc are included once per precision with `rk` bound to a
@@ -396,7 +580,12 @@ contains
       real(dp) :: k
       integer :: i
 
-      if (a%hi < -700.0_dp) then
+      ! ln(tiny(1.0_dp)) = -708.396, so anything above this still has a normal
+      ! double for `hi`. The first version cut at a round -700, which is
+      ! exp = 9.8e-305 -- nowhere near underflow, and it silently returned zero
+      ! for a whole decade of representable results. erfc(26.46) came back 0
+      ! against a true 1.8e-306.
+      if (a%hi < -708.0_dp) then
          r = dd_from(0.0_dp)
          return
       end if
@@ -460,13 +649,83 @@ contains
       if (a%hi < 0.0_dp) r = dd_neg(r)
    end function dd_erf
 
-   ! dd_erfc is deliberately absent: Jorge has a bitwise-reproducible erfc that
-   ! should be the reference here, and guessing at an asymptotic series before
-   ! seeing it would mean writing something that has to agree with libcint bit
-   ! for bit without ever having been compared to it.
-   !
-   ! The two call sites that need it are both `erfc(a) - erfc(b)` -- in
-   ! cint_fmt_body.inc and cint_wheeler_body.inc -- so whatever lands has to be
-   ! accurate in the tail, where `1 - erf(x)` is not.
+   pure type(dd) function dd_erfc(a) result(r)
+      !! erfc for double-double, in four bands.
+      !!
+      !! Band structure and method from bitwise_adventures' `erfc_reprod`, which
+      !! is the same shape at double precision. Two things had to change for dd.
+      !!
+      !! **The C/D boundary moves from 7 to 9.** An asymptotic series cannot be
+      !! made more accurate than its smallest term, and for this one that floor
+      !! is 7.4e-22 at x = 7 -- perfect for double and unreachable for dd. At
+      !! x = 9 it is 9.6e-36. So the Chebyshev band has to cover [2, 9] and the
+      !! asymptotic band start where it can actually deliver.
+      !!
+      !! **`1 - erf(x)` is used only below 0.46875**, where erf is small enough
+      !! that the subtraction costs nothing. Above it erfc is computed directly,
+      !! because by x = 4 the identity throws away eight digits before any of
+      !! this arithmetic begins -- and the two call sites in the shared bodies
+      !! are `erfc(a) - erfc(b)` with the two nearly equal, which is where those
+      !! digits were going to be needed.
+      type(dd), intent(in) :: a
+      type(dd) :: ax, u, t, tt, b1, b2, bt, ex2, s2
+      integer :: j
+
+      ax = dd_abs(a)
+      if (ax%hi >= 28.0_dp) then
+         ! Underflowed; erfc(28) is ~1e-342, below what a double `hi` can hold.
+         r = dd_from(0.0_dp)
+         if (a%hi < 0.0_dp) r = dd_from(2.0_dp)
+         return
+      end if
+
+      if (ax%hi <= 0.46875_dp) then
+         u = dd_mul(a, a)
+         t = ERF_MAC(ubound(ERF_MAC, 1))
+         do j = ubound(ERF_MAC, 1) - 1, 0, -1
+            t = dd_add(ERF_MAC(j), dd_mul(u, t))
+         end do
+         r = dd_sub(dd_from(1.0_dp), dd_mul(a, t))
+         return
+      end if
+
+      ! erfcx(x) = erfc(x) exp(x^2), which is what the fits below approximate;
+      ! it is O(1) across the whole range where erfc itself spans 300 decades.
+      ex2 = dd_exp(dd_neg(dd_mul(ax, ax)))
+
+      if (ax%hi <= 2.0_dp) then
+         ! Clenshaw on [0.46875, 2]. Both constants are exact in binary.
+         tt = dd_div(dd_sub(dd_mul(ax, dd_from(2.0_dp)), dd_from(2.46875_dp)), &
+                     dd_from(1.53125_dp))
+         b1 = dd_from(0.0_dp); b2 = dd_from(0.0_dp)
+         do j = ubound(CXB, 1), 1, -1
+            bt = dd_add(dd_sub(dd_mul(dd_mul(dd_from(2.0_dp), tt), b1), b2), CXB(j))
+            b2 = b1; b1 = bt
+         end do
+         t = dd_add(dd_sub(dd_mul(tt, b1), b2), CXB(0))
+         r = dd_mul(ex2, t)
+      else if (ax%hi <= 9.0_dp) then
+         tt = dd_div(dd_sub(dd_mul(ax, dd_from(2.0_dp)), dd_from(11.0_dp)), &
+                     dd_from(7.0_dp))
+         b1 = dd_from(0.0_dp); b2 = dd_from(0.0_dp)
+         do j = ubound(CXC, 1), 1, -1
+            bt = dd_add(dd_sub(dd_mul(dd_mul(dd_from(2.0_dp), tt), b1), b2), CXC(j))
+            b2 = b1; b1 = bt
+         end do
+         t = dd_add(dd_sub(dd_mul(tt, b1), b2), CXC(0))
+         r = dd_mul(ex2, t)
+      else
+         ! Asymptotic in s = 1/x^2, summed backwards so the smallest terms go in
+         ! first. Divergent, but cut where the terms stop shrinking.
+         s2 = dd_div(dd_from(1.0_dp), dd_mul(ax, ax))
+         t = ASY_D(ubound(ASY_D, 1))
+         do j = ubound(ASY_D, 1) - 1, 0, -1
+            t = dd_add(ASY_D(j), dd_mul(s2, t))
+         end do
+         r = dd_div(dd_mul(ex2, dd_mul(dd_div(DD_2_SQRTPI, dd_from(2.0_dp)), t)), ax)
+      end if
+
+      if (a%hi < 0.0_dp) r = dd_sub(dd_from(2.0_dp), r)
+   end function dd_erfc
 
 end module cint_dd
