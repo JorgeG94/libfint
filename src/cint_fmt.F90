@@ -81,8 +81,11 @@ module cint_fmt_qp
    ! 80-bit ladder; that ladder becomes binary128 here, so it gets the tighter
    ! tolerance and converges further than the C does.
    real(rk), parameter :: sml = 1.0e-31_rk   ! dd carries ~1e-32; 1e-35 is unreachable
-   real(rk), parameter :: sqrtpie4 = &
-      0.8862269254527580136490837416705725913987747280611935641069038949264_rk
+   ! sqrt(pi)/2 as a dd pair. As a bare double this carries 4.3e-17 against
+   ! the 67-digit value, which capped the whole extended ladder at ~1e-17 --
+   ! it is the leading factor in both the Boys function and the moments.
+   type(dd), parameter :: sqrtpie4 = &
+      dd(0.886226925452758_dp, -3.8332932499128993e-17_dp)
    real(rk), parameter :: erfc_bound = 200.0_rk
 
    ! The turnover table is a set of thresholds, not data feeding the result,

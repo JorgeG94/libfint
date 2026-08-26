@@ -71,8 +71,11 @@ module cint_wheeler_qp
 
    integer,  parameter :: MXRYSROOTS = 32
    integer,  parameter :: flocke_extra_order = 36
-   real(rk), parameter :: sqrtpie4 = &
-      0.8862269254527580136490837416705725913987747280611935641069038949264_rk
+   ! sqrt(pi)/2 as a dd pair. As a bare double this carries 4.3e-17 against
+   ! the 67-digit value, which capped the whole extended ladder at ~1e-17 --
+   ! it is the leading factor in both the Boys function and the moments.
+   type(dd), parameter :: sqrtpie4 = &
+      dd(0.886226925452758_dp, -3.8332932499128993e-17_dp)
    real(rk), parameter :: smallx_limit = 3.0e-7_rk
 
 contains
