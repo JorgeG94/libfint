@@ -63,6 +63,13 @@ add_executable(ecp_abi_check ecp_abi_check.c)
 target_link_libraries(ecp_abi_check fint m)
 add_test(NAME ecp_abi_check COMMAND $<TARGET_FILE:ecp_abi_check>)
 
+# Double-double carries no libcint reference: it is checked against real128 in
+# the same binary, which is exact and needs nothing external. Kept out of
+# LIBFINT_CHECKS for that reason -- everything in that list links `cint`.
+add_executable(dd_check dd_check.f90)
+target_link_libraries(dd_check fint)
+add_test(NAME dd_check COMMAND $<TARGET_FILE:dd_check>)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)

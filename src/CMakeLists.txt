@@ -8,6 +8,7 @@
 set(cintFortranSrc
   cint_const.f90
   cint_ecp_num.f90
+  cint_dd.f90
   cint_bas.f90
   cint_blas.f90
   cint_fmt.F90
