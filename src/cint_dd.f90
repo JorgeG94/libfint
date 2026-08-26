@@ -20,11 +20,32 @@
 ! has no portable FMA before F2018's IEEE_FMA and nvfortran's support for it is
 ! not something to rely on here.
 !
-! **This breaks under -ffast-math.**  Every one of these routines depends on the
-! compiler *not* reassociating `(a + b) - a`, which is the whole mechanism.
-! -Ofast, -ffast-math and nvfortran's default -fast will silently turn these
-! into zero error terms and leave double precision wearing a double-double type.
-! The build must keep IEEE semantics for this file.
+! **The flag contract, measured rather than assumed.**  Folding the raw bits of
+! 2000 dd results over sqrt/exp/erf/div/mul:
+!
+!   gfortran -O2                     hi 0854955B40D86FC2   lo 85F4EDB9AB7A5253
+!   nvfortran -O2 -Mnofma            hi 0854955B40D86FC2   lo 85F4EDB9AB7A5253
+!   nvfortran -O2   (FMA is default) hi 0854955B40D86FC2   lo B7E34D1CF97CFA3B
+!   nvfortran -fast                  hi 0854955B40D86FC2   lo B7E34D1CF97CFA3B
+!   gfortran -O2 -ffast-math         hi 1B7A0DE5351EEF18   lo 0000000000000000
+!
+! Two different failures, and they need different responses.
+!
+! **FMA contraction costs reproducibility, not accuracy.**  `hi` is identical
+! everywhere; only the error term changes, and it stays a valid error term --
+! accuracy over [-35,35] is 3.2e-30 contracted against 3.3e-30 not.  So an FMA
+! build is *correct* and merely disagrees bit-for-bit with every other build.
+! nvfortran contracts by default at -O2, so -Mnofma is required to match.  On
+! ifx the spelling is -no-fma; -fno-fma is accepted and silently ignored.
+!
+! **-ffast-math destroys it outright.**  Every `lo` folds to exactly zero: the
+! reassociation of `(a + b) - a` that the error terms are built from is gone,
+! and what is left is double precision wearing a double-double type.  That is
+! the one that must never be allowed, and dd_check catches it.
+!
+! Both findings are from this repository's own compilers, not from lore; the
+! landmine catalogue in bitwise_adventures documents the same FMA behaviour
+! from an independent direction.
 !
 module cint_dd
    use iso_fortran_env, only: real64

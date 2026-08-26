@@ -78,6 +78,12 @@ add_executable(dd_fn_check dd_fn_check.f90)
 target_link_libraries(dd_fn_check fint)
 add_test(NAME dd_fn_check COMMAND $<TARGET_FILE:dd_fn_check>)
 
+# Not a pass/fail test: it prints a bit fold for comparing one compiler's build
+# against another's. Reproducibility is a property of a *set* of builds, so no
+# single run can assert it.
+add_executable(dd_crossbit dd_crossbit.f90)
+target_link_libraries(dd_crossbit fint)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)
