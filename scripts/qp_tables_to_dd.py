@@ -39,6 +39,32 @@ def convert(text):
         count += 1
         return f"dd({hi!r}_dp, {lo!r}_dp)"
     out = LIT.sub(repl, text)
+    # Re-wrap: a dd(hi, lo) pair is much longer than the literal it replaces,
+    # so lines that held two or three literals now run past the 132-column
+    # free-form limit, which gfortran treats as -Werror=line-truncation.
+    wrapped = []
+    for line in out.split("\n"):
+        if len(line) <= 100 or "dd(" not in line:
+            wrapped.append(line); continue
+        indent = " " * (len(line) - len(line.lstrip()))
+        cont = line.rstrip().endswith("&")
+        body = line.strip().rstrip("&").strip()
+        parts, depth, cur = [], 0, ""
+        for ch in body:
+            if ch == "(": depth += 1
+            elif ch == ")": depth -= 1
+            if ch == "," and depth == 0:
+                parts.append(cur.strip()); cur = ""
+            else:
+                cur += ch
+        if cur.strip(): parts.append(cur.strip())
+        for i, pc in enumerate(parts):
+            last = (i == len(parts) - 1)
+            # A continued line's LAST element still needs its comma: the next
+            # source line carries the following element, not a new statement.
+            suffix = ", &" if (last and cont) else ("" if last else ", &")
+            wrapped.append(indent + pc + suffix)
+    out = "\n".join(wrapped)
     return out, count, worst
 
 def main():
