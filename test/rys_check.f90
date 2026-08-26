@@ -31,7 +31,11 @@
 ! the roots match would fail 2,230 correct results and hide those 25.
 !
 program rys_check
-   use cint_const,     only: dp, qp
+   use cint_const,     only: dp
+   use cint_dd, only: dd, dd_from, dd_to_dp, operator(+), operator(-), &
+                      operator(*), operator(/), operator(<), operator(>), &
+                      operator(<=), operator(>=), operator(==), operator(**), &
+                      assignment(=), sqrt, abs, exp, erf, erfc, max, min
    use cint_fmt_qp,    only: gamma_inc_like, fmt_erfc_like
    use cint_rys_roots, only: cint_rys_roots_lr, cint_rys_roots_sr
    implicit none
@@ -55,7 +59,7 @@ program rys_check
    character(len=256) :: path
    integer  :: u, ios, kind_, n, cerr, ferr, i, m
    real(dp) :: x, lo, cu(0:31), cw(0:31), fu(0:31), fw(0:31)
-   real(qp) :: fm(0:127), s, t2, want
+   type(dd) :: fm(0:127), s, t2, want
    real(dp) :: relC, relF, rel
    integer  :: nrec, nerrmis, nchecked, nworse, ndiff, nbetter
    real(dp) :: worst_excess
@@ -109,29 +113,29 @@ program rys_check
 
       ! moment reproduction, in quad
       if (lo == 0.0_dp) then
-         call gamma_inc_like(fm, real(x, qp), 2*n - 1)
+         call gamma_inc_like(fm, dd_from(x), 2*n - 1)
       else
-         call fmt_erfc_like(fm, real(x, qp), real(lo, qp), 2*n - 1)
+         call fmt_erfc_like(fm, dd_from(x), dd_from(lo), 2*n - 1)
       end if
-      if (fm(0) <= 0.0_qp) cycle
+      if (fm(0) <= dd_from(0.0_dp)) cycle
 
       relC = 0.0_dp
       relF = 0.0_dp
       do m = 0, 2*n - 1
          want = fm(m)
-         if (abs(want) < 1.0e-250_qp) cycle
-         s = 0.0_qp
+         if (abs(want) < dd_from(1.0e-250_dp)) cycle
+         s = dd_from(0.0_dp)
          do i = 0, n - 1
-            t2 = real(cu(i), qp) / (1.0_qp + real(cu(i), qp))
-            s = s + real(cw(i), qp) * t2**m
+            t2 = dd_from(cu(i)) / (dd_from(1.0_dp) + dd_from(cu(i)))
+            s = s + dd_from(cw(i)) * t2**m
          end do
-         relC = max(relC, real(abs(s - want) / abs(want), dp))
-         s = 0.0_qp
+         relC = max(relC, dd_to_dp(abs(s - want) / abs(want)))
+         s = dd_from(0.0_dp)
          do i = 0, n - 1
-            t2 = real(fu(i), qp) / (1.0_qp + real(fu(i), qp))
-            s = s + real(fw(i), qp) * t2**m
+            t2 = dd_from(fu(i)) / (dd_from(1.0_dp) + dd_from(fu(i)))
+            s = s + dd_from(fw(i)) * t2**m
          end do
-         relF = max(relF, real(abs(s - want) / abs(want), dp))
+         relF = max(relF, dd_to_dp(abs(s - want) / abs(want)))
       end do
       nchecked = nchecked + 1
 

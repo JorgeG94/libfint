@@ -80,7 +80,7 @@ module cint_fmt_qp
    ! C: SML_FLOAT128 = 1.0e-35.  The C also has SML_FLOAT80 = 2.0e-20 for its
    ! 80-bit ladder; that ladder becomes binary128 here, so it gets the tighter
    ! tolerance and converges further than the C does.
-   real(rk), parameter :: sml = 1.0e-35_rk
+   real(rk), parameter :: sml = 1.0e-31_rk   ! dd carries ~1e-32; 1e-35 is unreachable
    real(rk), parameter :: sqrtpie4 = &
       0.8862269254527580136490837416705725913987747280611935641069038949264_rk
    real(rk), parameter :: erfc_bound = 200.0_rk

@@ -54,6 +54,10 @@ module cint_dd
 
    integer, parameter :: dp = real64
 
+   interface dd_from
+      module procedure dd_from_r, dd_from_i
+   end interface
+
    type, public :: dd
       real(dp) :: hi = 0.0_dp
       real(dp) :: lo = 0.0_dp
@@ -65,6 +69,14 @@ module cint_dd
    public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
    public :: sqrt, abs
    public :: assignment(=), operator(**)
+   public :: max, min
+
+   interface max
+      module procedure dd_max, dd_max_r
+   end interface
+   interface min
+      module procedure dd_min, dd_min_r
+   end interface
 
    interface assignment(=)
       module procedure dd_assign_r
@@ -326,14 +338,23 @@ module cint_dd
 
 contains
 
-   pure type(dd) function dd_from(x) result(r)
+   elemental type(dd) function dd_from_r(x) result(r)
       !! A double promoted exactly: the error term is zero by construction.
       real(dp), intent(in) :: x
       r%hi = x
       r%lo = 0.0_dp
-   end function dd_from
+   end function dd_from_r
 
-   pure real(dp) function dd_to_dp(a) result(r)
+   elemental type(dd) function dd_from_i(n) result(r)
+      !! An integer promoted exactly. The shared bodies and the checks write
+      !! `real(2*m - 1, rk)`, which becomes `dd_from(2*m - 1)` once rk is a
+      !! type; without this that is "passed INTEGER(4) to REAL(8)".
+      integer, intent(in) :: n
+      r%hi = real(n, dp)
+      r%lo = 0.0_dp
+   end function dd_from_i
+
+   elemental real(dp) function dd_to_dp(a) result(r)
       !! Back to double, correctly rounded by the representation itself.
       type(dd), intent(in) :: a
       r = a%hi + a%lo
@@ -376,7 +397,7 @@ contains
       e = ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo
    end subroutine two_prod
 
-   pure type(dd) function dd_add(a, b) result(r)
+   elemental type(dd) function dd_add(a, b) result(r)
       !! Sum of two double-doubles, renormalised.
       type(dd), intent(in) :: a, b
       real(dp) :: s1, s2, t1, t2, u1, u2
@@ -394,7 +415,7 @@ contains
       call two_sum(u1, u2, r%hi, r%lo)
    end function dd_add
 
-   pure type(dd) function dd_mul(a, b) result(r)
+   elemental type(dd) function dd_mul(a, b) result(r)
       !! Product of two double-doubles, renormalised.
       type(dd), intent(in) :: a, b
       real(dp) :: p1, p2
@@ -404,17 +425,17 @@ contains
       call two_sum(p1, p2, r%hi, r%lo)
    end function dd_mul
 
-   pure type(dd) function dd_neg(a) result(r)
+   elemental type(dd) function dd_neg(a) result(r)
       type(dd), intent(in) :: a
       r%hi = -a%hi; r%lo = -a%lo
    end function dd_neg
 
-   pure type(dd) function dd_sub(a, b) result(r)
+   elemental type(dd) function dd_sub(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = dd_add(a, dd_neg(b))
    end function dd_sub
 
-   pure type(dd) function dd_div(a, b) result(r)
+   elemental type(dd) function dd_div(a, b) result(r)
       !! Long division: a double-precision quotient, then one correction pass
       !! against the exact remainder.
       !!
@@ -433,7 +454,7 @@ contains
       call two_sum(q1, q2, r%hi, r%lo)
    end function dd_div
 
-   pure type(dd) function dd_sqrt(a) result(r)
+   elemental type(dd) function dd_sqrt(a) result(r)
       !! One Newton step on a double-precision square root.
       !!
       !! x1 = x0 + (a - x0^2) / (2 x0) doubles the correct digits, so a
@@ -454,7 +475,7 @@ contains
       r = dd_add(dd_from(x0), corr)
    end function dd_sqrt
 
-   pure type(dd) function dd_abs(a) result(r)
+   elemental type(dd) function dd_abs(a) result(r)
       type(dd), intent(in) :: a
       if (a%hi < 0.0_dp) then
          r = dd_neg(a)
@@ -464,49 +485,49 @@ contains
    end function dd_abs
 
    ! Mixed dd/real64 forms, so a literal in the shared bodies needs no wrapper.
-   pure type(dd) function dd_add_r(a, b) result(r)
+   elemental type(dd) function dd_add_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_add(a, dd_from(b))
    end function dd_add_r
 
-   pure type(dd) function dd_r_add(a, b) result(r)
+   elemental type(dd) function dd_r_add(a, b) result(r)
       real(dp), intent(in) :: a
       type(dd), intent(in) :: b
       r = dd_add(dd_from(a), b)
    end function dd_r_add
 
-   pure type(dd) function dd_sub_r(a, b) result(r)
+   elemental type(dd) function dd_sub_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_sub(a, dd_from(b))
    end function dd_sub_r
 
-   pure type(dd) function dd_r_sub(a, b) result(r)
+   elemental type(dd) function dd_r_sub(a, b) result(r)
       real(dp), intent(in) :: a
       type(dd), intent(in) :: b
       r = dd_sub(dd_from(a), b)
    end function dd_r_sub
 
-   pure type(dd) function dd_mul_r(a, b) result(r)
+   elemental type(dd) function dd_mul_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_mul(a, dd_from(b))
    end function dd_mul_r
 
-   pure type(dd) function dd_r_mul(a, b) result(r)
+   elemental type(dd) function dd_r_mul(a, b) result(r)
       real(dp), intent(in) :: a
       type(dd), intent(in) :: b
       r = dd_mul(dd_from(a), b)
    end function dd_r_mul
 
-   pure type(dd) function dd_div_r(a, b) result(r)
+   elemental type(dd) function dd_div_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_div(a, dd_from(b))
    end function dd_div_r
 
-   pure type(dd) function dd_r_div(a, b) result(r)
+   elemental type(dd) function dd_r_div(a, b) result(r)
       real(dp), intent(in) :: a
       type(dd), intent(in) :: b
       r = dd_div(dd_from(a), b)
@@ -515,62 +536,62 @@ contains
    ! Comparisons go through the full value, not just `hi`: two numbers can share
    ! a leading double and differ in the tail, which is the entire reason for the
    ! type.
-   pure logical function dd_lt(a, b) result(r)
+   elemental logical function dd_lt(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = (a%hi < b%hi) .or. (a%hi == b%hi .and. a%lo < b%lo)
    end function dd_lt
 
-   pure logical function dd_lt_r(a, b) result(r)
+   elemental logical function dd_lt_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_lt(a, dd_from(b))
    end function dd_lt_r
 
-   pure logical function dd_gt(a, b) result(r)
+   elemental logical function dd_gt(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = (a%hi > b%hi) .or. (a%hi == b%hi .and. a%lo > b%lo)
    end function dd_gt
 
-   pure logical function dd_gt_r(a, b) result(r)
+   elemental logical function dd_gt_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_gt(a, dd_from(b))
    end function dd_gt_r
 
-   pure logical function dd_le(a, b) result(r)
+   elemental logical function dd_le(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = .not. dd_gt(a, b)
    end function dd_le
 
-   pure logical function dd_le_r(a, b) result(r)
+   elemental logical function dd_le_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_le(a, dd_from(b))
    end function dd_le_r
 
-   pure logical function dd_ge(a, b) result(r)
+   elemental logical function dd_ge(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = .not. dd_lt(a, b)
    end function dd_ge
 
-   pure logical function dd_ge_r(a, b) result(r)
+   elemental logical function dd_ge_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_ge(a, dd_from(b))
    end function dd_ge_r
 
-   pure logical function dd_eq(a, b) result(r)
+   elemental logical function dd_eq(a, b) result(r)
       type(dd), intent(in) :: a, b
       r = (a%hi == b%hi) .and. (a%lo == b%lo)
    end function dd_eq
 
-   pure logical function dd_eq_r(a, b) result(r)
+   elemental logical function dd_eq_r(a, b) result(r)
       type(dd), intent(in) :: a
       real(dp), intent(in) :: b
       r = dd_eq(a, dd_from(b))
    end function dd_eq_r
 
-   pure type(dd) function dd_exp(a) result(r)
+   elemental type(dd) function dd_exp(a) result(r)
       !! exp for double-double, by range reduction and a Taylor series.
       !!
       !! Two reductions. First `a = k ln2 + t` puts `t` in [-ln2/2, ln2/2]; then
@@ -619,7 +640,7 @@ contains
       r = dd_mul(sum, dd_from(2.0_dp**int(k)))
    end function dd_exp
 
-   pure type(dd) function dd_erf(a) result(r)
+   elemental type(dd) function dd_erf(a) result(r)
       !! erf for double-double.
       !!
       !! Below the crossover this uses the *confluent* series
@@ -657,7 +678,7 @@ contains
       if (a%hi < 0.0_dp) r = dd_neg(r)
    end function dd_erf
 
-   pure type(dd) function dd_erfc(a) result(r)
+   elemental type(dd) function dd_erfc(a) result(r)
       !! erfc for double-double, in four bands.
       !!
       !! Band structure and method from bitwise_adventures' `erfc_reprod`, which
@@ -746,7 +767,7 @@ contains
       out%lo = 0.0_dp
    end subroutine dd_assign_r
 
-   pure type(dd) function dd_pow_i(a, n) result(r)
+   elemental type(dd) function dd_pow_i(a, n) result(r)
       !! Integer power by repeated squaring.
       !!
       !! Squaring rather than exp(n log a): it is exact for the small n the
@@ -771,5 +792,27 @@ contains
       end do
       if (n < 0) r = dd_div(dd_from(1.0_dp), r)
    end function dd_pow_i
+
+   elemental type(dd) function dd_max(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = merge(a, b, dd_gt(a, b))
+   end function dd_max
+
+   elemental type(dd) function dd_max_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_max(a, dd_from(b))
+   end function dd_max_r
+
+   elemental type(dd) function dd_min(a, b) result(r)
+      type(dd), intent(in) :: a, b
+      r = merge(a, b, dd_lt(a, b))
+   end function dd_min
+
+   elemental type(dd) function dd_min_r(a, b) result(r)
+      type(dd), intent(in) :: a
+      real(dp), intent(in) :: b
+      r = dd_min(a, dd_from(b))
+   end function dd_min_r
 
 end module cint_dd
