@@ -13,3 +13,16 @@ the integral kernels, and the structure of this library are all libcint's.
 This project translates them to Fortran and verifies, on every build, that the
 translation produces bit-identical results.  It is not an independent
 implementation and does not claim to be one.
+
+PySCF
+Copyright 2014- The PySCF Developers
+https://github.com/pyscf/pyscf
+Licensed under the Apache License, Version 2.0.
+
+The effective core potential integrals -- src/cint_ecp_num.f90,
+cint_ecp_ang.f90, cint_ecp_rad.f90, cint_ecp.f90 and cint_ecp_drv.f90, and the
+ECPscalar entry points in cint_c_abi.f90 -- come from PySCF and not from
+libcint, which has no ECP code.  They are a translation of
+pyscf/lib/gto/nr_ecp.c and are verified against PySCF rather than against the
+C this library otherwise ports.  The same licence applies; the copyright is a
+different one, which is why it is named separately here.

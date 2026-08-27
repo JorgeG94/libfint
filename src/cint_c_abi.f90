@@ -3360,6 +3360,18 @@ contains
       integer(c_int), pointer :: pshls(:), patm(:), pbas(:), pdims(:)
       real(c_double), pointer :: pout(:), penv(:)
       integer :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all
+      ! `out == NULL` is not a mistake: libcint's contract is that it asks for
+      ! the cache size the call would need, and PySCF's GTOmax_cache_size
+      ! probes every shell pair that way before a run.  This library sizes its
+      ! own workspace from allocatables, so the honest answer is zero -- and a
+      ! zero here means the caller passes a NULL cache later, which is also
+      ! what this ignores.  Answering rather than dereferencing is the
+      ! difference between working with PySCF and segfaulting as it loads.
+      if (.not. c_associated(out)) then
+         ret = 0_c_int
+         return
+      end if
+
       call c_f_pointer(shls, pshls, [2])
       call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
       call c_f_pointer(env,  penv,  [PTR_ENV_START])
@@ -3393,6 +3405,18 @@ contains
       integer(c_int), pointer :: pshls(:), patm(:), pbas(:), pdims(:)
       real(c_double), pointer :: pout(:), penv(:)
       integer :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all
+      ! `out == NULL` is not a mistake: libcint's contract is that it asks for
+      ! the cache size the call would need, and PySCF's GTOmax_cache_size
+      ! probes every shell pair that way before a run.  This library sizes its
+      ! own workspace from allocatables, so the honest answer is zero -- and a
+      ! zero here means the caller passes a NULL cache later, which is also
+      ! what this ignores.  Answering rather than dereferencing is the
+      ! difference between working with PySCF and segfaulting as it loads.
+      if (.not. c_associated(out)) then
+         ret = 0_c_int
+         return
+      end if
+
       call c_f_pointer(shls, pshls, [2])
       call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
       call c_f_pointer(env,  penv,  [PTR_ENV_START])
