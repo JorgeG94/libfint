@@ -88,6 +88,17 @@ add_test(NAME dd_erfc_check COMMAND $<TARGET_FILE:dd_erfc_check>)
 add_executable(dd_crossbit dd_crossbit.f90)
 target_link_libraries(dd_crossbit fint)
 
+# The binary128 shim, held to gfortran's real128 in the same binary and
+# compared as raw bits -- the same contract the dd checks have, so no libcint.
+# libquadmath arrives through fint's PUBLIC link interface.
+add_executable(quad_check quad_check.f90)
+target_link_libraries(quad_check fint)
+add_test(NAME quad_check COMMAND $<TARGET_FILE:quad_check>)
+
+add_executable(quad_const_check quad_const_check.f90)
+target_link_libraries(quad_const_check fint)
+add_test(NAME quad_const_check COMMAND $<TARGET_FILE:quad_const_check>)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)
