@@ -14,7 +14,7 @@
 !
 program rys_core_check
    use cint_const, only: dp
-   use cint_dd, only: dd, dd_from, dd_to_dp, operator(+), operator(-), &
+   use cint_quad, only: quad, quad_from, quad_to_dp, operator(+), operator(-), &
                       operator(*), operator(/), operator(<), operator(>), &
                       operator(<=), operator(>=), operator(==), operator(**), &
                       assignment(=), sqrt, abs, exp, erf, erfc, max, min

@@ -18,6 +18,8 @@ module cint_wheeler_dp
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
+#undef ENSURE_EXT_TABLES
+#define ENSURE_EXT_TABLES
 #define RKTYPE real(rk)
 #define TO_RK(x) real(x, rk)
 #define TO_DP(x) real(x, dp)
@@ -47,20 +49,26 @@ end module cint_wheeler_dp
 
 module cint_wheeler_qp
    use cint_const,          only: dp, rk => dp
-   use cint_dd, only: dd, operator(+), operator(-), operator(*), operator(/), &
-                      operator(<), operator(>), operator(<=), operator(>=), &
-                      operator(==), operator(**), assignment(=), dd_from, dd_to_dp, &
-                      sqrt, abs, exp, erf, erfc
+   use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
+                        operator(<), operator(>), operator(<=), operator(>=), &
+                        operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
+                        quad_from3, sqrt, abs, exp, erf, erfc
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
-#define RKTYPE type(dd)
-#define TO_RK(x) dd_from(real(x, dp))
-#define TO_DP(x) dd_to_dp(x)
+#undef ENSURE_EXT_TABLES
+#define RKTYPE type(quad)
+#define TO_RK(x) quad_from(real(x, dp))
+#define TO_DP(x) quad_to_dp(x)
+! The quad tables cannot be parameters (see cint_tab_jacobi_ext), so the one
+! routine that reads them has to fill them first; the double instantiation
+! defines this hook empty because its tables are compile-time constants.
+#define ENSURE_EXT_TABLES call cint_tab_jacobi_ext_init()
    use cint_fmt_qp,         only: fmt_erfc_like
    use cint_eigh,           only: cint_diagonalize
    use cint_tab_jacobi,     only: jacobi_coef_order => JACOBI_COEF_ORDER
-   use cint_tab_jacobi_ext, only: jacobi_coef     => qJACOBI_COEF, &
+   use cint_tab_jacobi_ext, only: cint_tab_jacobi_ext_init, &
+                                  jacobi_coef     => qJACOBI_COEF, &
                                   jacobi_rn_part2 => qJACOBI_RN_PART2, &
                                   jacobi_sn       => qJACOBI_SN, &
                                   jacobi_alpha_rk => qJACOBI_ALPHA, &
@@ -71,11 +79,13 @@ module cint_wheeler_qp
 
    integer,  parameter :: MXRYSROOTS = 32
    integer,  parameter :: flocke_extra_order = 36
-   ! sqrt(pi)/2 as a dd pair. As a bare double this carries 4.3e-17 against
-   ! the 67-digit value, which capped the whole extended ladder at ~1e-17 --
-   ! it is the leading factor in both the Boys function and the moments.
-   type(dd), parameter :: sqrtpie4 = &
-      dd(0.886226925452758_dp, -3.8332932499128993e-17_dp)
+   ! sqrt(pi)/2 to 67 digits -- the leading factor in the Boys function and
+   ! the moments, so truncating it caps the whole extended ladder.  A quad
+   ! cannot be a named constant, so the name is a macro rebuilding it at
+   ! each use site through quad_from3; once per entry call, never in a loop.
+   real(dp), parameter :: sqrtpie4_3d(3) = &
+      [0.886226925452758_dp, -3.8332932499128993e-17_dp, -6.5291674539727145e-34_dp]
+#define sqrtpie4 quad_from3(sqrtpie4_3d(1), sqrtpie4_3d(2), sqrtpie4_3d(3))
    real(rk), parameter :: smallx_limit = 3.0e-7_rk
 
 contains

@@ -42,6 +42,10 @@ program dump_tables
    write(u) SR_DATA0_X, SR_DATA0_W, SR_DATA1_X, SR_DATA1_W
    write(u) SR_DATA2_X, SR_DATA2_W, SR_DATAL_X, SR_DATAL_W
 #endif
+   ! The quad tables are runtime-built (see cint_tab_jacobi_ext); written
+   ! raw they are once again the 16-byte binary128 patterns of the C's
+   ! __float128 set, which the dd pairs were not.
+   call cint_tab_jacobi_ext_init()
    write(u) lJACOBI_ALPHA, lJACOBI_BETA, lJACOBI_RN_PART2, lJACOBI_SN, lJACOBI_COEF
    write(u) qJACOBI_ALPHA, qJACOBI_BETA, qJACOBI_RN_PART2, qJACOBI_SN, qJACOBI_COEF
 

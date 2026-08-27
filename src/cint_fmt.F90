@@ -62,16 +62,16 @@ end module cint_fmt_dp
 
 module cint_fmt_qp
    use cint_const,  only: dp, rk => dp
-   use cint_dd, only: dd, operator(+), operator(-), operator(*), operator(/), &
-                      operator(<), operator(>), operator(<=), operator(>=), &
-                      operator(==), operator(**), assignment(=), dd_from, dd_to_dp, &
-                      sqrt, abs, exp, erf, erfc
+   use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
+                        operator(<), operator(>), operator(<=), operator(>=), &
+                        operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
+                        quad_from3, sqrt, abs, exp, erf, erfc
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
-#define RKTYPE type(dd)
-#define TO_RK(x) dd_from(real(x, dp))
-#define TO_DP(x) dd_to_dp(x)
+#define RKTYPE type(quad)
+#define TO_RK(x) quad_from(real(x, dp))
+#define TO_DP(x) quad_to_dp(x)
    use cint_fmt_tab, only: turnover_point_qp => turnover_point
    implicit none
    private
@@ -80,12 +80,18 @@ module cint_fmt_qp
    ! C: SML_FLOAT128 = 1.0e-35.  The C also has SML_FLOAT80 = 2.0e-20 for its
    ! 80-bit ladder; that ladder becomes binary128 here, so it gets the tighter
    ! tolerance and converges further than the C does.
-   real(rk), parameter :: sml = 1.0e-31_rk   ! dd carries ~1e-32; 1e-35 is unreachable
-   ! sqrt(pi)/2 as a dd pair. As a bare double this carries 4.3e-17 against
-   ! the 67-digit value, which capped the whole extended ladder at ~1e-17 --
-   ! it is the leading factor in both the Boys function and the moments.
-   type(dd), parameter :: sqrtpie4 = &
-      dd(0.886226925452758_dp, -3.8332932499128993e-17_dp)
+   real(rk), parameter :: sml = 1.0e-35_rk
+   ! sqrt(pi)/2 to 67 digits -- it is the leading factor in both the Boys
+   ! function and the moments, so truncating it caps the whole extended
+   ! ladder.  A quad cannot be a named constant (rebuilding one is a call
+   ! into the C shim), so the name is a macro and the rebuild happens at
+   ! each use site: it appears once per entry call, never in an inner loop,
+   ! and the module stays free of state that would need a guarded init.
+   ! The three parts sum to the exact binary128 value; quad_const_check
+   ! measures that, as raw bits, against gfortran's own parse of the digits.
+   real(dp), parameter :: sqrtpie4_3d(3) = &
+      [0.886226925452758_dp, -3.8332932499128993e-17_dp, -6.5291674539727145e-34_dp]
+#define sqrtpie4 quad_from3(sqrtpie4_3d(1), sqrtpie4_3d(2), sqrtpie4_3d(3))
    real(rk), parameter :: erfc_bound = 200.0_rk
 
    ! The turnover table is a set of thresholds, not data feeding the result,

@@ -53,16 +53,16 @@ end module cint_schmidt_dp
 
 module cint_schmidt_qp
    use cint_const,      only: dp, rk => dp
-   use cint_dd, only: dd, operator(+), operator(-), operator(*), operator(/), &
-                      operator(<), operator(>), operator(<=), operator(>=), &
-                      operator(==), operator(**), assignment(=), dd_from, dd_to_dp, &
-                      sqrt, abs, exp, erf, erfc
+   use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
+                        operator(<), operator(>), operator(<=), operator(>=), &
+                        operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
+                        sqrt, abs, exp, erf, erfc
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
-#define RKTYPE type(dd)
-#define TO_RK(x) dd_from(real(x, dp))
-#define TO_DP(x) dd_to_dp(x)
+#define RKTYPE type(quad)
+#define TO_RK(x) quad_from(real(x, dp))
+#define TO_DP(x) quad_to_dp(x)
    use cint_fmt_qp,     only: gamma_inc_like, fmt_erfc_like
    use cint_find_roots, only: cint_polynomial_roots, poly_value1
    implicit none

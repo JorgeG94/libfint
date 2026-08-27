@@ -266,6 +266,11 @@
 
       RKTYPE :: moments(0:2*MXRYSROOTS-1)
 
+      ! Expands to a table-fill call in the extended instantiation, whose
+      ! moment tables are runtime-built quads; empty at double, where the
+      ! tables are parameters.  This is the only routine that reads them.
+      ENSURE_EXT_TABLES
+
       moments = 0.0_rk
       if (lower == 0.0_dp) then
          call flocke_jacobi_moments(n*2, TO_RK(x), moments)
