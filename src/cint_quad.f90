@@ -7,8 +7,15 @@
 ! seam the RKTYPE macro created.
 !
 ! Where cint_dd trades 7 bits of significand for being all-Fortran and fast,
-! this keeps all 113 and reproduces what gfortran's real128 produces today,
-! because gfortran's real128 *is* libquadmath. It costs a call per operation.
+! this keeps all 113. It costs a call per operation.
+!
+! On +,-,*,/ and sqrt it is bit-identical to any compiler's real128, because
+! IEEE-754 requires those five to be correctly rounded and there is therefore
+! only one answer to produce. It is not identical on the transcendentals and
+! cannot be: the standard demands no rounding of them, so exp/erf/erfc are
+! whatever the linked library does -- glibc's *f128 for the shim and for
+! gfortran, Intel's libimf for ifx, differing by up to 2 ulp. test/quad_check
+! holds each half of that to the contract it can actually meet.
 !
 ! Everything is elemental, as in cint_dd: the shared bodies assign whole
 ! arrays (`moments = 0.0_rk`), which needs an elemental assignment(=), and

@@ -20,6 +20,9 @@ program dd_erfc_t
       ! precision therefore stops at hi > tiny*2**53 ~ 2e-292, not at tiny.
       ! Below that the answer is still right to double precision; below tiny
       ! it is zero. Both are checked, with the budget each can actually meet.
+      !
+      ! This band needs denormals to be live in the process, which is not the
+      ! default everywhere -- see the flag on this target in test/CMakeLists.txt.
       if (qref <= real(tiny(1.0_dp), qp)) cycle
       if (qref < real(tiny(1.0_dp), qp) * 2.0_qp**53) then
          rel = abs(real((real(z%hi, qp) + real(z%lo, qp) - qref)/qref, dp))
