@@ -31,6 +31,11 @@ void mqq_exp(const void*a,void*r){R=expq(A);}
 void mqq_erf(const void*a,void*r){R=erfq(A);}
 void mqq_erfc(const void*a,void*r){R=erfcq(A);}
 void mqq_from_d(double d,void*r){R=(q_t)d;}
+/* Three doubles reassembled. binary128 needs 113 bits and a double holds 53,
+   so two are short by seven and three are exact with room over. The sum is
+   exact because the parts are non-overlapping by construction. This is how a
+   67-digit constant reaches a type Fortran cannot write a literal for. */
+void mqq_from_3d(double a1,double a2,double a3,void*r){R=((q_t)a1+(q_t)a2)+(q_t)a3;}
 void mqq_from_i(int n,void*r){R=(q_t)n;}
 double mqq_to_d(const void*a){return (double)A;}
 /* Comparison returns int rather than a Fortran logical: the bit pattern of

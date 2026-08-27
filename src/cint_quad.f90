@@ -26,7 +26,7 @@ module cint_quad
       real(c_double) :: w(2)
    end type quad
 
-   public :: quad_from, quad_to_dp
+   public :: quad_from, quad_to_dp, quad_from3
    public :: operator(+), operator(-), operator(*), operator(/)
    public :: operator(<), operator(>), operator(<=), operator(>=), operator(==)
    public :: sqrt, abs, exp, erf, erfc, max, min, assignment(=), operator(**)
@@ -140,6 +140,11 @@ module cint_quad
          type(quad), intent(in) :: a
          type(quad), intent(out) :: r
       end subroutine mqq_erfc
+      subroutine mqq_from_3d(a1, a2, a3, r) bind(c, name="mqq_from_3d")
+         import quad, c_double
+         real(c_double), value :: a1, a2, a3
+         type(quad), intent(out) :: r
+      end subroutine mqq_from_3d
       subroutine mqq_from_d(d, r) bind(c, name="mqq_from_d")
          import quad, c_double
          real(c_double), value :: d
@@ -223,6 +228,16 @@ contains
       integer, intent(in) :: n
       call mqq_from_i(int(n, c_int), r)
    end function q_from_i
+
+   type(quad) function quad_from3(a1, a2, a3) result(r)
+      !! Rebuild a binary128 constant from three doubles.
+      !!
+      !! Fortran has no literal for this type, and the tables carry 67-digit
+      !! values. Two doubles would lose seven bits -- exactly the shortfall
+      !! that made double-double insufficient here -- so the split is three.
+      real(dp), intent(in) :: a1, a2, a3
+      call mqq_from_3d(real(a1, c_double), real(a2, c_double), real(a3, c_double), r)
+   end function quad_from3
 
    real(dp) function quad_to_dp(a) result(v)
       type(quad), intent(in) :: a
