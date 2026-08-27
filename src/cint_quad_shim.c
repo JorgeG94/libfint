@@ -9,27 +9,39 @@
  * settled ABI across gfortran/nvfortran/flang and their C partners, and this
  * exists to be identical on all three. By reference there is no question.
  *
- * The transcendentals are glibc's *f128 family, NOT libquadmath's *q family,
- * and the difference is measured, not stylistic: gfortran compiles real128
- * sqrt/exp/erf/erfc to sqrtf128/expf128/erff128/erfcf128 (nm a real128
- * object and look), and libquadmath's sqrtq disagrees with glibc's
- * correctly-rounded sqrtf128 in the last bit -- 526 of 10,000 values in
- * quad_check when this shim was first written against quadmath.h.
  * Bit-identity with gfortran's real128 is this module's whole contract, so
- * the shim calls exactly the symbols gfortran calls. They live in libm
- * (glibc 2.26+); the declarations are written out here because <math.h>
- * only offers them behind the _Float128 keyword, which not every C compiler
- * this shim targets has. __float128 and _Float128 share one ABI, so the
- * link resolves either way. The +,-,*,/ below are compiler-generated
- * (libgcc's __addtf3 family), the same code gfortran emits.
+ * the transcendentals are whatever symbols gfortran's real128 intrinsics
+ * call ON THIS PLATFORM, and the difference is measured, not stylistic. On
+ * Linux/glibc that is the *f128 family (nm a real128 object and look), and
+ * libquadmath's sqrtq disagrees with glibc's correctly-rounded sqrtf128 in
+ * the last bit -- 526 of 10,000 values in quad_check when this shim was
+ * first written against quadmath.h. Where the C library has no *f128
+ * (macOS), gfortran calls libquadmath, and so does the shim. The +,-,*,/
+ * below are compiler-generated (libgcc's __addtf3 family), the same code
+ * gfortran emits.
  */
 typedef __float128 q_t;
 
+#ifdef __linux__
+/* glibc's *f128 family; declared by hand because <math.h> only offers them
+   behind the _Float128 keyword, which not every targeted C compiler has.
+   __float128 and _Float128 share one ABI, so the link resolves either way. */
 extern q_t sqrtf128(q_t);
 extern q_t expf128(q_t);
 extern q_t erff128(q_t);
 extern q_t erfcf128(q_t);
 extern q_t fabsf128(q_t);
+#else
+/* No *f128 in the C library (macOS): gfortran's real128 intrinsics call
+   libquadmath there, so matching gfortran means calling libquadmath too.
+   The header ships with GCC, which is also the compiler on that CI lane. */
+#include <quadmath.h>
+#define sqrtf128 sqrtq
+#define expf128  expq
+#define erff128  erfq
+#define erfcf128 erfcq
+#define fabsf128 fabsq
+#endif
 
 /* memcpy, never a pointer cast: the Fortran side declares quad as two
    doubles, so it is 8-byte aligned, while __float128 loads and stores may
