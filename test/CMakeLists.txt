@@ -39,6 +39,30 @@ set(LIBFINT_CHECKS
   gen1e_check gen2e_check gen3c_check grids_check rel2e_check
   spinor1e_check spinor2e_check spinor3c_check)
 
+# The ECP checks, kept apart from LIBFINT_CHECKS above.
+#
+# Everything in that list links `cint` and compares against libcint at run
+# time.  These cannot and need not: libcint has no ECP code, so their
+# references are committed (generated from PySCF by gen_ecp_check.py and
+# gen_ecp_num_check.py) and they link `fint` alone.  Keeping them separate is
+# what would let them run in the toolchain lanes that never fetch libcint.
+#
+# ecp_abi_check is C, and drives ECPscalar_sph/ECPscalar_cart through
+# libcint's own C names.  It exists because ecp_check calls the Fortran module
+# directly and so cannot reach the bind(C) layer -- which is exactly where the
+# two faults fixed in "Fix the radial grid size, and two latent faults in the
+# C ABI" lived, invisible to every test at the time.
+foreach(chk ecp_num_check ecp_check)
+  add_executable(${chk} ${chk}.F90)
+  target_link_libraries(${chk} fint m)
+  target_include_directories(${chk} PRIVATE ${PROJECT_BINARY_DIR}/include)
+  add_test(NAME ${chk} COMMAND $<TARGET_FILE:${chk}>)
+endforeach()
+
+add_executable(ecp_abi_check ecp_abi_check.c)
+target_link_libraries(ecp_abi_check fint m)
+add_test(NAME ecp_abi_check COMMAND $<TARGET_FILE:ecp_abi_check>)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)

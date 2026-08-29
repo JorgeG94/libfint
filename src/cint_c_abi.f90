@@ -79,6 +79,8 @@ module cint_c_abi
                               int2e_ipip1ipip2_cart, int2e_ipip1ipip2_sph, &
                               int2e_ipvip1ipvip2_cart, int2e_ipvip1ipvip2_sph
    use cint_1e_grids,   only: int1e_grids_cart, int1e_grids_sph
+   use cint_ecp_drv,    only: ecp_scalar_cart, ecp_scalar_sph
+   use cint_ecp_num,    only: AS_ECPBAS_OFFSET, AS_NECPBAS
    ! The Fock-build set: overlap, kinetic and nuclear for the core Hamiltonian,
    ! the four-centre integral itself, the two- and three-centre ones density
    ! fitting needs, and the first derivatives a gradient needs.
@@ -3307,5 +3309,137 @@ contains
          n = max(n, bas(BAS_SLOTS*i + PTR_COEFF) + np*nc)
       end do
    end function env_len_all
+
+   ! ------------------------------------------------------------------
+   ! Effective core potentials
+   ! ------------------------------------------------------------------
+   !
+   ! These differ from every wrapper above in three ways, and all three are
+   ! about where the potential comes from.
+   !
+   ! `bas` is longer than `nbas` says.  PySCF stacks the ECP shells after the
+   ! orbital ones and passes the orbital count, so mapping BAS_SLOTS*nbas --
+   ! which is right for every other entry point here -- would stop short of
+   ! the rows these integrals need.  The real length is read out of env first.
+   !
+   ! `env` has to reach past the orbital shells too, to the ECP exponents and
+   ! coefficients. `ecp_env_len` walks the ECP shells as well as the pair.
+   !
+   ! `dims` is honoured rather than ignored.  The wrappers above always write
+   ! the natural block; these write into the caller's matrix when it asks,
+   ! because that is what PySCF's getints does with them.
+   !
+   ! env is mapped twice on purpose: slots 18 and 19 sit below PTR_ENV_START,
+   ! so twenty elements are enough to learn how long the real thing is.
+
+   pure integer function ecp_env_len(shls, bas, nbas, ecpoff, necpbas) result(n)
+      integer(c_int), intent(in) :: shls(:), bas(0:)
+      integer,        intent(in) :: nbas, ecpoff, necpbas
+      integer :: i, sh, np
+      n = env_len(shls, 2, bas, nbas)
+      do i = 0, necpbas - 1
+         sh = ecpoff + i
+         np = bas(BAS_SLOTS*sh + NPRIM_OF)
+         n = max(n, bas(BAS_SLOTS*sh + PTR_EXP)   + np)
+         ! An ECP shell's coefficients are one per primitive, so `np` and not
+         ! `np*nc` as it would be for an orbital shell.  Slot 3 of an ecpbas
+         ! row is RADI_POWER, the r exponent -- it occupies the position
+         ! NCTR_OF has in a basis row and means something else entirely, so
+         ! reading it as a contraction count gives `ptr_coeff` for an r^0 term
+         ! (short, excluding the coefficient) and `ptr_coeff + 2*np` for an
+         ! r^2 one (long, past the caller's buffer).
+         n = max(n, bas(BAS_SLOTS*sh + PTR_COEFF) + np)
+      end do
+   end function ecp_env_len
+
+   function c_ECPscalar_sph(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                            cache) result(ret) bind(C, name="ECPscalar_sph")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer(c_int), pointer :: pshls(:), patm(:), pbas(:), pdims(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all
+      ! `out == NULL` is not a mistake: libcint's contract is that it asks for
+      ! the cache size the call would need, and PySCF's GTOmax_cache_size
+      ! probes every shell pair that way before a run.  This library sizes its
+      ! own workspace from allocatables, so the honest answer is zero -- and a
+      ! zero here means the caller passes a NULL cache later, which is also
+      ! what this ignores.  Answering rather than dereferencing is the
+      ! difference between working with PySCF and segfaulting as it loads.
+      if (.not. c_associated(out)) then
+         ret = 0_c_int
+         return
+      end if
+
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(env,  penv,  [PTR_ENV_START])
+      ecpoff  = int(penv(AS_ECPBAS_OFFSET + 1))
+      necpbas = int(penv(AS_NECPBAS + 1))
+      ! Not nbas + necpbas: nothing requires the ECP rows to begin exactly
+      ! where the orbital ones end.  PySCF stacks them that way, the C never
+      ! assumes it, and neither does this.
+      nb_all  = max(int(nbas), ecpoff + necpbas)
+      call c_f_pointer(bas, pbas, [BAS_SLOTS*nb_all])
+      fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
+      di = cint_cgto_spheric(fshls(0), int(pbas)); dj = cint_cgto_spheric(fshls(1), int(pbas))
+      call c_f_pointer(env, penv, [ecp_env_len(pshls, int(pbas), int(nbas), ecpoff, necpbas)])
+      if (c_associated(dims)) then
+         call c_f_pointer(dims, pdims, [2])
+         call c_f_pointer(out, pout, [int(pdims(1))*int(pdims(2))])
+         ret = int(ecp_scalar_sph(pout, fshls, int(patm), int(natm), int(pbas), &
+                                  int(nbas), penv, [int(pdims(1)), int(pdims(2))]), c_int)
+      else
+         call c_f_pointer(out, pout, [di*dj])
+         ret = int(ecp_scalar_sph(pout, fshls, int(patm), int(natm), int(pbas), &
+                                  int(nbas), penv), c_int)
+      end if
+   end function c_ECPscalar_sph
+
+   function c_ECPscalar_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                             cache) result(ret) bind(C, name="ECPscalar_cart")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer(c_int), pointer :: pshls(:), patm(:), pbas(:), pdims(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all
+      ! `out == NULL` is not a mistake: libcint's contract is that it asks for
+      ! the cache size the call would need, and PySCF's GTOmax_cache_size
+      ! probes every shell pair that way before a run.  This library sizes its
+      ! own workspace from allocatables, so the honest answer is zero -- and a
+      ! zero here means the caller passes a NULL cache later, which is also
+      ! what this ignores.  Answering rather than dereferencing is the
+      ! difference between working with PySCF and segfaulting as it loads.
+      if (.not. c_associated(out)) then
+         ret = 0_c_int
+         return
+      end if
+
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(env,  penv,  [PTR_ENV_START])
+      ecpoff  = int(penv(AS_ECPBAS_OFFSET + 1))
+      necpbas = int(penv(AS_NECPBAS + 1))
+      ! Not nbas + necpbas: nothing requires the ECP rows to begin exactly
+      ! where the orbital ones end.  PySCF stacks them that way, the C never
+      ! assumes it, and neither does this.
+      nb_all  = max(int(nbas), ecpoff + necpbas)
+      call c_f_pointer(bas, pbas, [BAS_SLOTS*nb_all])
+      fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
+      di = cint_cgto_cart(fshls(0), int(pbas)); dj = cint_cgto_cart(fshls(1), int(pbas))
+      call c_f_pointer(env, penv, [ecp_env_len(pshls, int(pbas), int(nbas), ecpoff, necpbas)])
+      if (c_associated(dims)) then
+         call c_f_pointer(dims, pdims, [2])
+         call c_f_pointer(out, pout, [int(pdims(1))*int(pdims(2))])
+         ret = int(ecp_scalar_cart(pout, fshls, int(patm), int(natm), int(pbas), &
+                                   int(nbas), penv, [int(pdims(1)), int(pdims(2))]), c_int)
+      else
+         call c_f_pointer(out, pout, [di*dj])
+         ret = int(ecp_scalar_cart(pout, fshls, int(patm), int(natm), int(pbas), &
+                                   int(nbas), penv), c_int)
+      end if
+   end function c_ECPscalar_cart
 
 end module cint_c_abi
