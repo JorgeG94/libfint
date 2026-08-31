@@ -57,10 +57,17 @@ module cint_c_abi
    use cint_const,     only: dp
    use cint_bas,       only: cint_cgto_cart, cint_cgto_spheric
    use cint_workspace, only: cint_ws
+   ! `int1e_irp` joins the multipoles here rather than being left as a module
+   ! procedure. It is `<i| r nabla |j>`, the nuclear derivative of the dipole
+   ! integrals, and so what an analytic infrared intensity needs -- and a caller
+   ! that reaches `cint_gen_intor1` directly for it can no longer be linked
+   ! against libcint instead, which is the one property this ABI exists to
+   ! preserve.
    use cint_gen_intor1, only: int1e_r_cart, int1e_r_sph, &
                               int1e_rr_cart, int1e_rr_sph, &
                               int1e_rrr_cart, int1e_rrr_sph, &
-                              int1e_drinv_cart, int1e_drinv_sph
+                              int1e_drinv_cart, int1e_drinv_sph, &
+                              int1e_irp_cart, int1e_irp_sph
    ! The Hessian set rides in the same ONLY clause as the two second
    ! derivatives that were already here: one module, one use, so the list
    ! reads as what this file takes from cint_gen_hess rather than as two
@@ -463,6 +470,52 @@ contains
                          nbas, penv, ws)
       ret = merge(1_c_int, 0_c_int, hv)
    end function c_int1e_iprinvip_sph
+
+   ! int1e_irp_cart, 9 component(s) per shell pair
+   function c_int1e_irp_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                            cache) result(ret) bind(C, name="int1e_irp_cart")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:1), di, dj
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls(0) = pshls(1); fshls(1) = pshls(2)
+      di = cint_cgto_cart(fshls(0), pbas); dj = cint_cgto_cart(fshls(1), pbas)
+      d = [di, dj, 1, 1]
+      call c_f_pointer(out, pout, [di*dj*9])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      hv = int1e_irp_cart(pout, d, fshls, patm, natm, pbas, &
+                         nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c_int1e_irp_cart
+
+   ! int1e_irp_sph, 9 component(s) per shell pair
+   function c_int1e_irp_sph(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                            cache) result(ret) bind(C, name="int1e_irp_sph")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:1), di, dj
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls(0) = pshls(1); fshls(1) = pshls(2)
+      di = cint_cgto_spheric(fshls(0), pbas); dj = cint_cgto_spheric(fshls(1), pbas)
+      d = [di, dj, 1, 1]
+      call c_f_pointer(out, pout, [di*dj*9])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      hv = int1e_irp_sph(pout, d, fshls, patm, natm, pbas, &
+                         nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c_int1e_irp_sph
 
    ! the CINT2 spelling of the same thing: no dims, no opt, no cache
    function c2_int1e_r_cart(buf, shls, atm, natm, bas, nbas, env) result(ret) &
@@ -2514,6 +2567,60 @@ contains
       hv = int1e_iprinvip_sph(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
       ret = merge(1_c_int, 0_c_int, hv)
    end function c2_int1e_iprinvip_sph
+
+   ! the CINT2 spelling of the same thing: no dims, no opt, no cache
+   function c2_int1e_irp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_irp_cart")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_cart(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_irp_cart(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_irp_cart
+
+   ! the CINT2 spelling of the same thing: no dims, no opt, no cache
+   function c2_int1e_irp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret) &
+         bind(C, name="cint1e_irp_sph")
+      type(c_ptr),    value :: buf, shls, atm, bas, env
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      integer,        pointer :: pshls(:), patm(:), pbas(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: d(0:3), fshls(0:3), i, n
+      logical :: hv
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(bas,  pbas,  [BAS_SLOTS*nbas])
+      fshls = 0
+      d = 1
+      do i = 1, 2
+         fshls(i-1) = pshls(i)
+         d(i-1) = cint_cgto_spheric(fshls(i-1), pbas)
+      end do
+      n = product(d)*9
+      call c_f_pointer(buf, pout, [n])
+      call c_f_pointer(env, penv, [env_len(pshls, 2, pbas, nbas)])
+      call bind_opt(c_null_ptr)
+      hv = int1e_irp_sph(pout, d, fshls, patm, natm, pbas, nbas, penv, ws)
+      ret = merge(1_c_int, 0_c_int, hv)
+   end function c2_int1e_irp_sph
 
    ! int1e_ipnucip_cart, 2 shells, 9 component(s)
    function c_int1e_ipnucip_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &

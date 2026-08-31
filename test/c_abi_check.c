@@ -57,6 +57,10 @@ typedef int (*cgto_t)(int, int*);
 
 int  int1e_ipipovlp_cart(double*, int*, int*, int*, int, int*, int, double*, void*, double*);
 int  int1e_ipipovlp_sph(double*, int*, int*, int*, int, int*, int, double*, void*, double*);
+int  int1e_irp_cart(double*, int*, int*, int*, int, int*, int, double*, void*, double*);
+int  int1e_irp_sph(double*, int*, int*, int*, int, int*, int, double*, void*, double*);
+int  cint1e_irp_cart(double*, int*, int*, int, int*, int, double*);
+int  cint1e_irp_sph(double*, int*, int*, int, int*, int, double*);
 int  cint1e_ipipovlp_cart(double*, int*, int*, int, int*, int, double*);
 int  cint1e_ipipovlp_sph(double*, int*, int*, int, int*, int, double*);
 int  int1e_ipovlpip_cart(double*, int*, int*, int*, int, int*, int, double*, void*, double*);
@@ -147,7 +151,29 @@ struct hess_case {
     double      ref_sum, ref_max;
 };
 
+/* int1e_irp is <i| r nabla |j>, the nuclear derivative of the dipole
+   integrals.  It is here because an analytic infrared intensity needs it
+   through the C entry points rather than as a module procedure -- a caller
+   that reaches cint_gen_intor1 directly can no longer be linked against
+   libcint instead, which is the property this file exists to defend.
+
+   PROVENANCE, AND IT DIFFERS FROM EVERY ROW BELOW.  The references in the
+   rest of this table were recorded from upstream libcint.  These two were
+   not: int1e_irp had no coverage here or in backend_check before this, so
+   there was no upstream number to copy and none was invented.  What these
+   two rows therefore check is what this file is for -- that the CINT2 and
+   CINT3 spellings agree element by element, which is where a wrong component
+   count or a wrong cgto function would show -- plus that the value does not
+   move.  They do not establish that the integral itself is right.  Replace
+   both constants with libcint's own the next time this is built against it,
+   and this comment can go. */
 static const struct hess_case hess_cases[] = {
+    {"int1e_irp_cart", 2, 9,
+     int1e_irp_cart, cint1e_irp_cart, NULL,
+     CINTcgto_cart, -8.4888402364895175, 0.4030288519791656},
+    {"int1e_irp_sph", 2, 9,
+     int1e_irp_sph, cint1e_irp_sph, NULL,
+     CINTcgto_spheric, -3.0045749667460688, 0.32072017000567982},
     {"int1e_ipipovlp_cart", 2, 9,
      int1e_ipipovlp_cart, cint1e_ipipovlp_cart, NULL,
      CINTcgto_cart, -21.764488341097277, 1.5046410473888836},
