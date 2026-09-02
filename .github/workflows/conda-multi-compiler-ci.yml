@@ -20,9 +20,13 @@ on:
 permissions:
   contents: read
 
+# A new push wins: cancel whatever is still in flight for the same branch.
+# event_name is in the key because a push to a PR branch fires this workflow
+# twice -- once as `push`, once as `pull_request` -- and a single group would
+# have the two runs of one commit cancel each other.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   fpm:
