@@ -36,7 +36,16 @@ module cint_fmt_tab
 end module cint_fmt_tab
 
 module cint_fmt_dp
-   use cint_const,  only: dp, rk => dp
+   ! `rk => dp` comes FIRST here, and the order is not cosmetic.  LFortran
+   ! 0.64 keeps only the LAST entry of an only-list that names a given
+   ! symbol, so `only: dp, rk => dp` leaves `dp` itself undeclared in this
+   ! module -- and reports it against cint_quad.f90, which does not have the
+   ! problem, so the message points nowhere near the cause.  Written this way
+   ! round both names survive.  Every other compiler reads the two orders
+   ! identically.  The same import appears five more times -- below, and
+   ! twice each in cint_schmidt.F90 and cint_wheeler.F90 -- each with a
+   ! one-line pointer back to this note.
+   use cint_const,  only: rk => dp, dp
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
@@ -61,7 +70,8 @@ contains
 end module cint_fmt_dp
 
 module cint_fmt_qp
-   use cint_const,  only: dp, rk => dp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,  only: rk => dp, dp
    use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
                         operator(<), operator(>), operator(<=), operator(>=), &
                         operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &

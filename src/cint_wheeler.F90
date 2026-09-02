@@ -14,7 +14,8 @@
 ! and the quadruple instantiation takes 36.
 !
 module cint_wheeler_dp
-   use cint_const,       only: dp, rk => dp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,       only: rk => dp, dp
 #undef RKTYPE
 #undef TO_RK
 #undef TO_DP
@@ -48,7 +49,8 @@ contains
 end module cint_wheeler_dp
 
 module cint_wheeler_qp
-   use cint_const,          only: dp, rk => dp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,          only: rk => dp, dp
    use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
                         operator(<), operator(>), operator(<=), operator(>=), &
                         operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
