@@ -26,7 +26,11 @@
 !    to survive that.
 !
 program fmt_check
-   use cint_const,  only: dp, qp
+   use cint_const,  only: dp
+   use cint_quad, only: quad, quad_from, quad_to_dp, operator(+), operator(-), &
+                      operator(*), operator(/), operator(<), operator(>), &
+                      operator(<=), operator(>=), operator(==), operator(**), &
+                      assignment(=), sqrt, abs, exp, erf, erfc, max, min
    use cint_fmt_dp, only: gamma_inc_like, fmt_erfc_like
    use cint_fmt_qp, only: q_gamma_inc_like => gamma_inc_like, &
                           q_fmt_erfc_like  => fmt_erfc_like
@@ -121,56 +125,56 @@ contains
    ! ---- 2. does the quad path satisfy the Boys recurrence? --------------
    subroutine check_recurrence(ok)
       logical, intent(out) :: ok
-      real(qp) :: f(0:MMAX+1), t, l, e, e1, lhs, rhs, scale
+      type(quad) :: f(0:MMAX+1), t, l, e, e1, lhs, rhs, scale
       integer  :: m, i, j
-      real(qp) :: rel, worst_g, worst_e
+      type(quad) :: rel, worst_g, worst_e
       integer  :: nbad
 
       ok = .true.
-      worst_g = 0.0_qp
-      worst_e = 0.0_qp
+      worst_g = quad_from(0.0_dp)
+      worst_e = quad_from(0.0_dp)
       nbad = 0
 
       do i = 1, size(TS)
-         t = real(TS(i), qp)
-         if (t == 0.0_qp) cycle
+         t = quad_from(TS(i))
+         if (t == quad_from(0.0_dp)) cycle
          ! unattenuated: (2m-1) F_{m-1} = e^-t + 2t F_m
          call q_gamma_inc_like(f, t, MMAX)
          e = exp(-t)
          do m = 1, MMAX
-            lhs = real(2*m - 1, qp) * f(m-1)
-            rhs = e + 2.0_qp * t * f(m)
+            lhs = quad_from(2*m - 1) * f(m-1)
+            rhs = e + quad_from(2.0_dp) * t * f(m)
             scale = max(abs(lhs), abs(rhs))
-            if (scale > 0.0_qp) then
+            if (scale > quad_from(0.0_dp)) then
                rel = abs(lhs - rhs) / scale
                worst_g = max(worst_g, rel)
-               if (rel > 1.0e-28_qp) nbad = nbad + 1
+               if (rel > quad_from(1.0e-28_dp)) nbad = nbad + 1
             end if
          end do
 
          ! attenuated: (2m-1) F_{m-1} = e^-t - l^(2m-1) e^(-t l^2) + 2t F_m
          do j = 1, size(LS)
-            l = real(LS(j), qp)
-            if (l == 0.0_qp) cycle
+            l = quad_from(LS(j))
+            if (l == quad_from(0.0_dp)) cycle
             call q_fmt_erfc_like(f, t, l, MMAX)
-            if (all(f(0:MMAX) == 0.0_qp)) cycle   ! the erfc_bound cutoff
+            if (all(f(0:MMAX) == quad_from(0.0_dp))) cycle   ! the erfc_bound cutoff
             e1 = exp(-t * l * l)
             do m = 1, MMAX
-               lhs = real(2*m - 1, qp) * f(m-1)
-               rhs = e - l**(2*m - 1) * e1 + 2.0_qp * t * f(m)
+               lhs = quad_from(2*m - 1) * f(m-1)
+               rhs = e - l**(2*m - 1) * e1 + quad_from(2.0_dp) * t * f(m)
                scale = max(abs(lhs), abs(rhs))
-               if (scale > 0.0_qp) then
+               if (scale > quad_from(0.0_dp)) then
                   rel = abs(lhs - rhs) / scale
                   worst_e = max(worst_e, rel)
-                  if (rel > 1.0e-24_qp) nbad = nbad + 1
+                  if (rel > quad_from(1.0e-24_dp)) nbad = nbad + 1
                end if
             end do
          end do
       end do
 
       print '(A)',        "  [2] correctness: qp against the Boys recurrence"
-      print '(A,ES10.2)', "      worst residual, unattenuated : ", real(worst_g, dp)
-      print '(A,ES10.2)', "      worst residual, attenuated   : ", real(worst_e, dp)
+      print '(A,ES10.2)', "      worst residual, unattenuated : ", quad_to_dp(worst_g)
+      print '(A,ES10.2)', "      worst residual, attenuated   : ", quad_to_dp(worst_e)
       if (nbad > 0) then
          print '(A,I0)',  "      residuals beyond tolerance   : ", nbad
          ok = .false.
@@ -180,7 +184,7 @@ contains
    ! ---- 3. exact closed forms at t = 0 ----------------------------------
    subroutine check_exact_at_zero(ok)
       logical, intent(out) :: ok
-      real(qp) :: f(0:MMAX+1), l, want
+      type(quad) :: f(0:MMAX+1), l, want
       real(dp) :: rel, worst
       integer  :: m, j, nbad
 
@@ -189,22 +193,22 @@ contains
       nbad = 0
 
       ! F_m(0) = 1/(2m+1)
-      call q_gamma_inc_like(f, 0.0_qp, MMAX)
+      call q_gamma_inc_like(f, quad_from(0.0_dp), MMAX)
       do m = 0, MMAX
-         want = 1.0_qp / real(2*m + 1, qp)
-         rel = real(abs(f(m) - want) / want, dp)
+         want = quad_from(1.0_dp) / quad_from(2*m + 1)
+         rel = quad_to_dp(abs(f(m) - want) / want)
          worst = max(worst, rel)
          if (rel > 1.0e-30_dp) nbad = nbad + 1
       end do
 
       ! attenuated at t = 0: F_m = (1 - l^(2m+1)) / (2m+1)
       do j = 1, size(LS)
-         l = real(LS(j), qp)
-         if (l == 0.0_qp) cycle
-         call q_fmt_erfc_like(f, 0.0_qp, l, MMAX)
+         l = quad_from(LS(j))
+         if (l == quad_from(0.0_dp)) cycle
+         call q_fmt_erfc_like(f, quad_from(0.0_dp), l, MMAX)
          do m = 0, MMAX
-            want = (1.0_qp - l**(2*m + 1)) / real(2*m + 1, qp)
-            rel = real(abs(f(m) - want) / want, dp)
+            want = (quad_from(1.0_dp) - l**(2*m + 1)) / quad_from(2*m + 1)
+            rel = quad_to_dp(abs(f(m) - want) / want)
             worst = max(worst, rel)
             if (rel > 1.0e-30_dp) nbad = nbad + 1
          end do

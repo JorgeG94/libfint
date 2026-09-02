@@ -36,5 +36,5 @@ program smoke
       print *, "FAIL: expected 1.0"
       stop 1
    end if
-   print *, "OK -- pure Fortran, no C linked"
+   print *, "OK -- no libcint linked"
 end program smoke

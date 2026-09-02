@@ -19,12 +19,12 @@
 
    subroutine laguerre_moments(n, t, lower, alpha, beta, moments)
       integer,  intent(in)  :: n
-      real(rk), intent(in)  :: t, lower
-      real(rk), intent(out) :: alpha(0:), beta(0:), moments(0:)
+      RKTYPE, intent(in)  :: t, lower
+      RKTYPE, intent(out) :: alpha(0:), beta(0:), moments(0:)
 
       integer  :: i
-      real(rk) :: tt, t_inv, t2_inv, e0, l00, l01, fac0, fac1, l02
-      real(rk) :: lower2, l10, l11, l12, et
+      RKTYPE :: tt, t_inv, t2_inv, e0, l00, l01, fac0, fac1, l02
+      RKTYPE :: lower2, l10, l11, l12, et
 
       tt = sqrt(t)
       t_inv = 0.5_rk / t
@@ -40,10 +40,10 @@
          moments(0) = sqrtpie4 / tt * erf(tt)
          moments(1) = -l01 * e0
          do i = 1, n - 2
-            alpha(i) = real(i*4 + 1, rk) * t_inv
-            beta(i)  = real(i * (i*2 - 1), rk) * t2_inv
-            fac0 = real(i*4 - 1, rk) * t_inv
-            fac1 = real((i - 1) * (i*2 - 1), rk) * t2_inv
+            alpha(i) = TO_RK(i*4 + 1) * t_inv
+            beta(i)  = TO_RK(i * (i*2 - 1)) * t2_inv
+            fac0 = TO_RK(i*4 - 1) * t_inv
+            fac1 = TO_RK((i - 1) * (i*2 - 1)) * t2_inv
             l02 = (1.0_rk - fac0) * l01 - fac1 * l00
             l00 = l01
             l01 = l02
@@ -57,10 +57,10 @@
          moments(0) = sqrtpie4 / tt * (erfc(lower * tt) - erfc(tt))
          moments(1) = l11 * et - l01 * e0
          do i = 1, n - 2
-            alpha(i) = real(i*4 + 1, rk) * t_inv
-            beta(i)  = real(i * (i*2 - 1), rk) * t2_inv
-            fac0 = real(i*4 - 1, rk) * t_inv
-            fac1 = real((i - 1) * (i*2 - 1), rk) * t2_inv
+            alpha(i) = TO_RK(i*4 + 1) * t_inv
+            beta(i)  = TO_RK(i * (i*2 - 1)) * t2_inv
+            fac0 = TO_RK(i*4 - 1) * t_inv
+            fac1 = TO_RK((i - 1) * (i*2 - 1)) * t2_inv
             l12 = (lower2 - fac0) * l11 - fac1 * l10
             l10 = l11
             l11 = l12
@@ -78,12 +78,12 @@
    ! is preserved.
    subroutine naive_jacobi_moments(n, t, lower, mus)
       integer,  intent(in)  :: n
-      real(rk), intent(in)  :: t, lower
-      real(rk), intent(out) :: mus(0:)
+      RKTYPE, intent(in)  :: t, lower
+      RKTYPE, intent(out) :: mus(0:)
 
       integer  :: i, j, k, base
-      real(rk) :: s
-      real(rk) :: fmt(0:2*MXRYSROOTS-1)
+      RKTYPE :: s
+      RKTYPE :: fmt(0:2*MXRYSROOTS-1)
 
       call fmt_erfc_like(fmt, t, lower, n - 1)
 
@@ -92,7 +92,7 @@
          s = 0.0_rk
          do j = 0, i
             k = jacobi_coef_order(base + j)
-            s = s + real(jacobi_coef(base + k), rk) * fmt(k)
+            s = s + jacobi_coef(base + k) * fmt(k)
          end do
          mus(i) = s
       end do
@@ -104,14 +104,14 @@
    ! here; backward recurrence damps the unwanted solution instead.
    subroutine flocke_jacobi_moments(n, t, mus)
       integer,  intent(in)  :: n
-      real(rk), intent(in)  :: t
-      real(rk), intent(out) :: mus(0:)
+      RKTYPE, intent(in)  :: t
+      RKTYPE, intent(out) :: mus(0:)
 
-      real(rk) :: t_inv, mu0, mu1, mu2, rn, tt, norm
+      RKTYPE :: t_inv, mu0, mu1, mu2, rn, tt, norm
       integer  :: i
 
       if (t < smallx_limit) then
-         call naive_jacobi_moments(n, t, 0.0_rk, mus)
+         call naive_jacobi_moments(n, t, TO_RK(0.0), mus)
          return
       end if
 
@@ -121,14 +121,14 @@
       mu0 = mu1
 
       do i = n - 1 + flocke_extra_order, n, -1
-         rn = real(2*i + 3, rk) * t_inv + real(jacobi_rn_part2(i), rk)
-         mu0 = (mu2 - rn * mu1) / real(jacobi_sn(i), rk)
+         rn = TO_RK(2*i + 3) * t_inv + jacobi_rn_part2(i)
+         mu0 = (mu2 - rn * mu1) / jacobi_sn(i)
          mu2 = mu1
          mu1 = mu0
       end do
       do i = n - 1, 0, -1
-         rn = real(2*i + 3, rk) * t_inv + real(jacobi_rn_part2(i), rk)
-         mu0 = (mu2 - rn * mu1) / real(jacobi_sn(i), rk)
+         rn = TO_RK(2*i + 3) * t_inv + jacobi_rn_part2(i)
+         mu0 = (mu2 - rn * mu1) / jacobi_sn(i)
          mus(i) = mu0
          mu2 = mu1
          mu1 = mu0
@@ -150,16 +150,16 @@
    ! for it afterwards rather than the recursion avoiding it.
    subroutine wheeler_recursion(n, alpha, beta, moments, a, b)
       integer,  intent(in)  :: n
-      real(rk), intent(in)  :: alpha(0:), beta(0:), moments(0:)
-      real(rk), intent(out) :: a(0:), b(0:)
+      RKTYPE, intent(in)  :: alpha(0:), beta(0:), moments(0:)
+      RKTYPE, intent(out) :: a(0:), b(0:)
 
       integer  :: i, j, nc
-      real(rk) :: a0, b0, a1, b1
+      RKTYPE :: a0, b0, a1, b1
       ! Three rolling rows of the sigma table.  The C aliases pointers into one
       ! buffer and rotates them; separate arrays with an index rotation say the
       ! same thing without the aliasing.
-      real(rk) :: s0(0:2*MXRYSROOTS-1), sm(0:2*MXRYSROOTS-1), sk(0:2*MXRYSROOTS-1)
-      real(rk) :: tmp(0:2*MXRYSROOTS-1)
+      RKTYPE :: s0(0:2*MXRYSROOTS-1), sm(0:2*MXRYSROOTS-1), sk(0:2*MXRYSROOTS-1)
+      RKTYPE :: tmp(0:2*MXRYSROOTS-1)
 
       a0 = alpha(0) + moments(1) / moments(0)
       b0 = 0.0_rk
@@ -197,18 +197,18 @@
    ! negligible, and this does the same.
    function rys_wheeler_partial(n_in, alpha, beta, moments, roots, weights) result(err)
       integer,  intent(in)    :: n_in
-      real(rk), intent(in)    :: alpha(0:), beta(0:), moments(0:)
+      RKTYPE, intent(in)    :: alpha(0:), beta(0:), moments(0:)
       real(dp), intent(out)   :: roots(0:), weights(0:)
       integer :: err
 
-      real(rk) :: a(0:MXRYSROOTS-1), b(0:MXRYSROOTS-1)
+      RKTYPE :: a(0:MXRYSROOTS-1), b(0:MXRYSROOTS-1)
       real(dp) :: da(0:MXRYSROOTS-1), db(0:MXRYSROOTS-1)
       real(dp) :: c0(0:MXRYSROOTS*MXRYSROOTS-1)
       real(dp) :: mu0
       integer  :: i, k, n
 
       n = n_in
-      mu0 = real(moments(0), dp)
+      mu0 = TO_DP(moments(0))
 
       call wheeler_recursion(n, alpha, beta, moments, a, b)
 
@@ -228,10 +228,10 @@
       end do
 
       do i = 0, n - 1
-         da(i) = real(a(i), dp)
+         da(i) = TO_DP(a(i))
       end do
       do i = 1, n - 1
-         db(i-1) = real(b(i), dp)
+         db(i-1) = TO_DP(b(i))
       end do
 
       err = cint_diagonalize(n, da, db, roots, c0)
@@ -248,13 +248,13 @@
       real(dp), intent(out) :: roots(0:), weights(0:)
       integer :: err
 
-      real(rk) :: moments(0:2*MXRYSROOTS-1)
-      real(rk) :: alpha(0:2*MXRYSROOTS-1), beta(0:2*MXRYSROOTS-1)
+      RKTYPE :: moments(0:2*MXRYSROOTS-1)
+      RKTYPE :: alpha(0:2*MXRYSROOTS-1), beta(0:2*MXRYSROOTS-1)
 
       moments = 0.0_rk
       alpha = 0.0_rk
       beta = 0.0_rk
-      call laguerre_moments(n*2, real(x, rk), real(lower, rk), alpha, beta, moments)
+      call laguerre_moments(n*2, TO_RK(x), TO_RK(lower), alpha, beta, moments)
       err = rys_wheeler_partial(n, alpha, beta, moments, roots, weights)
    end function rys_laguerre
 
@@ -264,13 +264,18 @@
       real(dp), intent(out) :: roots(0:), weights(0:)
       integer :: err
 
-      real(rk) :: moments(0:2*MXRYSROOTS-1)
+      RKTYPE :: moments(0:2*MXRYSROOTS-1)
+
+      ! Expands to a table-fill call in the extended instantiation, whose
+      ! moment tables are runtime-built quads; empty at double, where the
+      ! tables are parameters.  This is the only routine that reads them.
+      ENSURE_EXT_TABLES
 
       moments = 0.0_rk
       if (lower == 0.0_dp) then
-         call flocke_jacobi_moments(n*2, real(x, rk), moments)
+         call flocke_jacobi_moments(n*2, TO_RK(x), moments)
       else
-         call naive_jacobi_moments(n*2, real(x, rk), real(lower, rk), moments)
+         call naive_jacobi_moments(n*2, TO_RK(x), TO_RK(lower), moments)
       end if
       err = rys_wheeler_partial(n, jacobi_alpha_rk, jacobi_beta_rk, moments, roots, weights)
    end function rys_jacobi

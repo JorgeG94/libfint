@@ -18,14 +18,14 @@
    ! F_m(t) by the ascending series.  Used below the turnover point, where
    ! the recursion downward from F_m is stable and the closed form is not.
    subroutine fmt1_gamma_inc_like(f, t, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: b, bi, e, x, s, tol
+      RKTYPE :: b, bi, e, x, s, tol
 
-      b = real(m, rk) + 0.5_rk
+      b = TO_RK(m) + 0.5_rk
       e = 0.5_rk * exp(-t)
       x = e
       s = e
@@ -44,17 +44,17 @@
    end subroutine fmt1_gamma_inc_like
 
    subroutine gamma_inc_like(f, t, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: tt, e, b
+      RKTYPE :: tt, e, b
 
       if (t == 0.0_rk) then
          f(0) = 1.0_rk
          do i = 1, m
-            f(i) = 1.0_rk / real(2*i + 1, rk)
+            f(i) = 1.0_rk / TO_RK(2*i + 1)
          end do
       else if (t < turnover_point(m)) then
          call fmt1_gamma_inc_like(f, t, m)
@@ -64,7 +64,7 @@
          e = exp(-t)
          b = 0.5_rk / t
          do i = 1, m
-            f(i) = b * (real(2*i - 1, rk) * f(i-1) - e)
+            f(i) = b * (TO_RK(2*i - 1) * f(i-1) - e)
          end do
       end if
    end subroutine gamma_inc_like
@@ -74,15 +74,15 @@
    ! approaches 1, which is why the C documents this whole path as unstable
    ! for x*lower**2 above about 40.
    subroutine fmt1_erfc_like(f, t, lower, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t, lower
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t, lower
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: lower2, b, bi, e, e1, x, x1, s, div, delta, tol, val
+      RKTYPE :: lower2, b, bi, e, e1, x, x1, s, div, delta, tol, val
 
       lower2 = lower * lower
-      b = real(m, rk) + 0.5_rk
+      b = TO_RK(m) + 0.5_rk
       e = 0.5_rk * exp(-t)
       e1 = 0.5_rk * exp(-t * lower2) * lower
       e1 = e1 * lower2 ** m
@@ -111,12 +111,12 @@
    end subroutine fmt1_erfc_like
 
    subroutine fmt_erfc_like(f, t, lower, m)
-      real(rk), intent(out) :: f(0:)
-      real(rk), intent(in)  :: t, lower
+      RKTYPE, intent(out) :: f(0:)
+      RKTYPE, intent(in)  :: t, lower
       integer,  intent(in)  :: m
 
       integer  :: i
-      real(rk) :: lower2, e1, tt, val, e, b
+      RKTYPE :: lower2, e1, tt, val, e, b
 
       if (lower == 0.0_rk) then
          call gamma_inc_like(f, t, m)
@@ -138,7 +138,7 @@
          f(0) = 1.0_rk - e1
          do i = 1, m
             e1 = e1 * lower2
-            f(i) = (1.0_rk - e1) / real(2*i + 1, rk)
+            f(i) = (1.0_rk - e1) / TO_RK(2*i + 1)
          end do
       else if (t < turnover_point(m)) then
          call fmt1_erfc_like(f, t, lower, m)
@@ -151,7 +151,7 @@
          e1 = exp(-t * lower2) * lower
          b = 0.5_rk / t
          do i = 0, m - 1
-            val = b * (real(2*i + 1, rk) * val - e + e1)
+            val = b * (TO_RK(2*i + 1) * val - e + e1)
             e1 = e1 * lower2
             f(i+1) = val
          end do

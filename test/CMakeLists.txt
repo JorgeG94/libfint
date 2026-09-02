@@ -63,6 +63,54 @@ add_executable(ecp_abi_check ecp_abi_check.c)
 target_link_libraries(ecp_abi_check fint m)
 add_test(NAME ecp_abi_check COMMAND $<TARGET_FILE:ecp_abi_check>)
 
+# Double-double carries no libcint reference: it is checked against real128 in
+# the same binary, which is exact and needs nothing external. Kept out of
+# LIBFINT_CHECKS for that reason -- everything in that list links `cint`.
+add_executable(dd_check dd_check.f90)
+target_link_libraries(dd_check fint)
+add_test(NAME dd_check COMMAND $<TARGET_FILE:dd_check>)
+
+add_executable(dd_ops_check dd_ops_check.f90)
+target_link_libraries(dd_ops_check fint)
+add_test(NAME dd_ops_check COMMAND $<TARGET_FILE:dd_ops_check>)
+
+add_executable(dd_fn_check dd_fn_check.f90)
+target_link_libraries(dd_fn_check fint)
+add_test(NAME dd_fn_check COMMAND $<TARGET_FILE:dd_fn_check>)
+
+# This one walks erfc down to the underflow floor, where the low word of a
+# double-double is denormal and carries the last few bits of the answer.  ifx
+# defaults to a relaxed floating-point model, and its startup code then sets
+# FTZ/DAZ in MXCSR for the whole process -- so `lo` arrives as exactly zero and
+# the result degrades to plain double, 1.7e-8 relative at x=26.26.  That is the
+# runtime flushing denormals, not the library losing them: fint itself is built
+# -fp-model=precise (see src/CMakeLists.txt), but MXCSR is process-wide and the
+# main program is what sets it.  So the flag has to be on the executable.
+add_executable(dd_erfc_check dd_erfc_check.f90)
+target_link_libraries(dd_erfc_check fint)
+if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
+  target_compile_options(dd_erfc_check PRIVATE -fp-model=precise)
+endif()
+add_test(NAME dd_erfc_check COMMAND $<TARGET_FILE:dd_erfc_check>)
+
+# Not a pass/fail test: it prints a bit fold for comparing one compiler's build
+# against another's. Reproducibility is a property of a *set* of builds, so no
+# single run can assert it.
+add_executable(dd_crossbit dd_crossbit.f90)
+target_link_libraries(dd_crossbit fint)
+
+# The binary128 shim, held to the local real128 in the same binary and compared
+# as raw bits -- the same contract the dd checks have, so no libcint.  Exact on
+# the operations IEEE-754 requires to be correctly rounded, within a measured
+# ulp budget on the transcendentals it does not; see the header of quad_check.
+add_executable(quad_check quad_check.f90)
+target_link_libraries(quad_check fint)
+add_test(NAME quad_check COMMAND $<TARGET_FILE:quad_check>)
+
+add_executable(quad_const_check quad_const_check.f90)
+target_link_libraries(quad_const_check fint)
+add_test(NAME quad_const_check COMMAND $<TARGET_FILE:quad_const_check>)
+
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
 target_link_libraries(catalogue_check fint fint_test_systems cint m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)

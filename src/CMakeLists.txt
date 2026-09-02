@@ -7,7 +7,13 @@
 
 set(cintFortranSrc
   cint_const.f90
+  # binary128 through C, for compilers with no real128 -- the module must
+  # come right after cint_const because everything on the extended ladder
+  # uses it.  The .c shim beside it is why this project declares C.
+  cint_quad.f90
+  cint_quad_shim.c
   cint_ecp_num.f90
+  cint_dd.f90
   cint_bas.f90
   cint_blas.f90
   cint_fmt.F90
@@ -160,6 +166,13 @@ endif()
 # libcint_fortran module sits in between.
 add_library(fint STATIC ${cintFortranSrc})
 
+# The shim's transcendentals are glibc's *f128 functions -- the very symbols
+# gfortran emits for real128, which is what makes the shim bit-identical to
+# it (see cint_quad_shim.c for the measurement).  They live in libm, so no
+# libquadmath archive and no gcc-private header are needed at all; the
+# explicit `m` is for C-driven links, since Fortran drivers add it anyway.
+target_link_libraries(fint PUBLIC m)
+
 # THREAD SAFETY.  libcint is thread-safe -- every call takes its scratch off
 # the C stack -- and this library has to be too, because callers drive it from
 # inside `!$omp parallel`.  It gets there differently: the workspace is a
@@ -211,11 +224,14 @@ target_include_directories(fint PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 #
 # Nothing equivalent is needed for GNU, which is strict by default.
 if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  target_compile_options(fint PRIVATE -fp-model=precise)
+  # Fortran-scoped: the C shim may be built by a different compiler family.
+  target_compile_options(fint PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-fp-model=precise>)
 endif()
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(fint PRIVATE -fmax-array-constructor=4000000)
+  # $<COMPILE_LANGUAGE:Fortran> on everything in this block: these are
+  # gfortran flags, and the target now holds a C file too.
+  target_compile_options(fint PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-fmax-array-constructor=4000000>)
   # -fno-tree-vectorize is worth 12% here, which is the opposite of what a
   # flag called that usually does.  The inner loops of the gout kernels index
   # g by three values pulled out of idx -- g(ix)*g(iy)*g(iz) -- and gfortran
@@ -252,7 +268,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   # way gfortran 13's vectoriser is a large regression -- int2e_sph 3,055M
   # instructions scalar against 3,964M vectorised -- including on the very
   # gout kernel gcc vectorises well.  See PERFORMANCE.md 7b.
-  target_compile_options(fint PRIVATE -fno-tree-vectorize)
+  target_compile_options(fint PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-fno-tree-vectorize>)
   # ...except where the loops are the shape a vectoriser is actually for.
   # cint_g1e holds prim_to_ctr_0 and _1, whose inner loop is an axpy --
   # gc(nf*j+n) += c0 * gp(n) -- and gcc vectorises the C's freely.  The
@@ -291,7 +307,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   # WITH_FORTRAN_LTO=OFF for anyone who would rather have the link back.
   option(WITH_FORTRAN_LTO "Link-time optimisation for the Fortran port" ON)
   if(WITH_FORTRAN_LTO)
-    target_compile_options(fint PRIVATE -flto=auto -ffat-lto-objects)
+    target_compile_options(fint PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-flto=auto$<SEMICOLON>-ffat-lto-objects>)
     target_link_options(fint PUBLIC -flto=auto)
   endif()
 endif()

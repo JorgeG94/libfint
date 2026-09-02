@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
-project(libfint VERSION 6.1.3 LANGUAGES Fortran)
+# C is a first-class language here, not a test-suite convenience: the
+# binary128 shim (src/cint_quad_shim.c) is part of the library, so every
+# build needs a C compiler.
+project(libfint VERSION 6.1.3 LANGUAGES Fortran C)
 
 include(GNUInstallDirs)
 

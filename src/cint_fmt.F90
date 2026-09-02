@@ -36,7 +36,22 @@ module cint_fmt_tab
 end module cint_fmt_tab
 
 module cint_fmt_dp
-   use cint_const,  only: rk => dp
+   ! `rk => dp` comes FIRST here, and the order is not cosmetic.  LFortran
+   ! 0.64 keeps only the LAST entry of an only-list that names a given
+   ! symbol, so `only: dp, rk => dp` leaves `dp` itself undeclared in this
+   ! module -- and reports it against cint_quad.f90, which does not have the
+   ! problem, so the message points nowhere near the cause.  Written this way
+   ! round both names survive.  Every other compiler reads the two orders
+   ! identically.  The same import appears five more times -- below, and
+   ! twice each in cint_schmidt.F90 and cint_wheeler.F90 -- each with a
+   ! one-line pointer back to this note.
+   use cint_const,  only: rk => dp, dp
+#undef RKTYPE
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE real(rk)
+#define TO_RK(x) real(x, rk)
+#define TO_DP(x) real(x, dp)
    use cint_fmt_tab, only: turnover_point
    implicit none
    private
@@ -55,7 +70,18 @@ contains
 end module cint_fmt_dp
 
 module cint_fmt_qp
-   use cint_const,  only: rk => qp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,  only: rk => dp, dp
+   use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
+                        operator(<), operator(>), operator(<=), operator(>=), &
+                        operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
+                        quad_from3, sqrt, abs, exp, erf, erfc
+#undef RKTYPE
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE type(quad)
+#define TO_RK(x) quad_from(real(x, dp))
+#define TO_DP(x) quad_to_dp(x)
    use cint_fmt_tab, only: turnover_point_qp => turnover_point
    implicit none
    private
@@ -65,8 +91,17 @@ module cint_fmt_qp
    ! 80-bit ladder; that ladder becomes binary128 here, so it gets the tighter
    ! tolerance and converges further than the C does.
    real(rk), parameter :: sml = 1.0e-35_rk
-   real(rk), parameter :: sqrtpie4 = &
-      0.8862269254527580136490837416705725913987747280611935641069038949264_rk
+   ! sqrt(pi)/2 to 67 digits -- it is the leading factor in both the Boys
+   ! function and the moments, so truncating it caps the whole extended
+   ! ladder.  A quad cannot be a named constant (rebuilding one is a call
+   ! into the C shim), so the name is a macro and the rebuild happens at
+   ! each use site: it appears once per entry call, never in an inner loop,
+   ! and the module stays free of state that would need a guarded init.
+   ! The three parts sum to the exact binary128 value; quad_const_check
+   ! measures that, as raw bits, against gfortran's own parse of the digits.
+   real(dp), parameter :: sqrtpie4_3d(3) = &
+      [0.886226925452758_dp, -3.8332932499128993e-17_dp, -6.5291674539727145e-34_dp]
+#define sqrtpie4 quad_from3(sqrtpie4_3d(1), sqrtpie4_3d(2), sqrtpie4_3d(3))
    real(rk), parameter :: erfc_bound = 200.0_rk
 
    ! The turnover table is a set of thresholds, not data feeding the result,

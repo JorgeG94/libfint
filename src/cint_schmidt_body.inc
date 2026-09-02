@@ -18,14 +18,14 @@
    ! enough precision that the higher Rys polynomials are meaningless, and the
    ! caller treats their contribution as zero.
    function r_smit(cs, fmt_ints, n) result(err)
-      real(rk), intent(inout) :: cs(0:)
-      real(rk), intent(in)    :: fmt_ints(0:)
+      RKTYPE, intent(inout) :: cs(0:)
+      RKTYPE, intent(in)    :: fmt_ints(0:)
       integer,  intent(in)    :: n
       integer :: err
 
       integer  :: i, j, k
-      real(rk) :: fac, dot, tmp
-      real(rk) :: v(0:MXRYSROOTS-1)
+      RKTYPE :: fac, dot, tmp
+      RKTYPE :: v(0:MXRYSROOTS-1)
 
       err = 0
       fac = -fmt_ints(1) / fmt_ints(0)
@@ -74,7 +74,7 @@
    end function r_smit
 
    pure subroutine set_zero(a, n, start)
-      real(rk), intent(inout) :: a(0:)
+      RKTYPE, intent(inout) :: a(0:)
       integer,  intent(in)    :: n, start
       integer :: i, k
       do k = start, n - 1
@@ -97,8 +97,8 @@
       real(dp), intent(out) :: roots(0:), weights(0:)
       integer :: err
 
-      real(rk) :: fmt_ints(0:2*MXRYSROOTS-1)
-      real(rk) :: qcs(0:MXRYSROOTS*MXRYSROOTS-1)
+      RKTYPE :: fmt_ints(0:2*MXRYSROOTS-1)
+      RKTYPE :: qcs(0:MXRYSROOTS*MXRYSROOTS-1)
       real(dp) :: rt(0:MXRYSROOTS-1)
       real(dp) :: cs(0:MXRYSROOTS*MXRYSROOTS-1)
       real(dp) :: root, poly, dum, dum0
@@ -108,9 +108,9 @@
       nroots1 = nroots + 1
 
       if (lower == 0.0_dp) then
-         call gamma_inc_like(fmt_ints, real(x, rk), nroots*2)
+         call gamma_inc_like(fmt_ints, TO_RK(x), nroots*2)
       else
-         call fmt_erfc_like(fmt_ints, real(x, rk), real(lower, rk), nroots*2)
+         call fmt_erfc_like(fmt_ints, TO_RK(x), TO_RK(lower), nroots*2)
       end if
 
       ! Guard against the moments underflowing to nothing; without it the
@@ -130,13 +130,13 @@
       ! root/(1-root).  Algebraically the same, numerically not: the two
       ! round differently, which shows up at the 1e-15 level.
       if (nroots == 1 .and. one_root_early_return) then
-         roots(0) = real(fmt_ints(1) / (fmt_ints(0) - fmt_ints(1)), dp)
-         weights(0) = real(fmt_ints(0), dp)
+         roots(0) = TO_DP(fmt_ints(1) / (fmt_ints(0) - fmt_ints(1)))
+         weights(0) = TO_DP(fmt_ints(0))
          return
       end if
 
       if (nroots == 1) then
-         rt(0) = real(fmt_ints(1) / fmt_ints(0), dp)
+         rt(0) = TO_DP(fmt_ints(1) / fmt_ints(0))
       else
          qcs = 0.0_rk
          err = r_smit(qcs, fmt_ints, nroots1)
@@ -152,14 +152,14 @@
          end if
          do k = 1, nroots1 - 1
             do i = 0, k
-               cs(k*nroots1 + i) = real(qcs(k*nroots1 + i), dp)
+               cs(k*nroots1 + i) = TO_DP(qcs(k*nroots1 + i))
             end do
          end do
          err = cint_polynomial_roots(rt, cs, nroots)
          if (err /= 0) return
       end if
 
-      dum0 = real(1.0_rk / fmt_ints(0), dp)
+      dum0 = TO_DP(1.0_rk / fmt_ints(0))
       do k = 0, nroots - 1
          root = rt(k)
          ! A root pinned at 1 marks a polynomial that r_smit gave up on; its

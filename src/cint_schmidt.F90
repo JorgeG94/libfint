@@ -28,7 +28,14 @@
 !     at anything but zero/non-zero.
 !
 module cint_schmidt_dp
-   use cint_const,      only: dp, rk => dp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,      only: rk => dp, dp
+#undef RKTYPE
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE real(rk)
+#define TO_RK(x) real(x, rk)
+#define TO_DP(x) real(x, dp)
    use cint_fmt_dp,     only: gamma_inc_like, fmt_erfc_like
    use cint_find_roots, only: cint_polynomial_roots, poly_value1
    implicit none
@@ -46,7 +53,18 @@ contains
 end module cint_schmidt_dp
 
 module cint_schmidt_qp
-   use cint_const,      only: dp, rk => qp
+   ! `rk => dp` first: LFortran 0.64 drops the plain `dp` otherwise (cint_fmt.F90).
+   use cint_const,      only: rk => dp, dp
+   use cint_quad, only: quad, operator(+), operator(-), operator(*), operator(/), &
+                        operator(<), operator(>), operator(<=), operator(>=), &
+                        operator(==), operator(**), assignment(=), quad_from, quad_to_dp, &
+                        sqrt, abs, exp, erf, erfc
+#undef RKTYPE
+#undef TO_RK
+#undef TO_DP
+#define RKTYPE type(quad)
+#define TO_RK(x) quad_from(real(x, dp))
+#define TO_DP(x) quad_to_dp(x)
    use cint_fmt_qp,     only: gamma_inc_like, fmt_erfc_like
    use cint_find_roots, only: cint_polynomial_roots, poly_value1
    implicit none

@@ -14,6 +14,10 @@
 !
 program rys_core_check
    use cint_const, only: dp
+   use cint_quad, only: quad, quad_from, quad_to_dp, operator(+), operator(-), &
+                      operator(*), operator(/), operator(<), operator(>), &
+                      operator(<=), operator(>=), operator(==), operator(**), &
+                      assignment(=), sqrt, abs, exp, erf, erfc, max, min
    use cint_find_roots, only: cint_polynomial_roots
    use cint_schmidt_dp, only: schmidt_dp => rys_schmidt
    use cint_schmidt_qp, only: schmidt_qp => rys_schmidt
