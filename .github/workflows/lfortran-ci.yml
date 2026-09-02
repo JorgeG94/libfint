@@ -56,6 +56,14 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: echo "LFORTRAN_LINKER=clang" >> $GITHUB_ENV
 
+      # this is for quadmath
+      - name: Homebrew GCC for the C shim (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install gcc@15
+          echo "CC=gcc-15" >> $GITHUB_ENV
+          echo "FPM_CC=gcc-15" >> $GITHUB_ENV
+
       # Debug only.  fpm's --profile release leaks its internal
       # flag_lfortran_opt name unexpanded to lfortran; the cmake job below
       # covers the optimised build instead.
