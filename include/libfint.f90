@@ -54,6 +54,13 @@ module libcint_fortran
     use cint_gen_grad1,   only: int1e_ipnuc_cart, int1e_ipnuc_sph, &
                                 int1e_iprinv_cart, int1e_iprinv_sph
     use cint_gen_grad2,   only: int2e_ip1_cart, int2e_ip1_sph
+    ! The scalar ECP integrals. libcint has no ECP code at all, so the C-backed
+    ! twin of this module cannot offer these and a caller that wants them has
+    ! to be built against this backend -- which is what `ECP_AVAILABLE` on the
+    ! metalquicha side is for. Reached here rather than through a hand-written
+    ! `bind(C)` interface so that the caller needs no C marshalling of its own.
+    use cint_ecp_drv,     only: ecp_scalar_cart, ecp_scalar_sph
+    use cint_ecp_num,     only: AS_ECPBAS_OFFSET, AS_NECPBAS
     use cint_gen_int3c2e, only: int3c2e_ip1_cart, int3c2e_ip1_sph, &
                                 int3c2e_ip2_cart, int3c2e_ip2_sph, &
                                 int2c2e_ip1_cart, int2c2e_ip1_sph
@@ -88,6 +95,7 @@ module libcint_fortran
 
     public :: libcint_1e_ovlp_cart, libcint_1e_kin_cart, libcint_1e_nuc_cart
     public :: libcint_1e_ipovlp_cart
+    public :: libcint_ecp_cart, libcint_ecp_sph
     public :: libcint_1e_ovlp_sph, libcint_1e_kin_sph, libcint_1e_nuc_sph
     public :: libcint_1e_ipovlp_sph
     public :: libcint_1e_ipkin_cart, libcint_1e_ipnuc_cart, libcint_1e_iprinv_cart
@@ -300,6 +308,41 @@ contains
         end do
     end function env_extent
 
+    ! `env_extent` for a call that also reads ECP shells.
+    !
+    ! An ECP row lives in the same `bas` array as the orbital shells but past
+    ! them, at `ecpoff`, and its exponents and coefficients live in `env` like
+    ! any other -- so the extent has to cover them or the callee reads past the
+    ! end of what the caller passed. Slot 3 of an ECP row is RADI_POWER, the r
+    ! exponent, sitting where NCTR_OF sits in an orbital row and meaning
+    ! something else entirely: reading it as a contraction count gives an
+    ! extent that is too short for an r^0 term and past the buffer for an r^2
+    ! one. An ECP shell has one coefficient per primitive, so `np` alone.
+    ! Not `pure`, and `bas` arrives already cut to length rather than assumed
+    ! size. Both are for lfortran: it reports `LIBCINT_BAS_SLOTS` as a call to
+    ! an impure getter when a PURE procedure uses it to slice an assumed-size
+    ! dummy in an executable statement, which is how this was first written.
+    ! `env_extent` beside it stays pure because it only uses the parameter in a
+    ! specification expression, which lfortran accepts. Nothing here is hot --
+    ! one call per shell pair against a kernel that integrates a radial grid --
+    ! so the attribute bought nothing worth working around it for.
+    function ecp_env_extent(shls, atm, natm, bas, nbas, ecpoff, necpbas) result(n)
+        integer(ip), intent(in) :: natm, nbas, ecpoff, necpbas
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in) :: bas(0:)
+        integer(ip) :: n
+        integer(ip) :: i, sh, np
+
+        n = env_extent(shls, 2_ip, atm, natm, bas(0:LIBCINT_BAS_SLOTS*nbas - 1), nbas)
+        do i = 0, necpbas - 1
+            sh = ecpoff + i
+            np = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NPRIM_OF - 1)
+            n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_EXP   - 1) + np)
+            n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_COEFF - 1) + np)
+        end do
+    end function ecp_env_extent
+
     ! ========================================================================
     ! One- and two-electron dispatch.  These take the flat views; the public
     ! entry points below are one line each.
@@ -437,6 +480,94 @@ contains
     ! ========================================================================
     ! One-electron entry points
     ! ========================================================================
+
+    ! ========================================================================
+    ! Scalar ECP over a shell pair.
+    !
+    ! Signature deliberately the same shape as the 1e integrals above, so a
+    ! caller that already has `libcint_1e_nuc_sph` working needs nothing new to
+    ! call this. The ECP shells are not passed: they travel in `bas` past the
+    ! orbital ones, and `env` slots 18 and 19 say where they start and how many
+    ! there are, which is the convention PySCF writes and libcint reads.
+
+    function run_ecp(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
+        logical,     intent(in)  :: cart
+        integer(ip), intent(in)  :: natm, nbas
+        real(dp),    intent(out) :: buf(*)
+        integer(ip), intent(in)  :: shls(2)
+        integer(ip), intent(in)  :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        ! Plain assumed-size, one-based, which is what every other wrapper in
+        ! this file takes. The ECP rows put its real length past `nbas`, so it
+        ! cannot be sized by `nbas` the way `run1e`'s is.
+        integer(ip), intent(in)  :: bas(*)
+        real(dp),    intent(in)  :: env(*)
+        integer(ip) :: ret
+
+        integer(ip) :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all, nenv
+
+        ! Slots 18 and 19 sit below PTR_ENV_START, so they are readable before
+        ! anything else about `env` is known.
+        ecpoff  = int(env(AS_ECPBAS_OFFSET + 1), ip)
+        necpbas = int(env(AS_NECPBAS + 1), ip)
+        if (necpbas <= 0) then
+            ! No ECP shells in this molecule. The block is zero rather than
+            ! absent, so a caller can add it unconditionally.
+            ret = 0_ip
+            return
+        end if
+        ! Not `nbas + necpbas`: nothing requires the ECP rows to begin exactly
+        ! where the orbital ones end. PySCF stacks them that way and the C never
+        ! assumes it, so neither does this.
+        nb_all = max(nbas, ecpoff + necpbas)
+
+        fshls(0) = shls(1); fshls(1) = shls(2)
+        ! Sliced rather than passed whole: `bas` is assumed-size here, because
+        ! the ECP rows put its real length past `nbas`, and an assumed-size
+        ! array cannot be handed to the assumed-shape dummies below.
+        if (cart) then
+            di = cint_cgto_cart(fshls(0), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+            dj = cint_cgto_cart(fshls(1), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+        else
+            di = cint_cgto_spheric(fshls(0), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+            dj = cint_cgto_spheric(fshls(1), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+        end if
+        nenv = ecp_env_extent(shls, atm, natm, bas(1:LIBCINT_BAS_SLOTS*nb_all), &
+                              nbas, ecpoff, necpbas)
+
+        if (cart) then
+            ret = int(ecp_scalar_cart(buf(1:di*dj), fshls, atm, natm, &
+                                      bas(1:LIBCINT_BAS_SLOTS*nb_all), nbas, &
+                                      env(1:nenv), [di, dj]), ip)
+        else
+            ret = int(ecp_scalar_sph(buf(1:di*dj), fshls, atm, natm, &
+                                     bas(1:LIBCINT_BAS_SLOTS*nb_all), nbas, &
+                                     env(1:nenv), [di, dj]), ip)
+        end if
+    end function run_ecp
+
+    function libcint_ecp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp(.true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_cart
+
+    function libcint_ecp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp(.false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_sph
 
     function libcint_1e_ovlp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
         real(dp), intent(out) :: buf(*)
