@@ -989,14 +989,17 @@ contains
         opt = c_loc(opt_pool(slot))
     end subroutine libcint_2e_spsp1_optimizer
 
+    ! Find the pool slot by comparing C addresses, not by ASSOCIATED.  A
+    ! pointer obtained from C_F_POINTER is not required to compare associated
+    ! with the module target it happens to address, and nvfortran indeed says
+    ! it is not: the slot would never be found, every free would be a silent
+    ! no-op, and the pool would fill after LIBCINT_MAX_OPT optimizers.
     subroutine libcint_del_optimizer(opt)
         type(c_ptr), intent(inout) :: opt
-        type(cint_opt_t), pointer :: p
         integer :: i
         if (c_associated(opt)) then
-            call c_f_pointer(opt, p)
             do i = 1, LIBCINT_MAX_OPT
-                if (associated(p, opt_pool(i))) then
+                if (c_associated(opt, c_loc(opt_pool(i)))) then
                     call cint_del_optimizer(opt_pool(i))
                     opt_taken(i) = .false.
                     exit
