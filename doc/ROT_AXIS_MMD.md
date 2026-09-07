@@ -203,10 +203,10 @@ a flag, so the benchmark can decide where the crossover really is.
   beyond the generated classes rather than falling back;
   `rotaxis_supported` is the caller's question to ask first.
 * Timed against `int2e_cart` over all quartets of 6-31G and 6-311G** on
-  C2H6 (20 repeats each), Cartesian: total l 0 is 1.07x Rys, l 1 is 0.98x,
-  l 2 0.81x, l 3 0.56x, l 4 0.57x.  Both paths sit near 1.7 us per quartet,
-  which says the driver's fixed cost -- allocatable pair tables and an
-  allocatable transform matrix per index, a generic scatter -- is what is
-  being measured, not the kernel.  Fitting the driver into the workspace
-  scheme the Rys path uses and specialising the s/p/L rotations is the next
-  step, and the kernels themselves have not been profiled at all.
+  C2H6 (20 repeats each), Cartesian, per quartet: total l 0 is 1.10x Rys,
+  l 1 1.25x, l 2 1.12x, l 3 0.78x, l 4 0.43x (l >= 3 is d-touching).  The
+  first driver allocated its pair tables and transforms per call and
+  measured parity at l <= 1; automatic arrays and fixed transforms are
+  what moved it.  Inside a threaded Fock build (mqc, msn slice, 6-31G,
+  16 threads) the s/p/L path measured 1.6x over Rys even with that first
+  driver, and d-touching quartets 2.5x slower -- so d stays on Rys there.

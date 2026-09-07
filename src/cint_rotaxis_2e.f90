@@ -151,20 +151,29 @@ contains
          cutoff = max(MIN_EXPCUTOFF, env(PTR_EXPCUTOFF)) + 1.0_dp
       end if
 
-      do l = 0, dim(3) - 1
-         do k = 0, dim(2) - 1
-            do j = 0, dim(1) - 1
-               do i = 0, dim(0) - 1
-                  out(i + dims(0)*(j + dims(1)*(k + dims(2)*l))) = 0.0_dp
+      call one_block(out, dims, sh, ncomp_out, env, cutoff, sph, has_value)
+      ! the scatter writes every element of the block; only a screened-out
+      ! quartet needs zeroing
+      if (.not. has_value) then
+         do l = 0, dim(3) - 1
+            do k = 0, dim(2) - 1
+               do j = 0, dim(1) - 1
+                  do i = 0, dim(0) - 1
+                     out(i + dims(0)*(j + dims(1)*(k + dims(2)*l))) = 0.0_dp
+                  end do
                end do
             end do
          end do
-      end do
-
-      call one_block(out, dims, sh, ncomp_out, env, cutoff, sph, has_value)
+      end if
    end function rotaxis_drv
 
    ! The quartet, computed in canonical order and scattered into `out`.
+   !
+   ! No allocation here: the pair tables, the block and its transform
+   ! scratch are automatic arrays sized by the quartet, which on a
+   ! (pp|pp) of a few primitives is a few kB of stack.  The first version
+   ! allocated all of them per call and that, not the kernel, was the
+   ! per-quartet floor.
    subroutine one_block(out, dims, sh, ncomp_out, env, cutoff, sph, has_value)
       real(dp), intent(inout) :: out(0:)
       integer,  intent(in)    :: dims(0:)
@@ -176,12 +185,10 @@ contains
 
       integer  :: perm(0:3), m, t, code
       integer  :: nf(0:3), nout(0:3), nctr(0:3), rk(0:3)
-      real(dp) :: rot(3, 3), gc(3), cl(3), rab, rcd
-      real(dp), allocatable :: bp(:,:), kab(:,:), kp(:,:), kcd(:,:)
-      real(dp), allocatable :: blk(:), work(:), tmat(:,:)
+      real(dp) :: rot(3, 3), gc(3), cl(3), rab, rcd, tmat(6, 6)
       real(dp) :: fc(0:3, 0:9)
       integer  :: nbra, nket, ncb, nck, ncomp, ncol, nb, na
-      integer  :: a, b, c, d, ia, ib, ic, id, ii(0:3), o
+      integer  :: a, b, c, d, ia, ib, ic, id, ii(0:3), o, npb, npk
 
       ! 1. canonical order: ranks ascend within each pair, then the pairs.
       perm = [0, 1, 2, 3]
@@ -212,52 +219,70 @@ contains
          error stop "cint_rotaxis_2e: quartet beyond the generated classes"
       end if
 
-      ! 2. frame and pair tables
-      call local_frame(sh(perm(0))%r, sh(perm(1))%r, sh(perm(2))%r, sh(perm(3))%r, &
-                       rot, rab, rcd, gc, cl)
-      call bra_pairs(sh(perm(0)), sh(perm(1)), env, rab, cutoff, bp, kab, nbra, ncb)
-      call ket_pairs(sh(perm(2)), sh(perm(3)), env, rcd, gc, cl, cutoff, kp, kcd, nket, nck)
-      has_value = .false.
-      if (nbra == 0 .or. nket == 0) return
-
-      ! 3. the kernel: the local-frame block, (a,b,c,d) with a fastest, then
-      !    the contraction columns (cA, cB, cC, cD) with cA fastest.
+      ncb = nctr(0)*nctr(1)
+      nck = nctr(2)*nctr(3)
+      npb = sh(perm(0))%nprim * sh(perm(1))%nprim
+      npk = sh(perm(2))%nprim * sh(perm(3))%nprim
       ncomp = nf(0)*nf(1)*nf(2)*nf(3)
       ncol  = ncb*nck
-      allocate(blk(ncomp*ncol))
-      call rotaxis_kernel(code, nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, blk, has_value)
-      if (.not. has_value) return
-      blk = blk * TWO_PI_52
+      call body(sh(perm(0))%ntype*sh(perm(1))%ntype*ncb, npb, &
+                sh(perm(2))%ntype*sh(perm(3))%ntype*nck, npk, ncomp*ncol)
 
-      ! 4. rotate each index back to the lab frame, composed with the
-      !    spherical transform when asked for.
-      allocate(work(ncomp*ncol))
-      nb = 1
-      na = nf(1)*nf(2)*nf(3)*ncol
-      do m = 0, 3
-         call index_matrix(sh(perm(m))%l, sh(perm(m))%sp, rot, sph, tmat)
-         call transform_index(blk, nb, nf(m), nout(m), na, tmat, work)
-         nb = nb * nout(m)
-         if (m < 3) na = na / nf(m+1)
-      end do
+   contains
 
-      ! 5. scatter.  Canonical position m holds original slot perm(m); the
-      !    per-l normalisation goes on here because for an L shell it is
-      !    per component.
-      do d = 0, nout(3)*nctr(3) - 1
-      do c = 0, nout(2)*nctr(2) - 1
-      do b = 0, nout(1)*nctr(1) - 1
-      do a = 0, nout(0)*nctr(0) - 1
-         ia = mod(a, nout(0)); ib = mod(b, nout(1)); ic = mod(c, nout(2)); id = mod(d, nout(3))
-         t = ia + nout(0)*(ib + nout(1)*(ic + nout(2)*id)) &
-             + nb*(a/nout(0) + nctr(0)*(b/nout(1) + nctr(1)*(c/nout(2) + nctr(2)*(d/nout(3)))))
-         ii(perm(0)) = a; ii(perm(1)) = b; ii(perm(2)) = c; ii(perm(3)) = d
-         o = ii(0) + dims(0)*(ii(1) + dims(1)*(ii(2) + dims(2)*ii(3)))
-         out(o) = blk(t + 1) * fc(0, ia) * fc(1, ib) * fc(2, ic) * fc(3, id)
-      end do
-      end do
-      end do
-      end do
+      ! Split off so the automatic arrays take their sizes from the
+      ! quartet; the host's variables are all visible here.
+      subroutine body(wb, npb, wk, npk, nblk)
+         integer, intent(in) :: wb, npb, wk, npk, nblk
+         real(dp) :: bp(5, npb), kab(wb, npb), kp(7, npk), kcd(wk, npk)
+         real(dp) :: blk(nblk), work(nblk)
+
+         ! 2. frame and pair tables
+         call local_frame(sh(perm(0))%r, sh(perm(1))%r, sh(perm(2))%r, sh(perm(3))%r, &
+                          rot, rab, rcd, gc, cl)
+         call bra_pairs(sh(perm(0)), sh(perm(1)), env, rab, cutoff, bp, kab, nbra)
+         call ket_pairs(sh(perm(2)), sh(perm(3)), env, rcd, gc, cl, cutoff, kp, kcd, nket)
+         has_value = .false.
+         if (nbra == 0 .or. nket == 0) return
+
+         ! 3. the kernel: the local-frame block, (a,b,c,d) with a fastest, then
+         !    the contraction columns (cA, cB, cC, cD) with cA fastest.  The
+         !    2 pi^(5/2) rides in the ket weights.
+         call rotaxis_kernel(code, nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, blk, has_value)
+         if (.not. has_value) return
+
+         ! 4. rotate each index back to the lab frame, composed with the
+         !    spherical transform when asked for.  An s index is the identity
+         !    and is skipped.
+         nb = 1
+         na = nf(1)*nf(2)*nf(3)*ncol
+         do m = 0, 3
+            if (nf(m) > 1) then
+               call index_matrix(sh(perm(m))%l, sh(perm(m))%sp, rot, sph, tmat, nout(m))
+               call transform_index(blk, nb, nf(m), nout(m), na, tmat, work)
+            end if
+            nb = nb * nout(m)
+            if (m < 3) na = na / nf(m+1)
+         end do
+
+         ! 5. scatter.  Canonical position m holds original slot perm(m); the
+         !    per-l normalisation goes on here because for an L shell it is
+         !    per component.
+         do d = 0, nout(3)*nctr(3) - 1
+         do c = 0, nout(2)*nctr(2) - 1
+         do b = 0, nout(1)*nctr(1) - 1
+         do a = 0, nout(0)*nctr(0) - 1
+            ia = mod(a, nout(0)); ib = mod(b, nout(1)); ic = mod(c, nout(2)); id = mod(d, nout(3))
+            t = ia + nout(0)*(ib + nout(1)*(ic + nout(2)*id)) &
+                + nb*(a/nout(0) + nctr(0)*(b/nout(1) + nctr(1)*(c/nout(2) + nctr(2)*(d/nout(3)))))
+            ii(perm(0)) = a; ii(perm(1)) = b; ii(perm(2)) = c; ii(perm(3)) = d
+            o = ii(0) + dims(0)*(ii(1) + dims(1)*(ii(2) + dims(2)*ii(3)))
+            out(o) = blk(t + 1) * fc(0, ia) * fc(1, ib) * fc(2, ic) * fc(3, id)
+         end do
+         end do
+         end do
+         end do
+      end subroutine body
    end subroutine one_block
 
    pure subroutine iswap(a, b)
@@ -312,17 +337,15 @@ contains
    ! tt = ta + ntype_a*tb, the weight c_a(ta,ci) c_b(tb,cj) exp(-mu R^2)/p
    ! sits at tt + ntt*cc + 1; a plain shell has one type and the layout is
    ! kab(cc+1, pair).
-   subroutine bra_pairs(sa, sb, env, rab, cutoff, bp, kab, nbra, ncb)
+   subroutine bra_pairs(sa, sb, env, rab, cutoff, bp, kab, nbra)
       type(shell_t), intent(in) :: sa, sb
       real(dp), intent(in)  :: env(0:), rab, cutoff
-      real(dp), allocatable, intent(out) :: bp(:,:), kab(:,:)
-      integer,  intent(out) :: nbra, ncb
+      real(dp), intent(out) :: bp(5, *), kab(sa%ntype*sb%ntype*sa%nctr*sb%nctr, *)
+      integer,  intent(out) :: nbra
       integer  :: ia, ib, ci, cj, ta, tb, ntt
       real(dp) :: a, b, p, eab, e
 
-      ncb = sa%nctr * sb%nctr
       ntt = sa%ntype * sb%ntype
-      allocate(bp(5, sa%nprim*sb%nprim), kab(ntt*ncb, sa%nprim*sb%nprim))
       nbra = 0
       do ib = 0, sb%nprim - 1
          b = env(sb%pe + ib)
@@ -353,17 +376,15 @@ contains
       end do
    end subroutine bra_pairs
 
-   subroutine ket_pairs(sc, sd, env, rcd, gc, cl, cutoff, kp, kcd, nket, nck)
+   subroutine ket_pairs(sc, sd, env, rcd, gc, cl, cutoff, kp, kcd, nket)
       type(shell_t), intent(in) :: sc, sd
       real(dp), intent(in)  :: env(0:), rcd, gc(3), cl(3), cutoff
-      real(dp), allocatable, intent(out) :: kp(:,:), kcd(:,:)
-      integer,  intent(out) :: nket, nck
+      real(dp), intent(out) :: kp(7, *), kcd(sc%ntype*sd%ntype*sc%nctr*sd%nctr, *)
+      integer,  intent(out) :: nket
       integer  :: ic, id, ck, jl, tc, td, ntt
       real(dp) :: c, d, q, ecd, e, yd
 
-      nck = sc%nctr * sd%nctr
       ntt = sc%ntype * sd%ntype
-      allocate(kp(7, sc%nprim*sd%nprim), kcd(ntt*nck, sc%nprim*sd%nprim))
       nket = 0
       do id = 0, sd%nprim - 1
          d = env(sd%pe + id)
@@ -381,7 +402,7 @@ contains
             kp(5, nket) = cl(1) + yd*gc(1)
             kp(6, nket) = cl(3) + yd*gc(2)
             kp(7, nket) = ecd
-            e = exp(-ecd)/q
+            e = TWO_PI_52 * exp(-ecd)/q
             do jl = 0, sd%nctr - 1
                do ck = 0, sc%nctr - 1
                   do td = 0, sd%ntype - 1
@@ -411,68 +432,73 @@ contains
 
    ! The matrix that takes the local-frame Cartesian components of one
    ! index to the lab frame -- and on to spherical when `sph` -- so that
-   ! out(I) = sum_J tmat(I, J) loc(J).  A lab Cartesian x^i y^j z^k is the
-   ! product of i factors (rot(1,:).x_loc), j of (rot(2,:).x_loc) and k of
-   ! (rot(3,:).x_loc), expanded as a polynomial in the local components.
-   !
-   ! An L shell is the s block and the p block side by side: 1 (+) rot,
-   ! with no spherical transform, since its s and p already are spherical.
-   subroutine index_matrix(l, is_sp, rot, sph, tmat)
-      integer,  intent(in) :: l
-      logical,  intent(in) :: is_sp
-      real(dp), intent(in) :: rot(3, 3)
-      logical,  intent(in) :: sph
-      real(dp), allocatable, intent(out) :: tmat(:,:)
-      real(dp), allocatable :: mrot(:,:), poly(:), nxt(:)
-      integer :: nf, nd, ix, iy, iz, row, deg, dir, k, jx, jy, jz, a, co, m, f, ff
-      integer :: ex(3)
+   ! out(I) = sum_J tmat(I, J) loc(J), in the leading nout x nf of tmat.
+   ! p is rot itself; L is 1 (+) rot; a lab Cartesian x^i y^j z^k of a d is
+   ! the product of the corresponding rows of rot expanded as a polynomial
+   ! in the local components.
+   subroutine index_matrix(l, is_sp, rot, sph, tmat, nout)
+      integer,  intent(in)  :: l
+      logical,  intent(in)  :: is_sp
+      real(dp), intent(in)  :: rot(3, 3)
+      logical,  intent(in)  :: sph
+      real(dp), intent(out) :: tmat(6, 6)
+      integer,  intent(out) :: nout
+      real(dp) :: mrot(6, 6)
+      integer :: nf, nd, ix, iy, iz, row, dir, co, m, f, ff, a, b
+      integer :: ex(3), fa(3), fb(3)
 
       if (is_sp) then
-         allocate(tmat(NF_SP, NF_SP))
-         tmat = 0.0_dp
+         nout = NF_SP
+         tmat(1:4, 1:4) = 0.0_dp
          tmat(1, 1) = 1.0_dp
          tmat(2:4, 2:4) = rot
          return
       end if
-      nf = cint_len_cart(l)
-      allocate(mrot(nf, nf))
-      row = 0
-      do ix = l, 0, -1
-         do iy = l - ix, 0, -1
-            iz = l - ix - iy
-            row = row + 1
-            allocate(poly(1)); poly = 1.0_dp
-            deg = 0
-            do dir = 1, 3
+      select case (l)
+      case (1)
+         nout = 3
+         tmat(1:3, 1:3) = rot
+         return
+      case (2)
+         ! x^i y^j z^k (lab) = (r_i . x)(r_j . x) summed: for the two lab
+         ! factors dir1, dir2 the local monomial e_a + e_b gets rot(dir1,a)
+         ! rot(dir2,b).
+         nf = 6
+         mrot(1:6, 1:6) = 0.0_dp
+         row = 0
+         do ix = 2, 0, -1
+            do iy = 2 - ix, 0, -1
+               iz = 2 - ix - iy
+               row = row + 1
                ex = [ix, iy, iz]
-               do k = 1, ex(dir)
-                  allocate(nxt(cint_len_cart(deg + 1))); nxt = 0.0_dp
-                  do jx = deg, 0, -1
-                     do jy = deg - jx, 0, -1
-                        jz = deg - jx - jy
-                        do a = 1, 3
-                           select case (a)
-                           case (1); m = cart_index(jx + 1, jy, jz)
-                           case (2); m = cart_index(jx, jy + 1, jz)
-                           case (3); m = cart_index(jx, jy, jz + 1)
-                           end select
-                           nxt(m + 1) = nxt(m + 1) + poly(cart_index(jx, jy, jz) + 1) * rot(dir, a)
-                        end do
-                     end do
+               ! the two factors' directions
+               fa = 0; fb = 0
+               dir = 0
+               do m = 1, 3
+                  do f = 1, ex(m)
+                     dir = dir + 1
+                     if (dir == 1) fa(1) = m
+                     if (dir == 2) fb(1) = m
                   end do
-                  deg = deg + 1
-                  call move_alloc(nxt, poly)
+               end do
+               do a = 1, 3
+                  do b = 1, 3
+                     m = cart_index(merge(1,0,a==1) + merge(1,0,b==1), &
+                                    merge(1,0,a==2) + merge(1,0,b==2), &
+                                    merge(1,0,a==3) + merge(1,0,b==3))
+                     mrot(row, m + 1) = mrot(row, m + 1) + rot(fa(1), a) * rot(fb(1), b)
+                  end do
                end do
             end do
-            mrot(row, :) = poly
-            deallocate(poly)
          end do
-      end do
+      case default
+         error stop "cint_rotaxis_2e: index_matrix beyond d"
+      end select
 
-      if (sph .and. l >= 2) then
+      if (sph) then
          nd = 2*l + 1
          co = C2S_OFFSET(l)
-         allocate(tmat(nd, nf))
+         nout = nd
          do m = 0, nd - 1
             do ff = 1, nf
                tmat(m + 1, ff) = 0.0_dp
@@ -482,7 +508,8 @@ contains
             end do
          end do
       else
-         call move_alloc(mrot, tmat)
+         nout = nf
+         tmat(1:nf, 1:nf) = mrot(1:nf, 1:nf)
       end if
    end subroutine index_matrix
 
@@ -491,7 +518,7 @@ contains
    subroutine transform_index(blk, nb, nin, nout, na, tmat, work)
       real(dp), intent(inout) :: blk(:)
       integer,  intent(in)    :: nb, nin, nout, na
-      real(dp), intent(in)    :: tmat(:,:)
+      real(dp), intent(in)    :: tmat(6, 6)
       real(dp), intent(inout) :: work(:)
       integer :: ia, io, ii, ib
       real(dp) :: acc
