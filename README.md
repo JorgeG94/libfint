@@ -54,8 +54,8 @@ the same four-centre Coulomb integrals as `int2e_cart`/`int2e_sph`, through the
 same shell-quartet interface, by rotated-axis McMurchie--Davidson instead of
 Rys quadrature -- the GAMESS-lineage sp/d kernels, here generated from a
 symbolic derivation (`scripts/rotaxis_mmd/`, `doc/ROT_AXIS_MMD.md`) for every
-class up to d (55 of them), an L shell being one four-component slot; the
-s/p/L classes are unrolled and the heavy d classes are table-driven loops.  It is a different
+s, p and L-shell class (21 of them), an L shell being one four-component
+slot.  d and above stay on Rys, which is faster there.  It is a different
 algorithm and so cannot be bit-identical to anything; `rotaxis_check` holds it
 to the Rys path at 1e-12 scaled and measures 5e-14.
 

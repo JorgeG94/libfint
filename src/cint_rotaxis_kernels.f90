@@ -12,119 +12,51 @@
 !   ssss: L=0 comps=1 S=1 g=1 r=1 (terms 1) km=1 cm=1 assembly terms=1
 !   sssp: L=1 comps=3 S=3 g=1 r=4 (terms 4) km=3 cm=4 assembly terms=5
 !   sssL: L=1 comps=4 S=3 g=1 r=5 (terms 5) km=4 cm=4 assembly terms=6
-!   sssd: L=2 comps=6 S=6 g=1 r=11 (terms 16) km=7 cm=10 assembly terms=16
 !   sspp: L=2 comps=9 S=6 g=1 r=16 (terms 23) km=9 cm=10 assembly terms=24
 !   sspL: L=2 comps=12 S=6 g=1 r=20 (terms 27) km=11 cm=10 assembly terms=29
-!   sspd: L=3 comps=18 S=10 g=1 r=42 (terms 84) km=19 cm=20 assembly terms=74
 !   ssLL: L=2 comps=16 S=6 g=1 r=25 (terms 32) km=13 cm=10 assembly terms=35
-!   ssLd: L=3 comps=24 S=10 g=1 r=53 (terms 100) km=23 cm=20 assembly terms=90
-!   ssdd: L=4 comps=36 S=15 g=1 r=114 (terms 329) km=38 cm=35 assembly terms=220
 !   spsp: L=2 comps=9 S=8 g=2 r=12 (terms 18) km=5 cm=7 assembly terms=16
 !   spsL: L=2 comps=12 S=8 g=2 r=15 (terms 22) km=7 cm=7 assembly terms=19
-!   spsd: L=3 comps=18 S=15 g=2 r=33 (terms 70) km=11 cm=16 assembly terms=52
 !   sppp: L=3 comps=27 S=15 g=2 r=48 (terms 104) km=14 cm=16 assembly terms=80
 !   sppL: L=3 comps=36 S=15 g=2 r=60 (terms 122) km=17 cm=16 assembly terms=96
-!   sppd: L=4 comps=54 S=24 g=2 r=129 (terms 387) km=28 cm=30 assembly terms=247
 !   spLL: L=3 comps=48 S=15 g=2 r=75 (terms 144) km=21 cm=16 assembly terms=115
-!   spLd: L=4 comps=72 S=24 g=2 r=162 (terms 457) km=34 cm=30 assembly terms=299
-!   spdd: L=5 comps=108 S=35 g=2 r=356 (terms 1540) km=54 cm=50 assembly terms=732
 !   sLsL: L=2 comps=16 S=11 g=3 r=20 (terms 27) km=7 cm=7 assembly terms=25
-!   sLsd: L=3 comps=24 S=21 g=3 r=44 (terms 86) km=11 cm=16 assembly terms=68
 !   sLpp: L=3 comps=36 S=21 g=3 r=64 (terms 127) km=14 cm=16 assembly terms=104
 !   sLpL: L=3 comps=48 S=21 g=3 r=80 (terms 149) km=17 cm=16 assembly terms=125
-!   sLpd: L=4 comps=72 S=34 g=3 r=171 (terms 471) km=28 cm=30 assembly terms=321
 !   sLLL: L=3 comps=64 S=21 g=3 r=100 (terms 176) km=21 cm=16 assembly terms=150
-!   sLLd: L=4 comps=96 S=34 g=3 r=215 (terms 557) km=34 cm=30 assembly terms=389
-!   sLdd: L=5 comps=144 S=50 g=3 r=470 (terms 1869) km=54 cm=50 assembly terms=952
-!   sdsd: L=4 comps=36 S=34 g=4 r=76 (terms 273) km=15 cm=22 assembly terms=119
-!   sdpp: L=4 comps=54 S=34 g=4 r=111 (terms 403) km=19 cm=22 assembly terms=183
-!   sdpL: L=4 comps=72 S=34 g=4 r=139 (terms 473) km=23 cm=22 assembly terms=220
-!   sdpd: L=5 comps=108 S=53 g=4 r=295 (terms 1488) km=37 cm=40 assembly terms=559
-!   sdLL: L=4 comps=96 S=34 g=4 r=174 (terms 559) km=29 cm=22 assembly terms=264
-!   sdLd: L=5 comps=144 S=53 g=4 r=371 (terms 1761) km=45 cm=40 assembly terms=678
-!   sddd: L=6 comps=216 S=76 g=4 r=808 (terms 5882) km=70 cm=65 assembly terms=1640
 !   pppp: L=4 comps=81 S=43 g=5 r=143 (terms 549) km=19 cm=22 assembly terms=271
 !   pppL: L=4 comps=108 S=43 g=5 r=179 (terms 644) km=23 cm=22 assembly terms=325
-!   pppd: L=5 comps=162 S=67 g=5 r=382 (terms 2037) km=37 cm=40 assembly terms=831
 !   ppLL: L=4 comps=144 S=43 g=5 r=224 (terms 760) km=29 cm=22 assembly terms=389
-!   ppLd: L=5 comps=216 S=67 g=5 r=480 (terms 2406) km=45 cm=40 assembly terms=1006
-!   ppdd: L=6 comps=324 S=96 g=5 r=1050 (terms 8095) km=70 cm=65 assembly terms=2444
 !   pLpL: L=4 comps=144 S=58 g=6 r=239 (terms 766) km=23 cm=22 assembly terms=421
-!   pLpd: L=5 comps=216 S=91 g=6 r=511 (terms 2424) km=37 cm=40 assembly terms=1078
 !   pLLL: L=4 comps=192 S=58 g=6 r=299 (terms 904) km=29 cm=22 assembly terms=504
-!   pLLd: L=5 comps=288 S=91 g=6 r=642 (terms 2863) km=45 cm=40 assembly terms=1305
-!   pLdd: L=6 comps=432 S=131 g=6 r=1406 (terms 9635) km=70 cm=65 assembly terms=3176
-!   pdpd: L=6 comps=324 S=134 g=9 r=805 (terms 7290) km=46 cm=50 assembly terms=1857
-!   pdLL: L=5 comps=288 S=88 g=9 r=477 (terms 2734) km=37 cm=28 assembly terms=880
-!   pdLd: L=6 comps=432 S=134 g=9 r=1013 (terms 8608) km=56 cm=50 assembly terms=2252
-!   pddd: L=7 comps=648 S=189 g=9 r=2199 (terms 28863) km=86 cm=80 assembly terms=5416
 !   LLLL: L=4 comps=256 S=79 g=8 r=399 (terms 1080) km=29 cm=22 assembly terms=654
-!   LLLd: L=5 comps=384 S=125 g=8 r=857 (terms 3420) km=45 cm=40 assembly terms=1694
-!   LLdd: L=6 comps=576 S=181 g=8 r=1876 (terms 11504) km=70 cm=65 assembly terms=4128
-!   LdLd: L=6 comps=576 S=187 g=11 r=1384 (terms 10369) km=56 cm=50 assembly terms=2930
-!   Lddd: L=7 comps=864 S=265 g=11 r=3007 (terms 34745) km=86 cm=80 assembly terms=7056
-!   dddd: L=8 comps=1296 S=362 g=16 r=4351 (terms 96367) km=102 cm=95 assembly terms=11888
 module cint_rotaxis_kernels
    use cint_const, only: dp
    use rotaxis_ssss_m, only: rotaxis_ssss
    use rotaxis_sssp_m, only: rotaxis_sssp
    use rotaxis_sssL_m, only: rotaxis_sssL
-   use rotaxis_sssd_m, only: rotaxis_sssd
    use rotaxis_sspp_m, only: rotaxis_sspp
    use rotaxis_sspL_m, only: rotaxis_sspL
-   use rotaxis_sspd_m, only: rotaxis_sspd
    use rotaxis_ssLL_m, only: rotaxis_ssLL
-   use rotaxis_ssLd_m, only: rotaxis_ssLd
-   use rotaxis_ssdd_m, only: rotaxis_ssdd
    use rotaxis_spsp_m, only: rotaxis_spsp
    use rotaxis_spsL_m, only: rotaxis_spsL
-   use rotaxis_spsd_m, only: rotaxis_spsd
    use rotaxis_sppp_m, only: rotaxis_sppp
    use rotaxis_sppL_m, only: rotaxis_sppL
-   use rotaxis_sppd_m, only: rotaxis_sppd
    use rotaxis_spLL_m, only: rotaxis_spLL
-   use rotaxis_spLd_m, only: rotaxis_spLd
-   use rotaxis_spdd_m, only: rotaxis_spdd
    use rotaxis_sLsL_m, only: rotaxis_sLsL
-   use rotaxis_sLsd_m, only: rotaxis_sLsd
    use rotaxis_sLpp_m, only: rotaxis_sLpp
    use rotaxis_sLpL_m, only: rotaxis_sLpL
-   use rotaxis_sLpd_m, only: rotaxis_sLpd
    use rotaxis_sLLL_m, only: rotaxis_sLLL
-   use rotaxis_sLLd_m, only: rotaxis_sLLd
-   use rotaxis_sLdd_m, only: rotaxis_sLdd
-   use rotaxis_sdsd_m, only: rotaxis_sdsd
-   use rotaxis_sdpp_m, only: rotaxis_sdpp
-   use rotaxis_sdpL_m, only: rotaxis_sdpL
-   use rotaxis_sdpd_m, only: rotaxis_sdpd
-   use rotaxis_sdLL_m, only: rotaxis_sdLL
-   use rotaxis_sdLd_m, only: rotaxis_sdLd
-   use rotaxis_sddd_m, only: rotaxis_sddd
    use rotaxis_pppp_m, only: rotaxis_pppp
    use rotaxis_pppL_m, only: rotaxis_pppL
-   use rotaxis_pppd_m, only: rotaxis_pppd
    use rotaxis_ppLL_m, only: rotaxis_ppLL
-   use rotaxis_ppLd_m, only: rotaxis_ppLd
-   use rotaxis_ppdd_m, only: rotaxis_ppdd
    use rotaxis_pLpL_m, only: rotaxis_pLpL
-   use rotaxis_pLpd_m, only: rotaxis_pLpd
    use rotaxis_pLLL_m, only: rotaxis_pLLL
-   use rotaxis_pLLd_m, only: rotaxis_pLLd
-   use rotaxis_pLdd_m, only: rotaxis_pLdd
-   use rotaxis_pdpd_m, only: rotaxis_pdpd
-   use rotaxis_pdLL_m, only: rotaxis_pdLL
-   use rotaxis_pdLd_m, only: rotaxis_pdLd
-   use rotaxis_pddd_m, only: rotaxis_pddd
    use rotaxis_LLLL_m, only: rotaxis_LLLL
-   use rotaxis_LLLd_m, only: rotaxis_LLLd
-   use rotaxis_LLdd_m, only: rotaxis_LLdd
-   use rotaxis_LdLd_m, only: rotaxis_LdLd
-   use rotaxis_Lddd_m, only: rotaxis_Lddd
-   use rotaxis_dddd_m, only: rotaxis_dddd
    implicit none
    private
    public :: rotaxis_kernel, rotaxis_has_class
-   integer, parameter, public :: ROTAXIS_LMAX = 2
+   integer, parameter, public :: ROTAXIS_LMAX = 1
    ! Kind ranks, the digits of the class code: s, p, L, d.
    integer, parameter, public :: ROTAXIS_KIND_S = 0, ROTAXIS_KIND_P = 1, &
                                  ROTAXIS_KIND_L = 2, ROTAXIS_KIND_D = 3
@@ -135,11 +67,8 @@ contains
    pure logical function rotaxis_has_class(code) result(yes)
       integer, intent(in) :: code
       select case (code)
-      case (0, 1, 2, 3, 11, 12, 13, 22, 23, 33, 101, 102, &
-            103, 111, 112, 113, 122, 123, 133, 202, 203, 211, 212, 213, &
-            222, 223, 233, 303, 311, 312, 313, 322, 323, 333, 1111, 1112, &
-            1113, 1122, 1123, 1133, 1212, 1213, 1222, 1223, 1233, 1313, 1322, 1323, &
-            1333, 2222, 2223, 2233, 2323, 2333, 3333)
+      case (0, 1, 2, 11, 12, 22, 101, 102, 111, 112, 122, 202, &
+            211, 212, 222, 1111, 1112, 1122, 1212, 1222, 2222)
          yes = .true.
       case default
          yes = .false.
@@ -162,110 +91,42 @@ contains
          call rotaxis_sssp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (2)
          call rotaxis_sssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (3)
-         call rotaxis_sssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (11)
          call rotaxis_sspp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (12)
          call rotaxis_sspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (13)
-         call rotaxis_sspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (22)
          call rotaxis_ssLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (23)
-         call rotaxis_ssLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (33)
-         call rotaxis_ssdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (101)
          call rotaxis_spsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (102)
          call rotaxis_spsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (103)
-         call rotaxis_spsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (111)
          call rotaxis_sppp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (112)
          call rotaxis_sppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (113)
-         call rotaxis_sppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (122)
          call rotaxis_spLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (123)
-         call rotaxis_spLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (133)
-         call rotaxis_spdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (202)
          call rotaxis_sLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (203)
-         call rotaxis_sLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (211)
          call rotaxis_sLpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (212)
          call rotaxis_sLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (213)
-         call rotaxis_sLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (222)
          call rotaxis_sLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (223)
-         call rotaxis_sLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (233)
-         call rotaxis_sLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (303)
-         call rotaxis_sdsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (311)
-         call rotaxis_sdpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (312)
-         call rotaxis_sdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (313)
-         call rotaxis_sdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (322)
-         call rotaxis_sdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (323)
-         call rotaxis_sdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (333)
-         call rotaxis_sddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (1111)
          call rotaxis_pppp(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (1112)
          call rotaxis_pppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1113)
-         call rotaxis_pppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (1122)
          call rotaxis_ppLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1123)
-         call rotaxis_ppLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1133)
-         call rotaxis_ppdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (1212)
          call rotaxis_pLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1213)
-         call rotaxis_pLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (1222)
          call rotaxis_pLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1223)
-         call rotaxis_pLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1233)
-         call rotaxis_pLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1313)
-         call rotaxis_pdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1322)
-         call rotaxis_pdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1323)
-         call rotaxis_pdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (1333)
-         call rotaxis_pddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case (2222)
          call rotaxis_LLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (2223)
-         call rotaxis_LLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (2233)
-         call rotaxis_LLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (2323)
-         call rotaxis_LdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (2333)
-         call rotaxis_Lddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
-      case (3333)
-         call rotaxis_dddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)
       case default
          error stop 'cint_rotaxis_kernels: no kernel for this class'
       end select

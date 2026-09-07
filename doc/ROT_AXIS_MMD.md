@@ -195,13 +195,15 @@ a flag, so the benchmark can decide where the crossover really is.
   ignored) and `libcint_rotaxis_supported(shls, bas, nbas)`.  The path
   keeps no state between calls, so it is safe under an OpenMP loop over
   quartets exactly as the Rys path is.
-* The committed kernels are every canonical class through d (55).  The
-  per-quartet harness on C2H6 rated the d classes at 0.3-0.5x of Rys, but
-  that harness also rated the s/p/L classes at parity where a threaded
-  Fock build over a real basis (mqc, msn slice, 6-31G) measures 1.6x, so
-  the d classes go in to be measured the same way.  The driver errors out
-  beyond the generated classes rather than falling back;
-  `rotaxis_supported` is the caller's question to ask first.
+* The committed kernels are every canonical class over s, p and L (21).
+  d was generated (`generate.py --lmax 2`, 55 classes, passing the check)
+  and measured inside mqc's threaded Fock build on the msn slice at
+  6-31G*: d-touching quartets 118 s against 47 s on Rys, 2.5x slower, so
+  d stays on Rys and the d kernels are not committed.  The candidate for
+  d and above is a GEMM-driven MMD in the SHARK form (Neese, JCC 2023,
+  44, 381), not these kernels tuned.  The driver errors out beyond the
+  generated classes rather than falling back; `rotaxis_supported` is the
+  caller's question to ask first.
 * Timed against `int2e_cart` over all quartets of 6-31G and 6-311G** on
   C2H6 (20 repeats each), Cartesian, per quartet: total l 0 is 1.10x Rys,
   l 1 1.25x, l 2 1.12x, l 3 0.78x, l 4 0.43x (l >= 3 is d-touching).  The
