@@ -44,6 +44,8 @@ set(cintFortranSrc
   cint_g2e_unrolled.f90
   cint_g2e.f90
   cint_2e.f90
+  cint_rotaxis_2e.f90
+  cint_rotaxis_kernels.f90
   cint_g2e_ops.f90
   cint_3c2e.f90
   cint_2e_spinor.f90
@@ -160,6 +162,10 @@ if(WITH_F12)
     ${PROJECT_SOURCE_DIR}/f12/cint_tab_stg_w.f90
     ${PROJECT_SOURCE_DIR}/f12/cint_tab_stg_roots.f90)
 endif()
+
+# The rotated-axis kernels, one file per class, listed by their generator.
+include(${CMAKE_CURRENT_SOURCE_DIR}/rotaxis/kernels.cmake)
+list(APPEND cintFortranSrc ${cintRotaxisSrc})
 
 # STATIC, not OBJECT: CMake does not propagate one OBJECT library's objects
 # through another to the final consumer, and with WITH_FORTRAN_BACKEND the

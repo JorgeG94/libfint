@@ -71,3 +71,6 @@ Testing/
 # libfint
 build*/
 extern/
+
+# Python bytecode from the generators in scripts/
+__pycache__/

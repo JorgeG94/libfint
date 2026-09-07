@@ -47,6 +47,18 @@ Performance is 1.03x to 1.18x libcint's, measured per entry point on an idle
 machine. `doc/PERFORMANCE.md` has the table, the method, and a long list of
 things that were tried and did not work, which is the more useful half.
 
+## A second route for the low angular momenta
+
+`int2e_rotaxis_cart` and `int2e_rotaxis_sph` (module `cint_rotaxis_2e`) compute
+the same four-centre Coulomb integrals as `int2e_cart`/`int2e_sph`, through the
+same shell-quartet interface, by rotated-axis McMurchie--Davidson instead of
+Rys quadrature -- the GAMESS-lineage sp/d kernels, here generated from a
+symbolic derivation (`scripts/rotaxis_mmd/`, `doc/ROT_AXIS_MMD.md`) for every
+s, p and L-shell class, an L shell being one four-component slot.  d stays on
+Rys; the generator can emit d classes (`--lmax 2`) but they are not faster.  It is a different
+algorithm and so cannot be bit-identical to anything; `rotaxis_check` holds it
+to the Rys path at 1e-12 scaled and measures 5e-14.
+
 ## Building
 
 With fpm:

@@ -177,6 +177,14 @@ target_link_libraries(l_shell_check fint m)
 target_include_directories(l_shell_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME l_shell_check COMMAND $<TARGET_FILE:l_shell_check>)
 
+# The rotated-axis MMD path against the Rys path: libfint against itself, so
+# libcint only for the shared basis-set helper (CINTgto_norm), and the same
+# tolerance argument l_shell_check makes.
+add_executable(rotaxis_check rotaxis_check.F90)
+target_link_libraries(rotaxis_check fint fint_test_systems cint m)
+target_include_directories(rotaxis_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME rotaxis_check COMMAND $<TARGET_FILE:rotaxis_check>)
+
 # The same contract for the gradient kernel int2e_ip1, which exercises the
 # one thing int2e cannot: contraction buffers with n_comp > 1, where the
 # stride of the s/p coefficient pattern carries a factor the plain integral
