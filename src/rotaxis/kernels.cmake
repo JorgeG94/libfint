@@ -6,22 +6,56 @@ set(cintRotaxisSrc
   rotaxis/rotaxis_ssss.f90
   rotaxis/rotaxis_sssp.f90
   rotaxis/rotaxis_sssL.f90
+  rotaxis/rotaxis_sssd.f90
   rotaxis/rotaxis_sspp.f90
   rotaxis/rotaxis_sspL.f90
+  rotaxis/rotaxis_sspd.f90
   rotaxis/rotaxis_ssLL.f90
+  rotaxis/rotaxis_ssLd.f90
+  rotaxis/rotaxis_ssdd.f90
   rotaxis/rotaxis_spsp.f90
   rotaxis/rotaxis_spsL.f90
+  rotaxis/rotaxis_spsd.f90
   rotaxis/rotaxis_sppp.f90
   rotaxis/rotaxis_sppL.f90
+  rotaxis/rotaxis_sppd.f90
   rotaxis/rotaxis_spLL.f90
+  rotaxis/rotaxis_spLd.f90
+  rotaxis/rotaxis_spdd.f90
   rotaxis/rotaxis_sLsL.f90
+  rotaxis/rotaxis_sLsd.f90
   rotaxis/rotaxis_sLpp.f90
   rotaxis/rotaxis_sLpL.f90
+  rotaxis/rotaxis_sLpd.f90
   rotaxis/rotaxis_sLLL.f90
+  rotaxis/rotaxis_sLLd.f90
+  rotaxis/rotaxis_sLdd.f90
+  rotaxis/rotaxis_sdsd.f90
+  rotaxis/rotaxis_sdpp.f90
+  rotaxis/rotaxis_sdpL.f90
+  rotaxis/rotaxis_sdpd.f90
+  rotaxis/rotaxis_sdLL.f90
+  rotaxis/rotaxis_sdLd.f90
+  rotaxis/rotaxis_sddd.f90
   rotaxis/rotaxis_pppp.f90
   rotaxis/rotaxis_pppL.f90
+  rotaxis/rotaxis_pppd.f90
   rotaxis/rotaxis_ppLL.f90
+  rotaxis/rotaxis_ppLd.f90
+  rotaxis/rotaxis_ppdd.f90
   rotaxis/rotaxis_pLpL.f90
+  rotaxis/rotaxis_pLpd.f90
   rotaxis/rotaxis_pLLL.f90
+  rotaxis/rotaxis_pLLd.f90
+  rotaxis/rotaxis_pLdd.f90
+  rotaxis/rotaxis_pdpd.f90
+  rotaxis/rotaxis_pdLL.f90
+  rotaxis/rotaxis_pdLd.f90
+  rotaxis/rotaxis_pddd.f90
   rotaxis/rotaxis_LLLL.f90
+  rotaxis/rotaxis_LLLd.f90
+  rotaxis/rotaxis_LLdd.f90
+  rotaxis/rotaxis_LdLd.f90
+  rotaxis/rotaxis_Lddd.f90
+  rotaxis/rotaxis_dddd.f90
 )
