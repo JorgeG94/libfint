@@ -166,6 +166,12 @@ endif()
 # The rotated-axis kernels, one file per class, listed by their generator.
 include(${CMAKE_CURRENT_SOURCE_DIR}/rotaxis/kernels.cmake)
 list(APPEND cintFortranSrc ${cintRotaxisSrc})
+# The driver sizes its pair tables and block as automatic arrays, which
+# gfortran puts on the heap unless told otherwise; measured, malloc and
+# free were 7% of the instructions of an s/p quartet.
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(cint_rotaxis_2e.f90 PROPERTIES COMPILE_OPTIONS "-fstack-arrays")
+endif()
 
 # STATIC, not OBJECT: CMake does not propagate one OBJECT library's objects
 # through another to the final consumer, and with WITH_FORTRAN_BACKEND the

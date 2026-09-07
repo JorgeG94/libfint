@@ -205,10 +205,14 @@ a flag, so the benchmark can decide where the crossover really is.
   generated classes rather than falling back; `rotaxis_supported` is the
   caller's question to ask first.
 * Timed against `int2e_cart` over all quartets of 6-31G and 6-311G** on
-  C2H6 (20 repeats each), Cartesian, per quartet: total l 0 is 1.10x Rys,
-  l 1 1.25x, l 2 1.12x, l 3 0.78x, l 4 0.43x (l >= 3 is d-touching).  The
-  first driver allocated its pair tables and transforms per call and
-  measured parity at l <= 1; automatic arrays and fixed transforms are
-  what moved it.  Inside a threaded Fock build (mqc, msn slice, 6-31G,
+  C2H6 (20 repeats each), Cartesian, per quartet: total l 0 is 1.33x Rys,
+  l 1 1.39x, l 2 1.26x, l 3 0.83x, l 4 0.78x (all s/p/L; the l 3-4 rows
+  are the p-heavy classes).  The first driver allocated its pair tables
+  and transforms per call and measured parity at l <= 1; automatic arrays
+  and fixed transforms moved it to 1.25x at l 1, and -fstack-arrays on the
+  driver (gfortran heap-allocates automatic arrays otherwise; malloc and
+  free were 7% of the instructions) to 1.39x.  What is left, by callgrind:
+  exp for the pair weights and erf in the Boys closed form are ~30%, the
+  kernels ~20%, the rest of the driver diffuse.  Inside a threaded Fock build (mqc, msn slice, 6-31G,
   16 threads) the s/p/L path measured 1.6x over Rys even with that first
   driver, and d-touching quartets 2.5x slower -- so d stays on Rys there.
