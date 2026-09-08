@@ -297,12 +297,17 @@ contains
     ! past the slice landed on the caller's own p coefficients: right
     ! answers, undefined behaviour, and a bounds-checked ifx build stopped
     ! on it (metalquicha, Pople basis, direct Fock build).
+    !
+    ! The slot constants are libcint_interface's own rather than the
+    ! LIBCINT_* aliases the rest of this module uses: LFortran turns a
+    ! module parameter that is initialised from another module's into a
+    ! getter call, and then refuses that call inside a pure procedure.
     pure function coeff_columns(bas, sh) result(nc)
         integer(ip), intent(in) :: bas(0:)
         integer(ip), intent(in) :: sh
         integer(ip) :: nc
-        nc = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NCTR_OF - 1)
-        if (bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_KAPPA_OF - 1) == KAPPA_SP_SHELL) nc = 2_ip*nc
+        nc = bas(BAS_SLOTS*sh + NCTR_OF - 1)
+        if (bas(BAS_SLOTS*sh + KAPPA_OF - 1) == KAPPA_SP_SHELL) nc = 2_ip*nc
     end function coeff_columns
 
     pure function env_extent(shls, nsh, atm, natm, bas, nbas) result(n)
