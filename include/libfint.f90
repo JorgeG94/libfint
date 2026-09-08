@@ -67,7 +67,8 @@ module libcint_fortran
                                 int2c2e_ip1_cart, int2c2e_ip1_sph
     use cint_gen_intor3,  only: int1e_spnucsp_spinor
     use cint_gen_intor4,  only: int2e_spsp1_spinor
-    use cint_bas,       only: cint_cgto_cart, cint_cgto_spheric, cint_cgto_spinor, &
+    use cint_bas,       only: KAPPA_SP_SHELL, &
+                              cint_cgto_cart, cint_cgto_spheric, cint_cgto_spinor, &
                               cint_tot_cgto_cart, cint_tot_cgto_spheric, &
                               cint_tot_pgto_spheric, cint_gto_norm
     use cint_1e,        only: int1e_nuc_cart, int1e_nuc_sph, &
@@ -287,6 +288,28 @@ contains
     ! nuclear-model slots of every atom, which int1e_nuc walks in full.
     ! nbas does not enter, so this stays cheap inside the quartet loop.
     ! ========================================================================
+    ! The width of a shell's coefficient block in columns.  NCTR_OF for a
+    ! plain shell; TWICE that for an L shell, whose block is the s columns
+    ! followed by the p columns (see KAPPA_SP_SHELL in cint_bas).  Every
+    ! reader of the block -- the optimizer's coefficient bound, the
+    ! contraction, the pair screening -- takes the doubled width, so the
+    ! env extent handed to them has to as well.  It did not, and the read
+    ! past the slice landed on the caller's own p coefficients: right
+    ! answers, undefined behaviour, and a bounds-checked ifx build stopped
+    ! on it (metalquicha, Pople basis, direct Fock build).
+    !
+    ! Declared exactly as env_extent declares `bas` -- explicit shape from
+    ! nbas, the slot constants only in expressions of that form -- because
+    ! that is the shape LFortran accepts in a pure procedure; with `bas(0:)`
+    ! it turned LIBCINT_BAS_SLOTS into a getter call and refused it.
+    pure function coeff_columns(bas, nbas, sh) result(nc)
+        integer(ip), intent(in) :: nbas, sh
+        integer(ip), intent(in) :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        integer(ip) :: nc
+        nc = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NCTR_OF - 1)
+        if (bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_KAPPA_OF - 1) == KAPPA_SP_SHELL) nc = 2_ip*nc
+    end function coeff_columns
+
     pure function env_extent(shls, nsh, atm, natm, bas, nbas) result(n)
         integer(ip), intent(in) :: nsh, natm, nbas
         integer(ip), intent(in) :: shls(nsh)
@@ -298,7 +321,7 @@ contains
         do i = 1, nsh
             sh = shls(i)                          ! 0-based shell id
             np = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NPRIM_OF - 1)
-            nc = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NCTR_OF  - 1)
+            nc = coeff_columns(bas, nbas, sh)
             n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_EXP   - 1) + np)
             n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_COEFF - 1) + np*nc)
         end do
@@ -1137,7 +1160,7 @@ contains
         n = LIBCINT_PTR_ENV_START
         do i = 0, nbas - 1
             np = bas(LIBCINT_BAS_SLOTS*i + LIBCINT_NPRIM_OF - 1)
-            nc = bas(LIBCINT_BAS_SLOTS*i + LIBCINT_NCTR_OF  - 1)
+            nc = coeff_columns(bas, nbas, i)
             n = max(n, bas(LIBCINT_BAS_SLOTS*i + LIBCINT_PTR_EXP   - 1) + np)
             n = max(n, bas(LIBCINT_BAS_SLOTS*i + LIBCINT_PTR_COEFF - 1) + np*nc)
         end do

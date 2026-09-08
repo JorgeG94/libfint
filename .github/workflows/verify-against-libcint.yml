@@ -62,6 +62,14 @@ jobs:
         toolchain:
           - {compiler: gcc, version: 13}
           - {compiler: intel, version: '2026.0'}
+          # gcc again, bounds-checked.  Every wrapper hands the integrals a
+          # slice of env sized by an extent helper; a short slice reads past
+          # its end onto the caller's own numbers, so the answers are right
+          # and only the bound is wrong -- invisible at -O2, fatal here.  Two
+          # of those (the L-shell coefficient block, the grid points) lived
+          # in the tree for a long time before an ifx -check bounds build
+          # elsewhere found one of them.
+          - {compiler: gcc, version: 13, flags: '-fcheck=bounds', build: Debug}
 
     steps:
     - name: Checkout code
@@ -98,7 +106,8 @@ jobs:
     - name: Configure with CMake
       run: >-
         cmake -G Ninja
-        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_BUILD_TYPE=${{ matrix.toolchain.build || 'Release' }}
+        -DCMAKE_Fortran_FLAGS="${{ matrix.toolchain.flags || '' }}"
         -DLIBFINT_BUILD_TESTS=ON
         -S . -B build
 
