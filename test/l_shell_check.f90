@@ -49,6 +49,9 @@ program l_shell_check
    use cint_envs, only: PTR_ENV_START
    use cint_workspace, only: cint_ws
    use cint_2e, only: int2e_sph, int2e_cart
+   use libcint_fortran, only: libcint_2e_sph, libcint_2e_cart, libcint_2e_sph_optimizer, &
+                              libcint_2e_cart_optimizer, libcint_del_optimizer
+   use iso_c_binding, only: c_ptr
    implicit none
 
    integer, parameter :: MAXBAS = 64, MAXENV = 4096, NATM = 3
@@ -88,6 +91,14 @@ program l_shell_check
       eri_packed = 0.0_dp; eri_split = 0.0_dp
       call all_eri(pbas, npbas, sph, nao_p, eri_packed)
       call all_eri(sbas, nsbas, sph, nao_s, eri_split)
+      call compare(eri_packed, eri_split, nao_p**4, sph)
+      ! The same packed basis through the PUBLIC wrappers, optimizer and
+      ! all.  The wrappers slice env to the extent they compute, and an L
+      ! shell's coefficient block is twice NCTR_OF wide; an extent that
+      ! forgot that read past its slice, correctly and silently, until a
+      ! bounds-checked build stopped on it.  This pass exists so that a
+      ! bounds-checked build of this test stops on it here.
+      call all_eri_wrapped(pbas, npbas, sph, nao_p, eri_split)
       call compare(eri_packed, eri_split, nao_p**4, sph)
       deallocate(eri_packed, eri_split)
    end do
@@ -316,6 +327,55 @@ contains
       end do
       end do
    end subroutine all_eri
+
+   ! all_eri through libcint_2e_*, with the optimizer built and passed as a
+   ! caller would.
+   subroutine all_eri_wrapped(bas, nbas, sph, nao, out)
+      integer,  intent(in)    :: nbas, sph, nao
+      integer,  intent(inout), target :: bas(0:)
+      real(dp), intent(inout) :: out(0:)
+      integer  :: ao_loc(0:MAXBAS), i, j, k, l, di, dj, dk, dl
+      integer  :: shls(4), a, b, c, d, ret
+      real(dp), allocatable :: buf(:)
+      type(c_ptr) :: opt
+
+      ao_loc(0) = 0
+      do i = 0, nbas - 1
+         ao_loc(i+1) = ao_loc(i) + shell_dim(bas, i, sph)
+      end do
+      if (sph == 1) then
+         call libcint_2e_sph_optimizer(opt, atm, NATM, bas, nbas, env)
+      else
+         call libcint_2e_cart_optimizer(opt, atm, NATM, bas, nbas, env)
+      end if
+      out = 0.0_dp
+      do i = 0, nbas - 1
+      do j = 0, nbas - 1
+      do k = 0, nbas - 1
+      do l = 0, nbas - 1
+         di = shell_dim(bas, i, sph); dj = shell_dim(bas, j, sph)
+         dk = shell_dim(bas, k, sph); dl = shell_dim(bas, l, sph)
+         allocate(buf(0:di*dj*dk*dl-1))
+         buf = 0.0_dp
+         shls = [i, j, k, l]
+         if (sph == 1) then
+            ret = libcint_2e_sph(buf, shls, atm, NATM, bas, nbas, env, opt)
+         else
+            ret = libcint_2e_cart(buf, shls, atm, NATM, bas, nbas, env, opt)
+         end if
+         if (ret /= 0) then
+            do d = 0, dl-1; do c = 0, dk-1; do b = 0, dj-1; do a = 0, di-1
+               out((ao_loc(i)+a) + nao*((ao_loc(j)+b) + nao*((ao_loc(k)+c) + nao*(ao_loc(l)+d)))) = &
+                  buf(a + di*(b + dj*(c + dk*d)))
+            end do; end do; end do; end do
+         end if
+         deallocate(buf)
+      end do
+      end do
+      end do
+      end do
+      call libcint_del_optimizer(opt)
+   end subroutine all_eri_wrapped
 
    ! TWO MEASURES, BOTH REPORTED.
    !
