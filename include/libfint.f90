@@ -298,16 +298,16 @@ contains
     ! answers, undefined behaviour, and a bounds-checked ifx build stopped
     ! on it (metalquicha, Pople basis, direct Fock build).
     !
-    ! The slot constants are libcint_interface's own rather than the
-    ! LIBCINT_* aliases the rest of this module uses: LFortran turns a
-    ! module parameter that is initialised from another module's into a
-    ! getter call, and then refuses that call inside a pure procedure.
-    pure function coeff_columns(bas, sh) result(nc)
-        integer(ip), intent(in) :: bas(0:)
-        integer(ip), intent(in) :: sh
+    ! Declared exactly as env_extent declares `bas` -- explicit shape from
+    ! nbas, the slot constants only in expressions of that form -- because
+    ! that is the shape LFortran accepts in a pure procedure; with `bas(0:)`
+    ! it turned LIBCINT_BAS_SLOTS into a getter call and refused it.
+    pure function coeff_columns(bas, nbas, sh) result(nc)
+        integer(ip), intent(in) :: nbas, sh
+        integer(ip), intent(in) :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
         integer(ip) :: nc
-        nc = bas(BAS_SLOTS*sh + NCTR_OF - 1)
-        if (bas(BAS_SLOTS*sh + KAPPA_OF - 1) == KAPPA_SP_SHELL) nc = 2_ip*nc
+        nc = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NCTR_OF - 1)
+        if (bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_KAPPA_OF - 1) == KAPPA_SP_SHELL) nc = 2_ip*nc
     end function coeff_columns
 
     pure function env_extent(shls, nsh, atm, natm, bas, nbas) result(n)
@@ -321,7 +321,7 @@ contains
         do i = 1, nsh
             sh = shls(i)                          ! 0-based shell id
             np = bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_NPRIM_OF - 1)
-            nc = coeff_columns(bas, sh)
+            nc = coeff_columns(bas, nbas, sh)
             n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_EXP   - 1) + np)
             n = max(n, bas(LIBCINT_BAS_SLOTS*sh + LIBCINT_PTR_COEFF - 1) + np*nc)
         end do
@@ -1160,7 +1160,7 @@ contains
         n = LIBCINT_PTR_ENV_START
         do i = 0, nbas - 1
             np = bas(LIBCINT_BAS_SLOTS*i + LIBCINT_NPRIM_OF - 1)
-            nc = coeff_columns(bas, i)
+            nc = coeff_columns(bas, nbas, i)
             n = max(n, bas(LIBCINT_BAS_SLOTS*i + LIBCINT_PTR_EXP   - 1) + np)
             n = max(n, bas(LIBCINT_BAS_SLOTS*i + LIBCINT_PTR_COEFF - 1) + np*nc)
         end do
