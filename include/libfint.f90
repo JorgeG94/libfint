@@ -44,6 +44,7 @@ module libcint_fortran
                                  PTR_RINV_ZETA, PTR_RANGE_OMEGA, PTR_ENV_START
     use cint_const,     only: port_dp => dp
     use cint_workspace, only: cint_ws
+    use cint_rotaxis_2e, only: int2e_rotaxis_cart, int2e_rotaxis_sph, rotaxis_supported
     use cint_envs,      only: cint_opt_t
     use cint_opt,       only: cint_del_optimizer
     use cint_g1e,       only: cint_all_1e_optimizer
@@ -103,6 +104,7 @@ module libcint_fortran
     public :: libcint_1e_spnucsp
 
     public :: libcint_2e_cart, libcint_2e_sph
+    public :: libcint_2e_rotaxis_cart, libcint_2e_rotaxis_sph, libcint_rotaxis_supported
     public :: libcint_3c2e_sph, libcint_2c2e_sph
     public :: libcint_3c2e_cart, libcint_2c2e_cart
     public :: libcint_2e_ip1_cart, libcint_2e_ip1_sph
@@ -490,6 +492,38 @@ contains
     ! orbital ones, and `env` slots 18 and 19 say where they start and how many
     ! there are, which is the convention PySCF writes and libcint reads.
 
+    ! run2e's shape for the rotated-axis path: same dims and 0-based views,
+    ! no optimizer binding.
+    function run2e_rotaxis(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
+        integer(ip), intent(in) :: natm, nbas
+        logical,     intent(in) :: cart
+        real(dp),    intent(out), target :: buf(*)
+        integer(ip), intent(in),  target :: shls(4)
+        integer(ip), intent(in),  target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in),  target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        real(dp),    intent(in),  target :: env(*)
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), i, n, nenv
+        logical :: hv
+
+        do i = 1, 4
+            fshls(i-1) = shls(i)
+            if (cart) then
+                dims(i-1) = cint_cgto_cart(fshls(i-1), bas)
+            else
+                dims(i-1) = cint_cgto_spheric(fshls(i-1), bas)
+            end if
+        end do
+        n = product(dims)
+        nenv = env_extent(shls, 4, atm, natm, bas, nbas)
+        if (cart) then
+            hv = int2e_rotaxis_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+        else
+            hv = int2e_rotaxis_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+        end if
+        ret = merge(1_ip, 0_ip, hv)
+    end function run2e_rotaxis
+
     function run_ecp(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
         logical,     intent(in)  :: cart
         integer(ip), intent(in)  :: natm, nbas
@@ -705,6 +739,60 @@ contains
         integer(ip) :: ret
         ret = run2e(4_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
     end function libcint_2e_cart
+
+    ! The rotated-axis McMurchie-Davidson path (cint_rotaxis_2e): the same
+    ! integrals as libcint_2e_cart/sph, by a different algorithm, for quartets
+    ! of s, p and L shells only -- ask libcint_rotaxis_supported first; a
+    ! quartet beyond that is an error stop, not a fallback.
+    !
+    ! Thread safety: the driver keeps no state between calls -- its pair
+    ! tables and transforms are locals, the kernels are pure arithmetic on
+    ! their arguments, and the module has no variables -- so it is safe from
+    ! inside an OpenMP loop over quartets exactly as the Rys path is.  `ws`
+    ! is accepted for signature parity and not touched.
+    !
+    ! `opt` is IGNORED, never refused: an optimizer built for the Rys path
+    ! carries nothing this path uses, and passing one is harmless.
+    function libcint_2e_rotaxis_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_rotaxis(.true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_2e_rotaxis_cart
+
+    function libcint_2e_rotaxis_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_rotaxis(.false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_2e_rotaxis_sph
+
+    ! True when every shell of the quartet is s, p or L, which is what the
+    ! generated rotated-axis kernels cover.
+    function libcint_rotaxis_supported(shls, bas, nbas) result(yes)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        logical :: yes
+        integer :: fshls(0:3), fbas(0:LIBCINT_BAS_SLOTS*nbas - 1), i
+        fshls = int(shls)
+        do i = 1, nbas
+            fbas(LIBCINT_BAS_SLOTS*(i-1):LIBCINT_BAS_SLOTS*i - 1) = int(bas(:, i))
+        end do
+        yes = rotaxis_supported(fshls, fbas)
+    end function libcint_rotaxis_supported
 
     function libcint_2e_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
         real(dp), intent(out) :: buf(*)
