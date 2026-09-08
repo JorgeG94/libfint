@@ -55,7 +55,7 @@
 module cint_c_abi
    use iso_c_binding, only: c_int, c_double, c_ptr, c_f_pointer, c_associated, c_null_ptr
    use cint_const,     only: dp
-   use cint_bas,       only: cint_cgto_cart, cint_cgto_spheric
+   use cint_bas,       only: cint_cgto_cart, cint_cgto_spheric, KAPPA_OF, KAPPA_SP_SHELL
    use cint_workspace, only: cint_ws
    ! `int1e_irp` joins the multipoles here rather than being left as a module
    ! procedure. It is `<i| r nabla |j>`, the nuclear derivative of the dipole
@@ -106,7 +106,7 @@ module cint_c_abi
    ! the c_loc handle already exist for the Fortran-facing module; exporting
    ! them under libcint's C names is all this adds, so both front doors hand
    ! out the same object and either can free it.
-   use cint_envs,       only: cint_opt_t
+   use cint_envs,       only: cint_opt_t, PTR_GRIDS
    use libcint_fortran, only: libcint_2e_cart_optimizer, libcint_2e_sph_optimizer, &
                               libcint_3c2e_cart_optimizer, libcint_3c2e_sph_optimizer, &
                               libcint_2c2e_cart_optimizer, libcint_2c2e_sph_optimizer, &
@@ -181,6 +181,18 @@ contains
 
    ! How long env has to be for these shells: the largest offset any of them
    ! reaches, which is what lets a c_f_pointer give env a real extent.
+   ! A shell's coefficient block is NCTR_OF columns wide -- twice that for
+   ! an L shell, whose block is the s columns then the p columns, which is
+   ! how every reader of it counts.  Under-counting here made the mapped
+   ! env one nprim short per L-shell contraction, and the readers walked
+   ! past it onto the caller's own p coefficients: right answers, undefined
+   ! behaviour, fatal under a bounds-checked build.
+   pure integer function coeff_columns(bas, sh) result(nc)
+      integer, intent(in) :: bas(0:), sh
+      nc = bas(BAS_SLOTS*sh + NCTR_OF)
+      if (bas(BAS_SLOTS*sh + KAPPA_OF) == KAPPA_SP_SHELL) nc = 2*nc
+   end function coeff_columns
+
    pure integer function env_len(shls, nsh, bas, nbas) result(n)
       integer,        intent(in) :: shls(:), bas(0:)
       integer,        intent(in) :: nsh, nbas
@@ -189,11 +201,23 @@ contains
       do i = 1, nsh
          sh = shls(i)
          np = bas(BAS_SLOTS*sh + NPRIM_OF)
-         nc = bas(BAS_SLOTS*sh + NCTR_OF)
+         nc = coeff_columns(bas, sh)
          n = max(n, bas(BAS_SLOTS*sh + PTR_EXP)   + np)
          n = max(n, bas(BAS_SLOTS*sh + PTR_COEFF) + np*nc)
       end do
    end function env_len
+
+   ! int1e_grids reads the grid points too: env(PTR_GRIDS) is where they
+   ! start and shls(4) is one past the last point asked for.  Twenty
+   ! elements are enough to learn where, as the ECP wrappers do below.
+   function grids_env_len(shls, bas, nbas, env) result(n)
+      integer,     intent(in) :: shls(:), bas(0:), nbas
+      type(c_ptr), value      :: env
+      integer :: n
+      real(c_double), pointer :: p20(:)
+      call c_f_pointer(env, p20, [PTR_ENV_START])
+      n = max(env_len(shls(1:2), 2, bas, nbas), int(p20(PTR_GRIDS + 1)) + 3*shls(4))
+   end function grids_env_len
 
    ! int1e_r_cart, 3 component(s) per shell pair
    function c_int1e_r_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
@@ -676,7 +700,7 @@ contains
       di = cint_cgto_cart(fshls(0), pbas); dj = cint_cgto_cart(fshls(1), pbas)
       d = [di, dj, ngrids, 1]
       call c_f_pointer(out, pout, [di*dj*ngrids])
-      call c_f_pointer(env, penv, [env_len(pshls(1:2), 2, pbas, nbas)])
+      call c_f_pointer(env, penv, [grids_env_len(pshls, pbas, nbas, env)])
       hv = int1e_grids_cart(pout, d, fshls, patm, natm, pbas, &
                               nbas, penv, ws)
       ret = merge(1_c_int, 0_c_int, hv)
@@ -703,7 +727,7 @@ contains
       di = cint_cgto_spheric(fshls(0), pbas); dj = cint_cgto_spheric(fshls(1), pbas)
       d = [di, dj, ngrids, 1]
       call c_f_pointer(out, pout, [di*dj*ngrids])
-      call c_f_pointer(env, penv, [env_len(pshls(1:2), 2, pbas, nbas)])
+      call c_f_pointer(env, penv, [grids_env_len(pshls, pbas, nbas, env)])
       hv = int1e_grids_sph(pout, d, fshls, patm, natm, pbas, &
                               nbas, penv, ws)
       ret = merge(1_c_int, 0_c_int, hv)
@@ -3411,7 +3435,7 @@ contains
       end do
       do i = 0, nbas - 1
          np = bas(BAS_SLOTS*i + NPRIM_OF)
-         nc = bas(BAS_SLOTS*i + NCTR_OF)
+         nc = coeff_columns(bas, i)
          n = max(n, bas(BAS_SLOTS*i + PTR_EXP)   + np)
          n = max(n, bas(BAS_SLOTS*i + PTR_COEFF) + np*nc)
       end do
