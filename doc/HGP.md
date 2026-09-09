@@ -147,7 +147,43 @@ same fix.
   is safe under an OpenMP loop over quartets. Which path a quartet takes is
   the caller's decision, not libfint's.
 
-## 9. Timing, so far
+## 9. Why this does not replace the rotated-axis path
+
+Profiled on the same molecule and basis, the HGP s/p kernels burn about
+four times the CPU of the rotated-axis ones on the same quartets, with the
+drivers within a second of each other. That is not a defect, and counting
+the arithmetic by loop level says why:
+
+| class | rot-axis per prim quartet | per ket prim | per quartet | HGP per prim quartet | per quartet |
+|---|---|---|---|---|---|
+| sssp | 3 | 4 | 5 | 6 | 0 |
+| spsp | 8 | 18 | 16 | 33 | 0 |
+| sppp | 15 | 104 | 80 | 120 | 54 |
+| pppp | 43 | 549 | 271 | 402 | 324 |
+
+The innermost loop is the whole story. The rotated frame collapses a bra
+pair's geometry to two scalars, so what has to happen per primitive quartet
+is 43 fused multiply-adds for (pp|pp) and the component-specific work moves
+out a level, to per ket primitive. HGP has no such collapse: it builds the
+entire [e0|f0] set at every primitive quartet, 402 terms. With n primitive
+pairs a side that is 43n² + 549n against 402n², which at n = 9 is the
+factor of four the profile measures.
+
+Above d the comparison inverts, and for the reason in §2: what the
+rotated-axis factorisation must carry across the contraction explodes,
+4351 accumulators over 96k terms for (dd|dd), while HGP's stays at 961.
+
+So the two are complements rather than competitors, and a per-quartet
+hybrid — rotated-axis at s, p and L, HGP for anything touching d — is the
+right architecture rather than a stopgap. Measured in a Fock build it is
+the fastest of the four paths, 1.50x Rys on 6-31G*.
+
+A rotated-frame HGP is possible and would prune six of the eighteen
+geometric symbols (P−A loses x and y, A−B likewise, Q−C and C−D lose y),
+which is a 24–32% cut in emitted arithmetic. Worth having at d. It does
+not change the low-l picture: 27% off 402 is still far above 43.
+
+## 10. Timing, so far
 
 Per quartet against `int2e_cart`, Cartesian, on a **generally contracted**
 basis: carbon with 9 primitives into 3 s contractions and 4 into 2 p,
