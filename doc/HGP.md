@@ -78,22 +78,48 @@ Classes are canonical with the **higher** kind first in each pair, since
 that is the direction the transfers run. This is the reverse of the
 rotated-axis convention, where the kinds ascend.
 
-## 5. Contraction
+## 5. Contraction, and why it is staged
 
 The contraction coefficients multiply in at the contraction rather than
 riding in the primitive weight, which is what lets one vertical recurrence
-serve every contraction column and every coefficient type:
+serve every contraction column and every coefficient type. But *how* they
+multiply in decides whether the path is usable at all on a generally
+contracted basis.
 
-    c(ef, bcol, kcol) += c_i c_j (bcol) · c_k c_l (kcol) · [e0|f0]
+Done flat — touching every (bra column, ket column) pair at every primitive
+quartet — the accumulation costs the product of the two contraction counts
+per quartet. On cc-pVDZ carbon, whose s shell is 9 primitives into 3
+contractions and whose p shell is 4 into 2, an (ss|ss) means 81
+accumulations of the whole target vector at each of 6561 primitive
+quartets. It is invisible on a segmented basis, where both counts are one.
 
-The geometric part — 2π^{5/2} exp(−μR_AB²) exp(−νR_CD²) / (p q √(p+q)) —
-rides in the pair tables and is shared.
+Staged, it is a sum instead of a product: sum the bra columns into a buffer
+inside the primitive loop, then fold the ket columns in once per ket
+primitive.
+
+    inside the bra loop:   cb(ef, bcol)       += c_i c_j (bcol) · [e0|f0]
+    once per ket primitive: c(ef, bcol, kcol) += c_k c_l (kcol) · cb(ef, bcol)
+
+This is what libcint's `cint_prim_to_ctr` staging does, and it is the
+single change that took this path from losing to winning on a generally
+contracted basis. The geometric part — 2π^{5/2} exp(−μR_AB²) exp(−νR_CD²)
+/ (p q √(p+q)) — rides in the pair tables and is shared throughout.
 
 ## 6. Numerics
 
 The Boys function is the same guarded routine the rotated-axis kernels use,
-for the same reason: libcint's closed form cancels catastrophically for F_1
-at a tiny argument, which the Rys path never asks for.
+and it now has three branches rather than two.
+
+* Below the turnover point, the ascending series. libcint's closed form
+  cancels catastrophically for F_1 at a tiny argument, which the Rys path
+  never asks for.
+* Above t = 50, a closed form with no library calls at all: exp(−t) is
+  under 2e-22 there and erf(√t) is 1 to better than that, so
+  F_0 = √π/(2√t) and the rest is (2i−1)/(2t) upward. This matters because
+  a screened Fock build spends much of its time on distant pairs, and
+  profiled inside one, libm's erf and exp were 12 s of 101 s on this path
+  against a Rys path that calls neither.
+* In between, the closed form as before.
 
 ## 7. Status
 
@@ -114,25 +140,25 @@ at a tiny argument, which the Rys path never asks for.
 Per quartet on C2H6 with 6-31G and 6-311G**, Cartesian, against
 `int2e_cart`:
 
-| total l | Rys µs | rotated-axis µs | HGP µs |
-|---|---|---|---|
-| 0 | 1.76 | 1.51 | 1.50 |
-| 1 | 1.67 | 1.25 | 1.23 |
-| 2 | 1.54 | 1.28 | 1.22 |
-| 3 | 1.48 | 1.90 | 1.52 |
-| 4 | 2.51 | 3.65 | 3.20 |
+On a **generally contracted** basis — carbon with 9 primitives into 3 s
+contractions and 4 into 2 p, cc-pVDZ's shape, which is the case that
+separates the algorithms:
 
-HGP matches the rotated-axis path at low angular momentum and is well
-ahead of it where that path lost, but does not beat Rys above total l 2
-here.
+| total l | Rys µs | rotated-axis µs | HGP µs | HGP/Rys |
+|---|---|---|---|---|
+| 0 | 105.1 | 63.1 | 64.7 | 1.62 |
+| 1 | 65.0 | 40.6 | 41.2 | 1.58 |
+| 2 | 40.3 | 25.3 | 27.2 | 1.48 |
+| 3 | 24.9 | 21.8 | 25.5 | 0.98 |
+| 4 | 20.7 | 28.4 | 26.4 | 0.79 |
 
-**This harness is not the verdict.** It rated the rotated-axis path at
-parity where a threaded Fock build over a real basis measured 1.75x, and
-the reason applies again: these quartets are small and the per-call cost
-dominates. Two things also work against HGP specifically here. The d
-shells in both bases are single primitives, so the contraction-before-
-transfer split — the entire point — buys nothing on exactly the classes
-being measured. And the transfer blocks have not been tuned at all.
+HGP tracks the rotated-axis path where that path is good, is ahead of it
+where it is not, and still does not beat Rys above total l 2. The d
+transfer blocks are untuned, and that is where the remaining work is.
 
-The measurement that counts is a Fock build over a properly contracted
-basis. Until that exists, nothing here should be routed by default.
+**Take any per-quartet harness with salt.** This one rated the rotated-axis
+path at parity where a threaded Fock build measured 1.75x. It also missed
+the staged-contraction defect in §5 entirely, because every basis it had
+was segmented — the case only appears once a shell has more than one
+contraction. A Fock build over a contracted basis is the verdict; nothing
+should be routed by default until one says so.

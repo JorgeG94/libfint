@@ -20,10 +20,12 @@ contains
       real(dp), intent(out) :: res(432, ncb*nck)
       logical,  intent(out) :: any
       real(dp) :: c(310, 1*ncb, 2*nck)
+      real(dp) :: cb(310, 1*ncb)
       real(dp) :: t(705), tv(310), f(0:6), b(0:6)
       real(dp) :: p, q, pq, rho, oo2p, oo2q, oo2pq, rp, rq, tt, w, eab, ecd
       real(dp) :: PA0, PA1, PA2, QC0, QC1, QC2, WP0, WP1, WP2, WQ0, WQ1, WQ2
       real(dp) :: PQ0, PQ1, PQ2, AB0, AB1, AB2, CD0, CD1, CD2, wq_, wp_
+      logical  :: hit
       real(dp) :: h(1314)
       integer  :: kq, bq, bc, kc, cc, ck, n, col
 
@@ -35,10 +37,21 @@ contains
          q = kp(1,kq); oo2q = kp(2,kq)
          QC0 = kp(3,kq); QC1 = kp(4,kq); QC2 = kp(5,kq)
          ecd = kp(10,kq)
+         ! THE CONTRACTION IS STAGED, and that is not a detail: done
+         ! flat -- every (bra column, ket column) pair touched at every
+         ! primitive quartet -- it costs the product of the two
+         ! contraction counts per quartet, which on a generally
+         ! contracted shell (cc-pVDZ carbon s: 9 primitives, 3
+         ! contractions) is 81 accumulations of the whole target vector
+         ! 6561 times over.  Summing the bra columns first and folding
+         ! in the ket ones once per ket primitive turns a product into
+         ! a sum, which is what libcint's prim_to_ctr staging does.
+         cb = 0.0_dp
+         hit = .false.
          do bq = 1, nbra
             eab = bp(10,bq)
             if (eab + ecd > cutoff) cycle
-            any = .true.
+            hit = .true.
             p = bp(1,bq); oo2p = bp(2,bq)
             PA0 = bp(3,bq); PA1 = bp(4,bq); PA2 = bp(5,bq)
             PQ0 = bp(6,bq) - kp(6,kq)
@@ -1082,10 +1095,15 @@ contains
             tv(308) = t(703)
             tv(309) = t(704)
             tv(310) = t(705)
-            do kc = 1, 2*nck
-               do bc = 1, 1*ncb
-                  c(1:310,bc,kc) = c(1:310,bc,kc) + kab(bc,bq)*kcd(kc,kq)*tv(1:310)
-               end do
+            do bc = 1, 1*ncb
+               cb(1:310,bc) = cb(1:310,bc) + kab(bc,bq)*tv(1:310)
+            end do
+         end do
+         if (.not. hit) cycle
+         any = .true.
+         do kc = 1, 2*nck
+            do bc = 1, 1*ncb
+               c(1:310,bc,kc) = c(1:310,bc,kc) + kcd(kc,kq)*cb(1:310,bc)
             end do
          end do
       end do
