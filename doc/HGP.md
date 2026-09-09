@@ -183,7 +183,35 @@ geometric symbols (P−A loses x and y, A−B likewise, Q−C and C−D lose y),
 which is a 24–32% cut in emitted arithmetic. Worth having at d. It does
 not change the low-l picture: 27% off 402 is still far above 43.
 
-## 10. Timing, so far
+## 10. Measured in a Fock build
+
+`test/fock_bench` builds a Fock matrix over all four paths -- Schwarz
+screened, threaded over shell quartets, same density and same screening for
+each -- so the only variable is which routine evaluates the quartet. Water
+clusters, STO-3G, which puts an L shell on every oxygen, optionally with a
+d shell so the d-touching classes appear at all. Four threads.
+
+With d, ratio to Rys in brackets:
+
+| waters | functions | Rys s | rot-axis s | HGP s | hybrid s |
+|---|---|---|---|---|---|
+| 8 | 96 | 0.448 | 0.353 (1.27x) | 0.349 (1.29x) | 0.316 (1.42x) |
+| 32 | 384 | 18.46 | 13.71 (1.35x) | 13.12 (1.41x) | 11.86 (1.56x) |
+| 64 | 768 | 112.3 | 81.44 (1.38x) | 77.08 (1.46x) | 69.52 (1.62x) |
+
+Without the d shell, so every quartet is s, p or L -- 32 waters, 224
+functions: Rys 8.92 s, rotated-axis 4.13 s (2.16x), HGP 5.42 s (1.65x).
+
+Two things to read out of that. The hybrid's margin grows with system size,
+1.42x to 1.62x, because screening removes the diffuse far-field quartets
+that all paths do cheaply and leaves the ones where the kernels differ. And
+the second row is the §9 argument at full strength: on a basis that is
+nothing but s, p and L, the rotated-axis path is 2.16x Rys and half a turn
+ahead of HGP, which is exactly what a ten-times-lighter innermost loop buys.
+
+The four paths agree on the assembled matrix to 2e-12 scaled at every size.
+
+## 11. Timing, so far
 
 Per quartet against `int2e_cart`, Cartesian, on a **generally contracted**
 basis: carbon with 9 primitives into 3 s contractions and 4 into 2 p,

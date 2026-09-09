@@ -193,6 +193,17 @@ target_link_libraries(hgp_check fint fint_test_systems cint m)
 target_include_directories(hgp_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME hgp_check COMMAND $<TARGET_FILE:hgp_check>)
 
+# A Fock build over all four two-electron paths: a benchmark, and the only
+# check that runs any of them under OpenMP.  Registered at a small size;
+# `fock_bench <nwaters> <d:0|1>` scales it up for measurement.
+add_executable(fock_bench fock_bench.F90)
+target_link_libraries(fock_bench fint m)
+if(OpenMP_Fortran_FOUND)
+  target_link_libraries(fock_bench OpenMP::OpenMP_Fortran)
+endif()
+target_include_directories(fock_bench PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME fock_bench COMMAND $<TARGET_FILE:fock_bench> 4 1)
+
 # The same contract for the gradient kernel int2e_ip1, which exercises the
 # one thing int2e cannot: contraction buffers with n_comp > 1, where the
 # stride of the s/p coefficient pattern carries a factor the plain integral
