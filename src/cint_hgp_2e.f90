@@ -162,7 +162,9 @@ contains
       integer  :: nf(0:3), nout(0:3), nctr(0:3), rk(0:3)
       real(dp) :: ab(3), cd(3), tmat(6, 6), fc(0:3, 0:9)
       integer  :: nbra, nket, ncb, nck, ncomp, ncol, nb, na, npb, npk
-      integer  :: a, b, c, d, ia, ib, ic, id, ii(0:3), o
+      integer  :: ia, ib, ic, id, cca, ccb, ccc, ccd, ostr(0:3)
+      integer  :: sa, sb, sc, sd, oa, ob, oc, od, xd, yc, tb, ub, uc, ud, t0
+      real(dp) :: fb, fcc, fd
 
       perm = [0, 1, 2, 3]
       rk = sh%rank
@@ -231,20 +233,49 @@ contains
             if (m < 3) na = na / nf(m+1)
          end do
 
-         do d = 0, nout(3)*nctr(3) - 1
-         do c = 0, nout(2)*nctr(2) - 1
-         do b = 0, nout(1)*nctr(1) - 1
-         do a = 0, nout(0)*nctr(0) - 1
-            ia = mod(a, nout(0)); ib = mod(b, nout(1))
-            ic = mod(c, nout(2)); id = mod(d, nout(3))
-            t = ia + nout(0)*(ib + nout(1)*(ic + nout(2)*id)) &
-                + nb*(a/nout(0) + nctr(0)*(b/nout(1) + nctr(1)*(c/nout(2) + nctr(2)*(d/nout(3)))))
-            ii(perm(0)) = a; ii(perm(1)) = b; ii(perm(2)) = c; ii(perm(3)) = d
-            o = ii(0) + dims(0)*(ii(1) + dims(1)*(ii(2) + dims(2)*ii(3)))
-            out(o) = blk(t + 1) * fc(0, ia) * fc(1, ib) * fc(2, ic) * fc(3, id)
-         end do
-         end do
-         end do
+         ! THE SCATTER, walked component-then-contraction so that no index
+         ! needs a division.  Written the obvious way -- one flat loop per
+         ! slot, splitting the index back out with mod and / -- it costs
+         ! eight integer divisions per output element, and profiled inside a
+         ! Fock build this routine was the largest single item in the run,
+         ! larger than any integral kernel.  The strides and the
+         ! normalisation products are carried down the nest instead.
+         ostr(0) = 1
+         ostr(1) = dims(0)
+         ostr(2) = dims(0)*dims(1)
+         ostr(3) = dims(0)*dims(1)*dims(2)
+         sa = ostr(perm(0)); sb = ostr(perm(1))
+         sc = ostr(perm(2)); sd = ostr(perm(3))
+         do ccd = 0, nctr(3) - 1
+            ud = nctr(2)*ccd
+            do id = 0, nout(3) - 1
+               od = (id + nout(3)*ccd)*sd
+               xd = nout(2)*id
+               fd = fc(3, id)
+               do ccc = 0, nctr(2) - 1
+                  uc = nctr(1)*(ccc + ud)
+                  do ic = 0, nout(2) - 1
+                     oc = od + (ic + nout(2)*ccc)*sc
+                     yc = nout(1)*(ic + xd)
+                     fcc = fd*fc(2, ic)
+                     do ccb = 0, nctr(1) - 1
+                        ub = nctr(0)*(ccb + uc)
+                        do ib = 0, nout(1) - 1
+                           ob = oc + (ib + nout(1)*ccb)*sb
+                           tb = nout(0)*(ib + yc)
+                           fb = fcc*fc(1, ib)
+                           do cca = 0, nctr(0) - 1
+                              t0 = tb + nb*(cca + ub)
+                              oa = ob + nout(0)*cca*sa
+                              do ia = 0, nout(0) - 1
+                                 out(oa + ia*sa) = blk(t0 + ia + 1)*fb*fc(0, ia)
+                              end do
+                           end do
+                        end do
+                     end do
+                  end do
+               end do
+            end do
          end do
       end subroutine body
    end subroutine one_block

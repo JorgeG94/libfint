@@ -121,7 +121,19 @@ and it now has three branches rather than two.
   against a Rys path that calls neither.
 * In between, the closed form as before.
 
-## 7. Status
+## 7. The scatter
+
+Written the obvious way -- one flat loop per slot, splitting the index
+back into a component and a contraction with `mod` and `/` -- the scatter
+costs eight integer divisions per output element. Profiled inside a Fock
+build, `one_block` was then the largest single item in the run, 29% of CPU
+and larger than any integral kernel. Walking component-then-contraction
+directly and carrying the strides and normalisation products down the loop
+nest removes every division, and it is what took the d classes from behind
+Rys to ahead of it. The rotated-axis driver had the same scatter and the
+same fix.
+
+## 8. Status
 
 * Coulomb (ab|cd) only, Cartesian and spherical, contracted and generally
   contracted, L shells. No range separation, no derivatives, no 3-centre.
@@ -135,7 +147,7 @@ and it now has three branches rather than two.
   is safe under an OpenMP loop over quartets. Which path a quartet takes is
   the caller's decision, not libfint's.
 
-## 8. Timing, so far
+## 9. Timing, so far
 
 Per quartet against `int2e_cart`, Cartesian, on a **generally contracted**
 basis: carbon with 9 primitives into 3 s contractions and 4 into 2 p,
@@ -143,15 +155,16 @@ cc-pVDZ's shape, which is the case that separates the algorithms.
 
 | total l | Rys µs | rotated-axis µs | HGP µs | HGP/Rys |
 |---|---|---|---|---|
-| 0 | 105.1 | 63.1 | 64.7 | 1.62 |
-| 1 | 65.0 | 40.6 | 41.2 | 1.58 |
-| 2 | 40.3 | 25.3 | 27.2 | 1.48 |
-| 3 | 24.9 | 21.8 | 25.5 | 0.98 |
-| 4 | 20.7 | 28.4 | 26.4 | 0.79 |
+| 0 | 105.6 | 63.7 | 62.9 | 1.68 |
+| 1 | 65.2 | 40.4 | 40.4 | 1.61 |
+| 2 | 40.0 | 24.7 | 25.4 | 1.57 |
+| 3 | 24.3 | 20.7 | 21.9 | 1.11 |
+| 4 | 20.3 | 25.8 | 19.8 | 1.02 |
 
-HGP tracks the rotated-axis path where that path is good, is ahead of it
-where it is not, and still does not beat Rys above total l 2. The d
-transfer blocks are untuned, and that is where the remaining work is.
+HGP is ahead of Rys at every angular momentum here and tracks the
+rotated-axis path closely, overtaking it at total l 4 where that path
+falls behind. Getting the d classes over the line took the scatter fix in
+§7 rather than anything in the recurrences.
 
 **Take any per-quartet harness with salt.** This one rated the rotated-axis
 path at parity where a threaded Fock build measured 1.75x. It also missed
