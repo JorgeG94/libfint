@@ -137,12 +137,10 @@ and it now has three branches rather than two.
 
 ## 8. Timing, so far
 
-Per quartet on C2H6 with 6-31G and 6-311G**, Cartesian, against
-`int2e_cart`:
-
-On a **generally contracted** basis — carbon with 9 primitives into 3 s
-contractions and 4 into 2 p, cc-pVDZ's shape, which is the case that
-separates the algorithms:
+Per quartet against `int2e_cart`, Cartesian, on a **generally contracted**
+— carbon with 9 primitives into 3 s contractions and 4
+into 2 p, cc-pVDZ's shape, which is the case that separates the
+algorithms:
 
 | total l | Rys µs | rotated-axis µs | HGP µs | HGP/Rys |
 |---|---|---|---|---|
