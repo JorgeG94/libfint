@@ -185,6 +185,14 @@ target_link_libraries(rotaxis_check fint fint_test_systems cint m)
 target_include_directories(rotaxis_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_check COMMAND $<TARGET_FILE:rotaxis_check>)
 
+# The Obara-Saika/HGP path against the Rys path, on the same argument as
+# rotaxis_check: two exact algorithms, so a scaled tolerance, not bit
+# identity.
+add_executable(hgp_check hgp_check.F90)
+target_link_libraries(hgp_check fint fint_test_systems cint m)
+target_include_directories(hgp_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME hgp_check COMMAND $<TARGET_FILE:hgp_check>)
+
 # The same contract for the gradient kernel int2e_ip1, which exercises the
 # one thing int2e cannot: contraction buffers with n_comp > 1, where the
 # stride of the s/p coefficient pattern carries a factor the plain integral
