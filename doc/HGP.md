@@ -64,6 +64,15 @@ whose length is the node count: 2330 vertical and 6254 transfer nodes for
 (dd|dd), against the 96k expanded terms the other approach produced for
 the same class. This is the lesson from that attempt applied directly.
 
+Those runs are split into contained procedures of at most a few hundred
+statements each. Emitted as one procedure, (dd|dd) took gfortran 577 s and
+0.91 GB for the single file, because an optimiser's cost per procedure is
+badly superlinear in its length; a build that overruns a CI job's budget is
+killed, and ninja reports that as "interrupted by user". Split, the same
+file takes 27 s and 0.41 GB. It costs nothing at run time -- the procedures
+reach everything by host association, the values live in the same arrays
+either way, and the Fock-build timings are unchanged to the third digit.
+
 ## 4. Shell kinds
 
 A slot is a kind — s, p, L or d — exactly as in the rotated-axis

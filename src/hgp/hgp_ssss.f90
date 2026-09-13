@@ -71,7 +71,7 @@ contains
             do n = 0, 0
                b(n) = w*f(n)
             end do
-            t(1) = b(0)
+            call vrr_001()
             tv(1) = t(1)
             do bc = 1, 1*ncb
                cb(1:1,bc) = cb(1:1,bc) + kab(bc,bq)*tv(1:1)
@@ -91,9 +91,20 @@ contains
          do cc = 1, ncb
             col = cc + ncb*(ck-1)
             bc = cc; kc = ck
-            h(1) = c(1,bc,kc)
+            call hrr_002()
             res(1,col) = h(1)
          end do
       end do
+
+   ! The straight-line runs, split so no single procedure is
+   ! thousands of statements.  Everything is reached by host
+   ! association, so this is a compile-time change only.
+   contains
+   subroutine vrr_001()
+      t(1) = b(0)
+   end subroutine vrr_001
+   subroutine hrr_002()
+      h(1) = c(1,bc,kc)
+   end subroutine hrr_002
    end subroutine hgp_ssss
 end module hgp_ssss_m

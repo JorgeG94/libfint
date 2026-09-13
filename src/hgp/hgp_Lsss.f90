@@ -71,11 +71,7 @@ contains
             do n = 0, 1
                b(n) = w*f(n)
             end do
-            t(1) = b(0)
-            t(2) = b(1)
-            t(3) = PA0*t(1) + WP0*t(2)
-            t(4) = PA1*t(1) + WP1*t(2)
-            t(5) = PA2*t(1) + WP2*t(2)
+            call vrr_001()
             tv(1) = t(1)
             tv(2) = t(3)
             tv(3) = t(4)
@@ -98,16 +94,34 @@ contains
          do cc = 1, ncb
             col = cc + ncb*(ck-1)
             bc = 1 + 2*(cc-1); kc = ck
-            h(1) = c(1,bc,kc)
+            call hrr_002()
             res(1,col) = h(1)
             bc = 2 + 2*(cc-1); kc = ck
-            h(1) = c(2,bc,kc)
-            h(2) = c(3,bc,kc)
-            h(3) = c(4,bc,kc)
+            call hrr_003()
             res(2,col) = h(1)
             res(3,col) = h(2)
             res(4,col) = h(3)
          end do
       end do
+
+   ! The straight-line runs, split so no single procedure is
+   ! thousands of statements.  Everything is reached by host
+   ! association, so this is a compile-time change only.
+   contains
+   subroutine vrr_001()
+      t(1) = b(0)
+      t(2) = b(1)
+      t(3) = PA0*t(1) + WP0*t(2)
+      t(4) = PA1*t(1) + WP1*t(2)
+      t(5) = PA2*t(1) + WP2*t(2)
+   end subroutine vrr_001
+   subroutine hrr_002()
+      h(1) = c(1,bc,kc)
+   end subroutine hrr_002
+   subroutine hrr_003()
+      h(1) = c(2,bc,kc)
+      h(2) = c(3,bc,kc)
+      h(3) = c(4,bc,kc)
+   end subroutine hrr_003
    end subroutine hgp_Lsss
 end module hgp_Lsss_m

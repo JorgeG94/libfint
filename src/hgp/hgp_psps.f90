@@ -71,24 +71,7 @@ contains
             do n = 0, 2
                b(n) = w*f(n)
             end do
-            t(1) = b(0)
-            t(2) = b(1)
-            t(3) = QC0*t(1) + WQ0*t(2)
-            t(4) = b(2)
-            t(5) = QC0*t(2) + WQ0*t(4)
-            t(6) = PA0*t(3) + WP0*t(5) + oo2pq*t(2)
-            t(7) = QC1*t(1) + WQ1*t(2)
-            t(8) = QC1*t(2) + WQ1*t(4)
-            t(9) = PA0*t(7) + WP0*t(8)
-            t(10) = QC2*t(1) + WQ2*t(2)
-            t(11) = QC2*t(2) + WQ2*t(4)
-            t(12) = PA0*t(10) + WP0*t(11)
-            t(13) = PA1*t(3) + WP1*t(5)
-            t(14) = PA1*t(7) + WP1*t(8) + oo2pq*t(2)
-            t(15) = PA1*t(10) + WP1*t(11)
-            t(16) = PA2*t(3) + WP2*t(5)
-            t(17) = PA2*t(7) + WP2*t(8)
-            t(18) = PA2*t(10) + WP2*t(11) + oo2pq*t(2)
+            call vrr_001()
             tv(1) = t(6)
             tv(2) = t(9)
             tv(3) = t(12)
@@ -116,15 +99,7 @@ contains
          do cc = 1, ncb
             col = cc + ncb*(ck-1)
             bc = cc; kc = ck
-            h(1) = c(1,bc,kc)
-            h(2) = c(4,bc,kc)
-            h(3) = c(7,bc,kc)
-            h(4) = c(2,bc,kc)
-            h(5) = c(5,bc,kc)
-            h(6) = c(8,bc,kc)
-            h(7) = c(3,bc,kc)
-            h(8) = c(6,bc,kc)
-            h(9) = c(9,bc,kc)
+            call hrr_002()
             res(1,col) = h(1)
             res(2,col) = h(2)
             res(3,col) = h(3)
@@ -136,5 +111,41 @@ contains
             res(9,col) = h(9)
          end do
       end do
+
+   ! The straight-line runs, split so no single procedure is
+   ! thousands of statements.  Everything is reached by host
+   ! association, so this is a compile-time change only.
+   contains
+   subroutine vrr_001()
+      t(1) = b(0)
+      t(2) = b(1)
+      t(3) = QC0*t(1) + WQ0*t(2)
+      t(4) = b(2)
+      t(5) = QC0*t(2) + WQ0*t(4)
+      t(6) = PA0*t(3) + WP0*t(5) + oo2pq*t(2)
+      t(7) = QC1*t(1) + WQ1*t(2)
+      t(8) = QC1*t(2) + WQ1*t(4)
+      t(9) = PA0*t(7) + WP0*t(8)
+      t(10) = QC2*t(1) + WQ2*t(2)
+      t(11) = QC2*t(2) + WQ2*t(4)
+      t(12) = PA0*t(10) + WP0*t(11)
+      t(13) = PA1*t(3) + WP1*t(5)
+      t(14) = PA1*t(7) + WP1*t(8) + oo2pq*t(2)
+      t(15) = PA1*t(10) + WP1*t(11)
+      t(16) = PA2*t(3) + WP2*t(5)
+      t(17) = PA2*t(7) + WP2*t(8)
+      t(18) = PA2*t(10) + WP2*t(11) + oo2pq*t(2)
+   end subroutine vrr_001
+   subroutine hrr_002()
+      h(1) = c(1,bc,kc)
+      h(2) = c(4,bc,kc)
+      h(3) = c(7,bc,kc)
+      h(4) = c(2,bc,kc)
+      h(5) = c(5,bc,kc)
+      h(6) = c(8,bc,kc)
+      h(7) = c(3,bc,kc)
+      h(8) = c(6,bc,kc)
+      h(9) = c(9,bc,kc)
+   end subroutine hrr_002
    end subroutine hgp_psps
 end module hgp_psps_m

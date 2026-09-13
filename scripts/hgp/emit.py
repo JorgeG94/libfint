@@ -25,6 +25,16 @@ from .recur import Graph
 
 MAX_LINE = 110
 
+# Statements per contained procedure.  A class like (dd|dd) is 8584
+# intermediates, and emitted as one procedure gfortran spends 577 s on the
+# file -- the optimiser's cost per procedure is badly superlinear, and a CI
+# job that overruns its budget is killed, which ninja reports as
+# "interrupted by user".  Splitting the straight-line runs into contained
+# procedures costs nothing at run time (they share everything by host
+# association, and the values live in `t` and `h` either way) and brings
+# the compile back to seconds.
+CHUNK = 250
+
 
 def cname(kinds):
     return "".join(kinds)
@@ -185,15 +195,25 @@ def emit_kernel(pl):
     o.append(f"            do n = 0, {L}")
     o.append("               b(n) = w*f(n)")
     o.append("            end do")
-    # the vertical recurrence
+    # the vertical recurrence, in chunks
+    vlines = []
     for key in pl.vorder:
         i = pl.vname[key]
         e = pl.g.expr[key]
         if e is None:
-            o.append(f"            t({i}) = b({key[3]})")
+            vlines.append([f"      t({i}) = b({key[3]})"])
         else:
             terms = [term_text(cf, sy, f"t({pl.vname[dep]})") for cf, sy, dep in e]
-            o.extend(wrap(f"t({i})", terms, "            "))
+            vlines.append(wrap(f"t({i})", terms, "      "))
+    contained = []
+    for ci, start in enumerate(range(0, len(vlines), CHUNK)):
+        name_c = f"vrr_{ci+1:03d}"
+        o.append(f"            call {name_c}()")
+        body = [f"   subroutine {name_c}()"]
+        for grp in vlines[start:start+CHUNK]:
+            body.extend(grp)
+        body.append(f"   end subroutine {name_c}")
+        contained.append("\n".join(body))
     # gather the targets, then contract
     for j, tgt in enumerate(pl.targets):
         o.append(f"            tv({j+1}) = t({pl.vname[('v', tgt[0], tgt[1], 0)]})")
@@ -220,16 +240,24 @@ def emit_kernel(pl):
         kc = f"{blk['kcol']} + {pl.ntk}*(ck-1)" if pl.ntk > 1 else "ck"
         o.append(f"            bc = {bc}; kc = {kc}")
         hg, nm = blk["g"], blk["name"]
-        NH = len(blk["order"])
+        hlines = []
         for key in blk["order"]:
             i = nm[key]
             e = hg.expr.get(key)
             if e is None:  # a contracted vertical result
                 j = pl.tindex[(key[1], key[2])] + 1
-                o.append(f"            h({i}) = c({j},bc,kc)")
+                hlines.append([f"      h({i}) = c({j},bc,kc)"])
             else:
                 terms = [term_text(cf, sy, f"h({nm[dep]})") for cf, sy, dep in e]
-                o.extend(wrap(f"h({i})", terms, "            "))
+                hlines.append(wrap(f"h({i})", terms, "      "))
+        for ci, start in enumerate(range(0, len(hlines), CHUNK)):
+            name_c = f"hrr_{len(contained)+1:03d}"
+            o.append(f"            call {name_c}()")
+            body = [f"   subroutine {name_c}()"]
+            for grp in hlines[start:start+CHUNK]:
+                body.extend(grp)
+            body.append(f"   end subroutine {name_c}")
+            contained.append("\n".join(body))
         oa, ob, oc, od = blk["offs"]
         la, lb, lc, ld = blk["ls"]
         na, nb, nc = pl.ncomp[0], pl.ncomp[1], pl.ncomp[2]
@@ -240,6 +268,13 @@ def emit_kernel(pl):
             o.append(f"            res({idx},col) = h({nm[key]})")
     o.append("         end do")
     o.append("      end do")
+    if contained:
+        o.append("")
+        o.append("   ! The straight-line runs, split so no single procedure is")
+        o.append("   ! thousands of statements.  Everything is reached by host")
+        o.append("   ! association, so this is a compile-time change only.")
+        o.append("   contains")
+        o.extend(contained)
     o.append(f"   end subroutine {name}")
     return "\n".join(o)
 
