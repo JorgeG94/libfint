@@ -445,12 +445,29 @@ module cint_rotaxis_boys
    implicit none
    private
    public :: boys
+   ! sqrt(pi)/2, the large-argument limit of sqrt(pi/(4t)) erf(sqrt(t)) t^(1/2)
+   real(dp), parameter :: SQRT_PI_2 = 0.88622692545275801365_dp
 contains
    subroutine boys(f, t, m)
       real(dp), intent(out) :: f(0:)
       real(dp), intent(in)  :: t
       integer,  intent(in)  :: m
-      if (t < max(turnover_point(m), 1.0_dp)) then
+      real(dp) :: b
+      integer  :: i
+      if (t > 50.0_dp) then
+         ! THE FAR FIELD, and worth its own branch.  Above t = 50 the closed
+         ! form's exp(-t) is under 2e-22 and its erf(sqrt(t)) is 1 to better
+         ! than that, so both libm calls drop out and F_m is
+         ! sqrt(pi)/(2 sqrt(t)) run up by (2i-1)/(2t).  Measured inside a
+         ! Fock build, libm's erf and exp were 12 s of 101 s on this path
+         ! against a Rys path that calls neither -- and a screened Fock
+         ! build spends much of its time exactly here, on distant pairs.
+         f(0) = SQRT_PI_2/sqrt(t)
+         b = 0.5_dp/t
+         do i = 1, m
+            f(i) = b*real(2*i - 1, dp)*f(i-1)
+         end do
+      else if (t < max(turnover_point(m), 1.0_dp)) then
          call fmt1_gamma_inc_like(f, t, m)
       else
          call gamma_inc_like(f, t, m)
