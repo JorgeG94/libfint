@@ -61,6 +61,28 @@ element of magnitude 5e-6 carries 5e-14 of absolute error, which reads as
 import os
 import sys
 
+# PySCF lays `mol._env` out in one of two orders, and which one it picks is
+# decided per process by Python's string hash randomisation. Ten unpinned runs
+# of this script gave seven of one layout and three of the other; ten with
+# PYTHONHASHSEED=0 gave ten of the same. Within a single process it is stable,
+# so it is chosen once at first use rather than per Mole.
+#
+# Nothing is *wrong* with either layout -- `bas` points into `env` consistently
+# within a run, so the generated check passes whichever one it got. What it
+# costs is the ability to regenerate: the tables below move wholesale, and a
+# real change to a reference becomes indistinguishable from a reshuffle in the
+# diff. This file could not be regenerated to compare against for that reason.
+#
+# The seed has to be set before the interpreter starts, so this re-execs itself
+# once rather than asking the caller to remember. The guard is on the value, so
+# the second pass falls straight through.
+if os.environ.get("PYTHONHASHSEED") != "0":
+    os.execve(
+        sys.executable,
+        [sys.executable, *sys.argv],
+        {**os.environ, "PYTHONHASHSEED": "0"},
+    )
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # tag, geometry, basis (and ECP), label, whether the screen should reject
