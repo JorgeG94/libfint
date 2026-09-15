@@ -38,6 +38,10 @@ def main():
     ap.add_argument("--no-L", action="store_true", help="leave out the L-shell kernels")
     ap.add_argument("--grad", action="store_true",
                     help="emit the gradient kernels (d/dA, libcint int2e_ip1 layout)")
+    ap.add_argument("--max-terms", type=int, default=0,
+                    help="skip classes above this many level-2 terms; 0 = keep all. "
+                         "The supported() predicates ask the dispatcher, so a "
+                         "partial set is declined cleanly rather than trusted.")
     ap.add_argument("--unroll-limit", type=int, default=3000,
                     help="classes with more ket-level terms than this are table driven")
     args = ap.parse_args()
@@ -54,7 +58,7 @@ def main():
     else:
         classes = canonical_classes(args.lmax, not args.no_L)
     if args.grad:
-        files, facts = emit_grad_files(classes, args.unroll_limit)
+        files, facts = emit_grad_files(classes, args.unroll_limit, args.max_terms)
     else:
         files, facts = emit_files(classes, args.unroll_limit)
     for f in facts:

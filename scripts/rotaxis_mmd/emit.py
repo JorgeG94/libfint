@@ -482,7 +482,7 @@ end module cint_rotaxis_boys
 """
 
 
-def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT):
+def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT, max_terms=0):
     """The gradient kernels: d/dA of every component, in libcint's ip1
     layout -- three derivative directions slowest, then (i,j,k,l) with i
     fastest -- and NEGATED, because int2e_ip1 is <nabla i|, which is minus
@@ -493,9 +493,13 @@ def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT):
     try:
         Derivation.all_components = Derivation.all_grad_components
         for k in classes:
-            facts.append(Factorised(Derivation(*k, extra=1)))
+            f = Factorised(Derivation(*k, extra=1))
+            if max_terms and sum(len(r) for r, _ in f.r_list) > max_terms:
+                continue          # declined; supported() will say so
+            facts.append(f)
     finally:
         Derivation.all_components = orig
+    classes = [f.d.kinds for f in facts]
 
     files = {}
     for f in facts:

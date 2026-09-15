@@ -12,167 +12,467 @@
 !   ssss: L=1 comps=3 S=3 g=2 r=3 (terms 4) km=2 cm=2 assembly terms=3
 !   sssp: L=2 comps=9 S=8 g=2 r=12 (terms 18) km=5 cm=7 assembly terms=16
 !   sssL: L=2 comps=12 S=8 g=2 r=15 (terms 22) km=7 cm=7 assembly terms=19
+!   sssd: L=3 comps=18 S=15 g=2 r=33 (terms 70) km=11 cm=16 assembly terms=52
 !   ssps: L=2 comps=9 S=8 g=2 r=12 (terms 18) km=5 cm=7 assembly terms=16
 !   sspp: L=3 comps=27 S=15 g=2 r=48 (terms 104) km=14 cm=16 assembly terms=80
 !   sspL: L=3 comps=36 S=15 g=2 r=60 (terms 122) km=17 cm=16 assembly terms=96
+!   sspd: L=4 comps=54 S=24 g=2 r=129 (terms 387) km=28 cm=30 assembly terms=247
 !   ssLs: L=2 comps=12 S=8 g=2 r=15 (terms 22) km=7 cm=7 assembly terms=19
 !   ssLp: L=3 comps=36 S=15 g=2 r=60 (terms 122) km=17 cm=16 assembly terms=96
 !   ssLL: L=3 comps=48 S=15 g=2 r=75 (terms 144) km=21 cm=16 assembly terms=115
+!   ssLd: L=4 comps=72 S=24 g=2 r=162 (terms 457) km=34 cm=30 assembly terms=299
+!   ssds: L=3 comps=18 S=15 g=2 r=33 (terms 70) km=11 cm=16 assembly terms=52
+!   ssdp: L=4 comps=54 S=24 g=2 r=129 (terms 387) km=28 cm=30 assembly terms=247
+!   ssdL: L=4 comps=72 S=24 g=2 r=162 (terms 457) km=34 cm=30 assembly terms=299
+!   ssdd: L=5 comps=108 S=35 g=2 r=356 (terms 1540) km=54 cm=50 assembly terms=732
 !   spss: L=2 comps=9 S=10 g=5 r=9 (terms 21) km=3 cm=3 assembly terms=10
 !   spsp: L=3 comps=27 S=24 g=5 r=36 (terms 95) km=7 cm=10 assembly terms=54
 !   spsL: L=3 comps=36 S=24 g=5 r=45 (terms 116) km=10 cm=10 assembly terms=64
+!   spsd: L=4 comps=54 S=43 g=5 r=98 (terms 369) km=15 cm=22 assembly terms=175
 !   spps: L=3 comps=27 S=24 g=5 r=36 (terms 95) km=7 cm=10 assembly terms=54
 !   sppp: L=4 comps=81 S=43 g=5 r=143 (terms 549) km=19 cm=22 assembly terms=271
 !   sppL: L=4 comps=108 S=43 g=5 r=179 (terms 644) km=23 cm=22 assembly terms=325
+!   sppd: L=5 comps=162 S=67 g=5 r=382 (terms 2037) km=37 cm=40 assembly terms=831
 !   spLs: L=3 comps=36 S=24 g=5 r=45 (terms 116) km=10 cm=10 assembly terms=64
 !   spLp: L=4 comps=108 S=43 g=5 r=179 (terms 644) km=23 cm=22 assembly terms=325
 !   spLL: L=4 comps=144 S=43 g=5 r=224 (terms 760) km=29 cm=22 assembly terms=389
+!   spLd: L=5 comps=216 S=67 g=5 r=480 (terms 2406) km=45 cm=40 assembly terms=1006
+!   spds: L=4 comps=54 S=43 g=5 r=98 (terms 369) km=15 cm=22 assembly terms=175
+!   spdp: L=5 comps=162 S=67 g=5 r=382 (terms 2037) km=37 cm=40 assembly terms=831
+!   spdL: L=5 comps=216 S=67 g=5 r=480 (terms 2406) km=45 cm=40 assembly terms=1006
+!   spdd: L=6 comps=324 S=96 g=5 r=1050 (terms 8095) km=70 cm=65 assembly terms=2444
 !   sLss: L=2 comps=12 S=13 g=6 r=12 (terms 25) km=3 cm=3 assembly terms=13
 !   sLsp: L=3 comps=36 S=32 g=6 r=48 (terms 113) km=7 cm=10 assembly terms=70
 !   sLsL: L=3 comps=48 S=32 g=6 r=60 (terms 138) km=10 cm=10 assembly terms=83
+!   sLsd: L=4 comps=72 S=58 g=6 r=131 (terms 439) km=15 cm=22 assembly terms=227
 !   sLps: L=3 comps=36 S=32 g=6 r=48 (terms 113) km=7 cm=10 assembly terms=70
 !   sLpp: L=4 comps=108 S=58 g=6 r=191 (terms 653) km=19 cm=22 assembly terms=351
 !   sLpL: L=4 comps=144 S=58 g=6 r=239 (terms 766) km=23 cm=22 assembly terms=421
+!   sLpd: L=5 comps=216 S=91 g=6 r=511 (terms 2424) km=37 cm=40 assembly terms=1078
 !   sLLs: L=3 comps=48 S=32 g=6 r=60 (terms 138) km=10 cm=10 assembly terms=83
 !   sLLp: L=4 comps=144 S=58 g=6 r=239 (terms 766) km=23 cm=22 assembly terms=421
 !   sLLL: L=4 comps=192 S=58 g=6 r=299 (terms 904) km=29 cm=22 assembly terms=504
+!   sLLd: L=5 comps=288 S=91 g=6 r=642 (terms 2863) km=45 cm=40 assembly terms=1305
+!   sLds: L=4 comps=72 S=58 g=6 r=131 (terms 439) km=15 cm=22 assembly terms=227
+!   sLdp: L=5 comps=216 S=91 g=6 r=511 (terms 2424) km=37 cm=40 assembly terms=1078
+!   sLdL: L=5 comps=288 S=91 g=6 r=642 (terms 2863) km=45 cm=40 assembly terms=1305
+!   sLdd: L=6 comps=432 S=131 g=6 r=1406 (terms 9635) km=70 cm=65 assembly terms=3176
+!   sdss: L=3 comps=18 S=23 g=9 r=19 (terms 74) km=4 cm=4 assembly terms=23
+!   sdsp: L=4 comps=54 S=51 g=9 r=77 (terms 344) km=9 cm=13 assembly terms=123
+!   sdsL: L=4 comps=72 S=51 g=9 r=96 (terms 418) km=13 cm=13 assembly terms=146
+!   sdsd: L=5 comps=108 S=88 g=9 r=208 (terms 1318) km=19 cm=28 assembly terms=395
+!   sdps: L=4 comps=54 S=51 g=9 r=77 (terms 344) km=9 cm=13 assembly terms=123
+!   sdpp: L=5 comps=162 S=88 g=9 r=304 (terms 1972) km=24 cm=28 assembly terms=611
+!   sdpL: L=5 comps=216 S=88 g=9 r=381 (terms 2316) km=29 cm=28 assembly terms=734
+!   sdpd: L=6 comps=324 S=134 g=9 r=805 (terms 7290) km=46 cm=50 assembly terms=1857
+!   sdLs: L=4 comps=72 S=51 g=9 r=96 (terms 418) km=13 cm=13 assembly terms=146
+!   sdLp: L=5 comps=216 S=88 g=9 r=381 (terms 2316) km=29 cm=28 assembly terms=734
+!   sdLL: L=5 comps=288 S=88 g=9 r=477 (terms 2734) km=37 cm=28 assembly terms=880
+!   sdLd: L=6 comps=432 S=134 g=9 r=1013 (terms 8608) km=56 cm=50 assembly terms=2252
+!   sdds: L=5 comps=108 S=88 g=9 r=208 (terms 1318) km=19 cm=28 assembly terms=395
+!   sddp: L=6 comps=324 S=134 g=9 r=805 (terms 7290) km=46 cm=50 assembly terms=1857
+!   sddL: L=6 comps=432 S=134 g=9 r=1013 (terms 8608) km=56 cm=50 assembly terms=2252
+!   sddd: L=7 comps=648 S=189 g=9 r=2199 (terms 28863) km=86 cm=80 assembly terms=5416
 !   psss: L=2 comps=9 S=9 g=5 r=7 (terms 19) km=3 cm=3 assembly terms=10
 !   pssp: L=3 comps=27 S=22 g=5 r=28 (terms 82) km=7 cm=10 assembly terms=54
 !   pssL: L=3 comps=36 S=22 g=5 r=35 (terms 101) km=10 cm=10 assembly terms=64
+!   pssd: L=4 comps=54 S=40 g=5 r=76 (terms 321) km=15 cm=22 assembly terms=175
 !   psps: L=3 comps=27 S=22 g=5 r=28 (terms 82) km=7 cm=10 assembly terms=54
 !   pspp: L=4 comps=81 S=40 g=5 r=111 (terms 472) km=19 cm=22 assembly terms=271
 !   pspL: L=4 comps=108 S=40 g=5 r=139 (terms 554) km=23 cm=22 assembly terms=325
+!   pspd: L=5 comps=162 S=63 g=5 r=295 (terms 1740) km=37 cm=40 assembly terms=831
 !   psLs: L=3 comps=36 S=22 g=5 r=35 (terms 101) km=10 cm=10 assembly terms=64
 !   psLp: L=4 comps=108 S=40 g=5 r=139 (terms 554) km=23 cm=22 assembly terms=325
 !   psLL: L=4 comps=144 S=40 g=5 r=174 (terms 655) km=29 cm=22 assembly terms=389
+!   psLd: L=5 comps=216 S=63 g=5 r=371 (terms 2061) km=45 cm=40 assembly terms=1006
+!   psds: L=4 comps=54 S=40 g=5 r=76 (terms 321) km=15 cm=22 assembly terms=175
+!   psdp: L=5 comps=162 S=63 g=5 r=295 (terms 1740) km=37 cm=40 assembly terms=831
+!   psdL: L=5 comps=216 S=63 g=5 r=371 (terms 2061) km=45 cm=40 assembly terms=1006
+!   psdd: L=6 comps=324 S=91 g=5 r=808 (terms 6869) km=70 cm=65 assembly terms=2444
 !   ppss: L=3 comps=27 S=26 g=11 r=21 (terms 91) km=4 cm=4 assembly terms=34
 !   ppsp: L=4 comps=81 S=59 g=11 r=86 (terms 425) km=9 cm=13 assembly terms=183
 !   ppsL: L=4 comps=108 S=59 g=11 r=107 (terms 516) km=13 cm=13 assembly terms=217
+!   ppsd: L=5 comps=162 S=103 g=11 r=233 (terms 1629) km=19 cm=28 assembly terms=589
 !   ppps: L=4 comps=81 S=59 g=11 r=86 (terms 425) km=9 cm=13 assembly terms=183
 !   pppp: L=5 comps=243 S=103 g=11 r=340 (terms 2431) km=24 cm=28 assembly terms=913
 !   pppL: L=5 comps=324 S=103 g=11 r=426 (terms 2856) km=29 cm=28 assembly terms=1096
+!   pppd: L=6 comps=486 S=158 g=11 r=901 (terms 8994) km=46 cm=50 assembly terms=2778
 !   ppLs: L=4 comps=108 S=59 g=11 r=107 (terms 516) km=13 cm=13 assembly terms=217
 !   ppLp: L=5 comps=324 S=103 g=11 r=426 (terms 2856) km=29 cm=28 assembly terms=1096
 !   ppLL: L=5 comps=432 S=103 g=11 r=533 (terms 3372) km=37 cm=28 assembly terms=1313
+!   ppLd: L=6 comps=648 S=158 g=11 r=1134 (terms 10623) km=56 cm=50 assembly terms=3367
+!   ppds: L=5 comps=162 S=103 g=11 r=233 (terms 1629) km=19 cm=28 assembly terms=589
+!   ppdp: L=6 comps=486 S=158 g=11 r=901 (terms 8994) km=46 cm=50 assembly terms=2778
+!   ppdL: L=6 comps=648 S=158 g=11 r=1134 (terms 10623) km=56 cm=50 assembly terms=3367
+!   ppdd: L=7 comps=972 S=224 g=11 r=2462 (terms 35626) km=86 cm=80 assembly terms=8108
 !   pLss: L=3 comps=36 S=35 g=14 r=28 (terms 110) km=4 cm=4 assembly terms=44
 !   pLsp: L=4 comps=108 S=81 g=14 r=114 (terms 507) km=9 cm=13 assembly terms=237
 !   pLsL: L=4 comps=144 S=81 g=14 r=142 (terms 617) km=13 cm=13 assembly terms=281
+!   pLsd: L=5 comps=216 S=143 g=14 r=309 (terms 1950) km=19 cm=28 assembly terms=764
 !   pLps: L=4 comps=108 S=81 g=14 r=114 (terms 507) km=9 cm=13 assembly terms=237
 !   pLpp: L=5 comps=324 S=143 g=14 r=451 (terms 2903) km=24 cm=28 assembly terms=1184
 !   pLpL: L=5 comps=432 S=143 g=14 r=565 (terms 3410) km=29 cm=28 assembly terms=1421
+!   pLpd: L=6 comps=648 S=221 g=14 r=1196 (terms 10734) km=46 cm=50 assembly terms=3609
 !   pLLs: L=4 comps=144 S=81 g=14 r=142 (terms 617) km=13 cm=13 assembly terms=281
 !   pLLp: L=5 comps=432 S=143 g=14 r=565 (terms 3410) km=29 cm=28 assembly terms=1421
 !   pLLL: L=5 comps=576 S=143 g=14 r=707 (terms 4027) km=37 cm=28 assembly terms=1702
+!   pLLd: L=6 comps=864 S=221 g=14 r=1505 (terms 12684) km=56 cm=50 assembly terms=4373
+!   pLds: L=5 comps=216 S=143 g=14 r=309 (terms 1950) km=19 cm=28 assembly terms=764
+!   pLdp: L=6 comps=648 S=221 g=14 r=1196 (terms 10734) km=46 cm=50 assembly terms=3609
+!   pLdL: L=6 comps=864 S=221 g=14 r=1505 (terms 12684) km=56 cm=50 assembly terms=4373
+!   pdss: L=4 comps=54 S=58 g=20 r=45 (terms 328) km=5 cm=5 assembly terms=77
+!   pdsp: L=5 comps=162 S=123 g=20 r=186 (terms 1519) km=11 cm=16 assembly terms=411
+!   pdsL: L=5 comps=216 S=123 g=20 r=231 (terms 1847) km=16 cm=16 assembly terms=488
+!   pdsd: L=6 comps=324 S=208 g=20 r=501 (terms 5819) km=23 cm=34 assembly terms=1313
+!   pdps: L=5 comps=162 S=123 g=20 r=186 (terms 1519) km=11 cm=16 assembly terms=411
+!   pdpp: L=6 comps=486 S=208 g=20 r=732 (terms 8662) km=29 cm=34 assembly terms=2033
+!   pdpL: L=6 comps=648 S=208 g=20 r=918 (terms 10181) km=35 cm=34 assembly terms=2444
+!   pdpd: L=7 comps=972 S=313 g=20 r=1926 (terms 31866) km=55 cm=60 assembly terms=6141
+!   pdLs: L=5 comps=216 S=123 g=20 r=231 (terms 1847) km=16 cm=16 assembly terms=488
+!   pdLp: L=6 comps=648 S=208 g=20 r=918 (terms 10181) km=35 cm=34 assembly terms=2444
+!   pdLL: L=6 comps=864 S=208 g=20 r=1149 (terms 12028) km=45 cm=34 assembly terms=2932
+!   pdLd: L=7 comps=1296 S=313 g=20 r=2427 (terms 37685) km=67 cm=60 assembly terms=7454
+!   pdds: L=6 comps=324 S=208 g=20 r=501 (terms 5819) km=23 cm=34 assembly terms=1313
+!   pddp: L=7 comps=972 S=313 g=20 r=1926 (terms 31866) km=55 cm=60 assembly terms=6141
+!   pddL: L=7 comps=1296 S=313 g=20 r=2427 (terms 37685) km=67 cm=60 assembly terms=7454
 !   Lsss: L=2 comps=12 S=12 g=6 r=10 (terms 23) km=3 cm=3 assembly terms=13
 !   Lssp: L=3 comps=36 S=30 g=6 r=40 (terms 100) km=7 cm=10 assembly terms=70
 !   LssL: L=3 comps=48 S=30 g=6 r=50 (terms 123) km=10 cm=10 assembly terms=83
+!   Lssd: L=4 comps=72 S=55 g=6 r=109 (terms 391) km=15 cm=22 assembly terms=227
 !   Lsps: L=3 comps=36 S=30 g=6 r=40 (terms 100) km=7 cm=10 assembly terms=70
 !   Lspp: L=4 comps=108 S=55 g=6 r=159 (terms 576) km=19 cm=22 assembly terms=351
 !   LspL: L=4 comps=144 S=55 g=6 r=199 (terms 676) km=23 cm=22 assembly terms=421
+!   Lspd: L=5 comps=216 S=87 g=6 r=424 (terms 2127) km=37 cm=40 assembly terms=1078
 !   LsLs: L=3 comps=48 S=30 g=6 r=50 (terms 123) km=10 cm=10 assembly terms=83
 !   LsLp: L=4 comps=144 S=55 g=6 r=199 (terms 676) km=23 cm=22 assembly terms=421
 !   LsLL: L=4 comps=192 S=55 g=6 r=249 (terms 799) km=29 cm=22 assembly terms=504
+!   LsLd: L=5 comps=288 S=87 g=6 r=533 (terms 2518) km=45 cm=40 assembly terms=1305
+!   Lsds: L=4 comps=72 S=55 g=6 r=109 (terms 391) km=15 cm=22 assembly terms=227
+!   Lsdp: L=5 comps=216 S=87 g=6 r=424 (terms 2127) km=37 cm=40 assembly terms=1078
+!   LsdL: L=5 comps=288 S=87 g=6 r=533 (terms 2518) km=45 cm=40 assembly terms=1305
+!   Lsdd: L=6 comps=432 S=126 g=6 r=1164 (terms 8409) km=70 cm=65 assembly terms=3176
 !   Lpss: L=3 comps=36 S=36 g=13 r=30 (terms 112) km=4 cm=4 assembly terms=44
 !   Lpsp: L=4 comps=108 S=83 g=13 r=122 (terms 520) km=9 cm=13 assembly terms=237
 !   LpsL: L=4 comps=144 S=83 g=13 r=152 (terms 632) km=13 cm=13 assembly terms=281
+!   Lpsd: L=5 comps=216 S=146 g=13 r=331 (terms 1998) km=19 cm=28 assembly terms=764
 !   Lpps: L=4 comps=108 S=83 g=13 r=122 (terms 520) km=9 cm=13 assembly terms=237
 !   Lppp: L=5 comps=324 S=146 g=13 r=483 (terms 2980) km=24 cm=28 assembly terms=1184
 !   LppL: L=5 comps=432 S=146 g=13 r=605 (terms 3500) km=29 cm=28 assembly terms=1421
+!   Lppd: L=6 comps=648 S=225 g=13 r=1283 (terms 11031) km=46 cm=50 assembly terms=3609
 !   LpLs: L=4 comps=144 S=83 g=13 r=152 (terms 632) km=13 cm=13 assembly terms=281
 !   LpLp: L=5 comps=432 S=146 g=13 r=605 (terms 3500) km=29 cm=28 assembly terms=1421
 !   LpLL: L=5 comps=576 S=146 g=13 r=757 (terms 4132) km=37 cm=28 assembly terms=1702
+!   LpLd: L=6 comps=864 S=225 g=13 r=1614 (terms 13029) km=56 cm=50 assembly terms=4373
+!   Lpds: L=5 comps=216 S=146 g=13 r=331 (terms 1998) km=19 cm=28 assembly terms=764
+!   Lpdp: L=6 comps=648 S=225 g=13 r=1283 (terms 11031) km=46 cm=50 assembly terms=3609
+!   LpdL: L=6 comps=864 S=225 g=13 r=1614 (terms 13029) km=56 cm=50 assembly terms=4373
 !   LLss: L=3 comps=48 S=48 g=16 r=40 (terms 135) km=4 cm=4 assembly terms=57
 !   LLsp: L=4 comps=144 S=113 g=16 r=162 (terms 620) km=9 cm=13 assembly terms=307
 !   LLsL: L=4 comps=192 S=113 g=16 r=202 (terms 755) km=13 cm=13 assembly terms=364
+!   LLsd: L=5 comps=288 S=201 g=16 r=440 (terms 2389) km=19 cm=28 assembly terms=991
 !   LLps: L=4 comps=144 S=113 g=16 r=162 (terms 620) km=9 cm=13 assembly terms=307
 !   LLpp: L=5 comps=432 S=201 g=16 r=642 (terms 3556) km=24 cm=28 assembly terms=1535
 !   LLpL: L=5 comps=576 S=201 g=16 r=804 (terms 4176) km=29 cm=28 assembly terms=1842
+!   LLpd: L=6 comps=864 S=312 g=16 r=1707 (terms 13158) km=46 cm=50 assembly terms=4687
 !   LLLs: L=4 comps=192 S=113 g=16 r=202 (terms 755) km=13 cm=13 assembly terms=364
 !   LLLp: L=5 comps=576 S=201 g=16 r=804 (terms 4176) km=29 cm=28 assembly terms=1842
 !   LLLL: L=5 comps=768 S=201 g=16 r=1006 (terms 4931) km=37 cm=28 assembly terms=2206
+!   LLLd: L=6 comps=1152 S=312 g=16 r=2147 (terms 15547) km=56 cm=50 assembly terms=5678
+!   LLds: L=5 comps=288 S=201 g=16 r=440 (terms 2389) km=19 cm=28 assembly terms=991
+!   LLdp: L=6 comps=864 S=312 g=16 r=1707 (terms 13158) km=46 cm=50 assembly terms=4687
+!   LLdL: L=6 comps=1152 S=312 g=16 r=2147 (terms 15547) km=56 cm=50 assembly terms=5678
+!   Ldss: L=4 comps=72 S=81 g=23 r=64 (terms 402) km=5 cm=5 assembly terms=100
+!   Ldsp: L=5 comps=216 S=174 g=23 r=263 (terms 1863) km=11 cm=16 assembly terms=534
+!   LdsL: L=5 comps=288 S=174 g=23 r=327 (terms 2265) km=16 cm=16 assembly terms=634
+!   Ldsd: L=6 comps=432 S=296 g=23 r=709 (terms 7137) km=23 cm=34 assembly terms=1708
+!   Ldps: L=5 comps=216 S=174 g=23 r=263 (terms 1863) km=11 cm=16 assembly terms=534
+!   Ldpp: L=6 comps=648 S=296 g=23 r=1036 (terms 10634) km=29 cm=34 assembly terms=2644
+!   LdpL: L=6 comps=864 S=296 g=23 r=1299 (terms 12497) km=35 cm=34 assembly terms=3178
+!   Ldpd: L=7 comps=1296 S=447 g=23 r=2731 (terms 39156) km=55 cm=60 assembly terms=7998
+!   LdLs: L=5 comps=288 S=174 g=23 r=327 (terms 2265) km=16 cm=16 assembly terms=634
+!   LdLp: L=6 comps=864 S=296 g=23 r=1299 (terms 12497) km=35 cm=34 assembly terms=3178
+!   LdLL: L=6 comps=1152 S=296 g=23 r=1626 (terms 14762) km=45 cm=34 assembly terms=3812
+!   Ldds: L=6 comps=432 S=296 g=23 r=709 (terms 7137) km=23 cm=34 assembly terms=1708
+!   Lddp: L=7 comps=1296 S=447 g=23 r=2731 (terms 39156) km=55 cm=60 assembly terms=7998
+!   dsss: L=3 comps=18 S=19 g=8 r=19 (terms 81) km=4 cm=4 assembly terms=23
+!   dssp: L=4 comps=54 S=43 g=8 r=78 (terms 377) km=9 cm=13 assembly terms=123
+!   dssL: L=4 comps=72 S=43 g=8 r=97 (terms 458) km=13 cm=13 assembly terms=146
+!   dssd: L=5 comps=108 S=75 g=8 r=212 (terms 1446) km=19 cm=28 assembly terms=395
+!   dsps: L=4 comps=54 S=43 g=8 r=78 (terms 377) km=9 cm=13 assembly terms=123
+!   dspp: L=5 comps=162 S=75 g=8 r=309 (terms 2154) km=24 cm=28 assembly terms=611
+!   dspL: L=5 comps=216 S=75 g=8 r=387 (terms 2531) km=29 cm=28 assembly terms=734
+!   dspd: L=6 comps=324 S=115 g=8 r=819 (terms 7965) km=46 cm=50 assembly terms=1857
+!   dsLs: L=4 comps=72 S=43 g=8 r=97 (terms 458) km=13 cm=13 assembly terms=146
+!   dsLp: L=5 comps=216 S=75 g=8 r=387 (terms 2531) km=29 cm=28 assembly terms=734
+!   dsLL: L=5 comps=288 S=75 g=8 r=484 (terms 2989) km=37 cm=28 assembly terms=880
+!   dsLd: L=6 comps=432 S=115 g=8 r=1031 (terms 9411) km=56 cm=50 assembly terms=2252
+!   dsds: L=5 comps=108 S=75 g=8 r=212 (terms 1446) km=19 cm=28 assembly terms=395
+!   dsdp: L=6 comps=324 S=115 g=8 r=819 (terms 7965) km=46 cm=50 assembly terms=1857
+!   dsdL: L=6 comps=432 S=115 g=8 r=1031 (terms 9411) km=56 cm=50 assembly terms=2252
+!   dsdd: L=7 comps=648 S=163 g=8 r=2238 (terms 31522) km=86 cm=80 assembly terms=5416
+!   dpss: L=4 comps=54 S=55 g=19 r=55 (terms 411) km=5 cm=5 assembly terms=77
+!   dpsp: L=5 comps=162 S=117 g=19 r=230 (terms 1935) km=11 cm=16 assembly terms=411
+!   dpsL: L=5 comps=216 S=117 g=19 r=285 (terms 2346) km=16 cm=16 assembly terms=488
+!   dpsd: L=6 comps=324 S=198 g=19 r=623 (terms 7414) km=23 cm=34 assembly terms=1313
+!   dpps: L=5 comps=162 S=117 g=19 r=230 (terms 1935) km=11 cm=16 assembly terms=411
+!   dppp: L=6 comps=486 S=198 g=19 r=908 (terms 11048) km=29 cm=34 assembly terms=2033
+!   dppL: L=6 comps=648 S=198 g=19 r=1138 (terms 12983) km=35 cm=34 assembly terms=2444
+!   dpLs: L=5 comps=216 S=117 g=19 r=285 (terms 2346) km=16 cm=16 assembly terms=488
+!   dpLp: L=6 comps=648 S=198 g=19 r=1138 (terms 12983) km=35 cm=34 assembly terms=2444
+!   dpLL: L=6 comps=864 S=198 g=19 r=1423 (terms 15329) km=45 cm=34 assembly terms=2932
+!   dpds: L=6 comps=324 S=198 g=19 r=623 (terms 7414) km=23 cm=34 assembly terms=1313
+!   dLss: L=4 comps=72 S=74 g=22 r=74 (terms 492) km=5 cm=5 assembly terms=100
+!   dLsp: L=5 comps=216 S=160 g=22 r=308 (terms 2312) km=11 cm=16 assembly terms=534
+!   dLsL: L=5 comps=288 S=160 g=22 r=382 (terms 2804) km=16 cm=16 assembly terms=634
+!   dLsd: L=6 comps=432 S=273 g=22 r=835 (terms 8860) km=23 cm=34 assembly terms=1708
+!   dLps: L=5 comps=216 S=160 g=22 r=308 (terms 2312) km=11 cm=16 assembly terms=534
+!   dLpp: L=6 comps=648 S=273 g=22 r=1217 (terms 13202) km=29 cm=34 assembly terms=2644
+!   dLpL: L=6 comps=864 S=273 g=22 r=1525 (terms 15514) km=35 cm=34 assembly terms=3178
+!   dLLs: L=5 comps=288 S=160 g=22 r=382 (terms 2804) km=16 cm=16 assembly terms=634
+!   dLLp: L=6 comps=864 S=273 g=22 r=1525 (terms 15514) km=35 cm=34 assembly terms=3178
+!   dLLL: L=6 comps=1152 S=273 g=22 r=1907 (terms 18318) km=45 cm=34 assembly terms=3812
+!   dLds: L=6 comps=432 S=273 g=22 r=835 (terms 8860) km=23 cm=34 assembly terms=1708
+!   ddss: L=5 comps=108 S=115 g=33 r=115 (terms 1379) km=6 cm=6 assembly terms=172
+!   ddsp: L=6 comps=324 S=232 g=33 r=482 (terms 6591) km=13 cm=19 assembly terms=912
+!   ddsL: L=6 comps=432 S=232 g=33 r=597 (terms 7970) km=19 cm=19 assembly terms=1084
+!   ddsd: L=7 comps=648 S=382 g=33 r=1297 (terms 24984) km=27 cm=40 assembly terms=2896
+!   ddps: L=6 comps=324 S=232 g=33 r=482 (terms 6591) km=13 cm=19 assembly terms=912
+!   ddpp: L=7 comps=972 S=382 g=33 r=1894 (terms 37346) km=34 cm=40 assembly terms=4480
+!   ddLs: L=6 comps=432 S=232 g=33 r=597 (terms 7970) km=19 cm=19 assembly terms=1084
+!   ddds: L=7 comps=648 S=382 g=33 r=1297 (terms 24984) km=27 cm=40 assembly terms=2896
 module cint_rotaxis_grad_kernels
    use cint_const, only: dp
    use rotaxis_grad_ssss_m, only: rotaxis_grad_ssss
    use rotaxis_grad_sssp_m, only: rotaxis_grad_sssp
    use rotaxis_grad_sssL_m, only: rotaxis_grad_sssL
+   use rotaxis_grad_sssd_m, only: rotaxis_grad_sssd
    use rotaxis_grad_ssps_m, only: rotaxis_grad_ssps
    use rotaxis_grad_sspp_m, only: rotaxis_grad_sspp
    use rotaxis_grad_sspL_m, only: rotaxis_grad_sspL
+   use rotaxis_grad_sspd_m, only: rotaxis_grad_sspd
    use rotaxis_grad_ssLs_m, only: rotaxis_grad_ssLs
    use rotaxis_grad_ssLp_m, only: rotaxis_grad_ssLp
    use rotaxis_grad_ssLL_m, only: rotaxis_grad_ssLL
+   use rotaxis_grad_ssLd_m, only: rotaxis_grad_ssLd
+   use rotaxis_grad_ssds_m, only: rotaxis_grad_ssds
+   use rotaxis_grad_ssdp_m, only: rotaxis_grad_ssdp
+   use rotaxis_grad_ssdL_m, only: rotaxis_grad_ssdL
+   use rotaxis_grad_ssdd_m, only: rotaxis_grad_ssdd
    use rotaxis_grad_spss_m, only: rotaxis_grad_spss
    use rotaxis_grad_spsp_m, only: rotaxis_grad_spsp
    use rotaxis_grad_spsL_m, only: rotaxis_grad_spsL
+   use rotaxis_grad_spsd_m, only: rotaxis_grad_spsd
    use rotaxis_grad_spps_m, only: rotaxis_grad_spps
    use rotaxis_grad_sppp_m, only: rotaxis_grad_sppp
    use rotaxis_grad_sppL_m, only: rotaxis_grad_sppL
+   use rotaxis_grad_sppd_m, only: rotaxis_grad_sppd
    use rotaxis_grad_spLs_m, only: rotaxis_grad_spLs
    use rotaxis_grad_spLp_m, only: rotaxis_grad_spLp
    use rotaxis_grad_spLL_m, only: rotaxis_grad_spLL
+   use rotaxis_grad_spLd_m, only: rotaxis_grad_spLd
+   use rotaxis_grad_spds_m, only: rotaxis_grad_spds
+   use rotaxis_grad_spdp_m, only: rotaxis_grad_spdp
+   use rotaxis_grad_spdL_m, only: rotaxis_grad_spdL
+   use rotaxis_grad_spdd_m, only: rotaxis_grad_spdd
    use rotaxis_grad_sLss_m, only: rotaxis_grad_sLss
    use rotaxis_grad_sLsp_m, only: rotaxis_grad_sLsp
    use rotaxis_grad_sLsL_m, only: rotaxis_grad_sLsL
+   use rotaxis_grad_sLsd_m, only: rotaxis_grad_sLsd
    use rotaxis_grad_sLps_m, only: rotaxis_grad_sLps
    use rotaxis_grad_sLpp_m, only: rotaxis_grad_sLpp
    use rotaxis_grad_sLpL_m, only: rotaxis_grad_sLpL
+   use rotaxis_grad_sLpd_m, only: rotaxis_grad_sLpd
    use rotaxis_grad_sLLs_m, only: rotaxis_grad_sLLs
    use rotaxis_grad_sLLp_m, only: rotaxis_grad_sLLp
    use rotaxis_grad_sLLL_m, only: rotaxis_grad_sLLL
+   use rotaxis_grad_sLLd_m, only: rotaxis_grad_sLLd
+   use rotaxis_grad_sLds_m, only: rotaxis_grad_sLds
+   use rotaxis_grad_sLdp_m, only: rotaxis_grad_sLdp
+   use rotaxis_grad_sLdL_m, only: rotaxis_grad_sLdL
+   use rotaxis_grad_sLdd_m, only: rotaxis_grad_sLdd
+   use rotaxis_grad_sdss_m, only: rotaxis_grad_sdss
+   use rotaxis_grad_sdsp_m, only: rotaxis_grad_sdsp
+   use rotaxis_grad_sdsL_m, only: rotaxis_grad_sdsL
+   use rotaxis_grad_sdsd_m, only: rotaxis_grad_sdsd
+   use rotaxis_grad_sdps_m, only: rotaxis_grad_sdps
+   use rotaxis_grad_sdpp_m, only: rotaxis_grad_sdpp
+   use rotaxis_grad_sdpL_m, only: rotaxis_grad_sdpL
+   use rotaxis_grad_sdpd_m, only: rotaxis_grad_sdpd
+   use rotaxis_grad_sdLs_m, only: rotaxis_grad_sdLs
+   use rotaxis_grad_sdLp_m, only: rotaxis_grad_sdLp
+   use rotaxis_grad_sdLL_m, only: rotaxis_grad_sdLL
+   use rotaxis_grad_sdLd_m, only: rotaxis_grad_sdLd
+   use rotaxis_grad_sdds_m, only: rotaxis_grad_sdds
+   use rotaxis_grad_sddp_m, only: rotaxis_grad_sddp
+   use rotaxis_grad_sddL_m, only: rotaxis_grad_sddL
+   use rotaxis_grad_sddd_m, only: rotaxis_grad_sddd
    use rotaxis_grad_psss_m, only: rotaxis_grad_psss
    use rotaxis_grad_pssp_m, only: rotaxis_grad_pssp
    use rotaxis_grad_pssL_m, only: rotaxis_grad_pssL
+   use rotaxis_grad_pssd_m, only: rotaxis_grad_pssd
    use rotaxis_grad_psps_m, only: rotaxis_grad_psps
    use rotaxis_grad_pspp_m, only: rotaxis_grad_pspp
    use rotaxis_grad_pspL_m, only: rotaxis_grad_pspL
+   use rotaxis_grad_pspd_m, only: rotaxis_grad_pspd
    use rotaxis_grad_psLs_m, only: rotaxis_grad_psLs
    use rotaxis_grad_psLp_m, only: rotaxis_grad_psLp
    use rotaxis_grad_psLL_m, only: rotaxis_grad_psLL
+   use rotaxis_grad_psLd_m, only: rotaxis_grad_psLd
+   use rotaxis_grad_psds_m, only: rotaxis_grad_psds
+   use rotaxis_grad_psdp_m, only: rotaxis_grad_psdp
+   use rotaxis_grad_psdL_m, only: rotaxis_grad_psdL
+   use rotaxis_grad_psdd_m, only: rotaxis_grad_psdd
    use rotaxis_grad_ppss_m, only: rotaxis_grad_ppss
    use rotaxis_grad_ppsp_m, only: rotaxis_grad_ppsp
    use rotaxis_grad_ppsL_m, only: rotaxis_grad_ppsL
+   use rotaxis_grad_ppsd_m, only: rotaxis_grad_ppsd
    use rotaxis_grad_ppps_m, only: rotaxis_grad_ppps
    use rotaxis_grad_pppp_m, only: rotaxis_grad_pppp
    use rotaxis_grad_pppL_m, only: rotaxis_grad_pppL
+   use rotaxis_grad_pppd_m, only: rotaxis_grad_pppd
    use rotaxis_grad_ppLs_m, only: rotaxis_grad_ppLs
    use rotaxis_grad_ppLp_m, only: rotaxis_grad_ppLp
    use rotaxis_grad_ppLL_m, only: rotaxis_grad_ppLL
+   use rotaxis_grad_ppLd_m, only: rotaxis_grad_ppLd
+   use rotaxis_grad_ppds_m, only: rotaxis_grad_ppds
+   use rotaxis_grad_ppdp_m, only: rotaxis_grad_ppdp
+   use rotaxis_grad_ppdL_m, only: rotaxis_grad_ppdL
+   use rotaxis_grad_ppdd_m, only: rotaxis_grad_ppdd
    use rotaxis_grad_pLss_m, only: rotaxis_grad_pLss
    use rotaxis_grad_pLsp_m, only: rotaxis_grad_pLsp
    use rotaxis_grad_pLsL_m, only: rotaxis_grad_pLsL
+   use rotaxis_grad_pLsd_m, only: rotaxis_grad_pLsd
    use rotaxis_grad_pLps_m, only: rotaxis_grad_pLps
    use rotaxis_grad_pLpp_m, only: rotaxis_grad_pLpp
    use rotaxis_grad_pLpL_m, only: rotaxis_grad_pLpL
+   use rotaxis_grad_pLpd_m, only: rotaxis_grad_pLpd
    use rotaxis_grad_pLLs_m, only: rotaxis_grad_pLLs
    use rotaxis_grad_pLLp_m, only: rotaxis_grad_pLLp
    use rotaxis_grad_pLLL_m, only: rotaxis_grad_pLLL
+   use rotaxis_grad_pLLd_m, only: rotaxis_grad_pLLd
+   use rotaxis_grad_pLds_m, only: rotaxis_grad_pLds
+   use rotaxis_grad_pLdp_m, only: rotaxis_grad_pLdp
+   use rotaxis_grad_pLdL_m, only: rotaxis_grad_pLdL
+   use rotaxis_grad_pdss_m, only: rotaxis_grad_pdss
+   use rotaxis_grad_pdsp_m, only: rotaxis_grad_pdsp
+   use rotaxis_grad_pdsL_m, only: rotaxis_grad_pdsL
+   use rotaxis_grad_pdsd_m, only: rotaxis_grad_pdsd
+   use rotaxis_grad_pdps_m, only: rotaxis_grad_pdps
+   use rotaxis_grad_pdpp_m, only: rotaxis_grad_pdpp
+   use rotaxis_grad_pdpL_m, only: rotaxis_grad_pdpL
+   use rotaxis_grad_pdpd_m, only: rotaxis_grad_pdpd
+   use rotaxis_grad_pdLs_m, only: rotaxis_grad_pdLs
+   use rotaxis_grad_pdLp_m, only: rotaxis_grad_pdLp
+   use rotaxis_grad_pdLL_m, only: rotaxis_grad_pdLL
+   use rotaxis_grad_pdLd_m, only: rotaxis_grad_pdLd
+   use rotaxis_grad_pdds_m, only: rotaxis_grad_pdds
+   use rotaxis_grad_pddp_m, only: rotaxis_grad_pddp
+   use rotaxis_grad_pddL_m, only: rotaxis_grad_pddL
    use rotaxis_grad_Lsss_m, only: rotaxis_grad_Lsss
    use rotaxis_grad_Lssp_m, only: rotaxis_grad_Lssp
    use rotaxis_grad_LssL_m, only: rotaxis_grad_LssL
+   use rotaxis_grad_Lssd_m, only: rotaxis_grad_Lssd
    use rotaxis_grad_Lsps_m, only: rotaxis_grad_Lsps
    use rotaxis_grad_Lspp_m, only: rotaxis_grad_Lspp
    use rotaxis_grad_LspL_m, only: rotaxis_grad_LspL
+   use rotaxis_grad_Lspd_m, only: rotaxis_grad_Lspd
    use rotaxis_grad_LsLs_m, only: rotaxis_grad_LsLs
    use rotaxis_grad_LsLp_m, only: rotaxis_grad_LsLp
    use rotaxis_grad_LsLL_m, only: rotaxis_grad_LsLL
+   use rotaxis_grad_LsLd_m, only: rotaxis_grad_LsLd
+   use rotaxis_grad_Lsds_m, only: rotaxis_grad_Lsds
+   use rotaxis_grad_Lsdp_m, only: rotaxis_grad_Lsdp
+   use rotaxis_grad_LsdL_m, only: rotaxis_grad_LsdL
+   use rotaxis_grad_Lsdd_m, only: rotaxis_grad_Lsdd
    use rotaxis_grad_Lpss_m, only: rotaxis_grad_Lpss
    use rotaxis_grad_Lpsp_m, only: rotaxis_grad_Lpsp
    use rotaxis_grad_LpsL_m, only: rotaxis_grad_LpsL
+   use rotaxis_grad_Lpsd_m, only: rotaxis_grad_Lpsd
    use rotaxis_grad_Lpps_m, only: rotaxis_grad_Lpps
    use rotaxis_grad_Lppp_m, only: rotaxis_grad_Lppp
    use rotaxis_grad_LppL_m, only: rotaxis_grad_LppL
+   use rotaxis_grad_Lppd_m, only: rotaxis_grad_Lppd
    use rotaxis_grad_LpLs_m, only: rotaxis_grad_LpLs
    use rotaxis_grad_LpLp_m, only: rotaxis_grad_LpLp
    use rotaxis_grad_LpLL_m, only: rotaxis_grad_LpLL
+   use rotaxis_grad_LpLd_m, only: rotaxis_grad_LpLd
+   use rotaxis_grad_Lpds_m, only: rotaxis_grad_Lpds
+   use rotaxis_grad_Lpdp_m, only: rotaxis_grad_Lpdp
+   use rotaxis_grad_LpdL_m, only: rotaxis_grad_LpdL
    use rotaxis_grad_LLss_m, only: rotaxis_grad_LLss
    use rotaxis_grad_LLsp_m, only: rotaxis_grad_LLsp
    use rotaxis_grad_LLsL_m, only: rotaxis_grad_LLsL
+   use rotaxis_grad_LLsd_m, only: rotaxis_grad_LLsd
    use rotaxis_grad_LLps_m, only: rotaxis_grad_LLps
    use rotaxis_grad_LLpp_m, only: rotaxis_grad_LLpp
    use rotaxis_grad_LLpL_m, only: rotaxis_grad_LLpL
+   use rotaxis_grad_LLpd_m, only: rotaxis_grad_LLpd
    use rotaxis_grad_LLLs_m, only: rotaxis_grad_LLLs
    use rotaxis_grad_LLLp_m, only: rotaxis_grad_LLLp
    use rotaxis_grad_LLLL_m, only: rotaxis_grad_LLLL
+   use rotaxis_grad_LLLd_m, only: rotaxis_grad_LLLd
+   use rotaxis_grad_LLds_m, only: rotaxis_grad_LLds
+   use rotaxis_grad_LLdp_m, only: rotaxis_grad_LLdp
+   use rotaxis_grad_LLdL_m, only: rotaxis_grad_LLdL
+   use rotaxis_grad_Ldss_m, only: rotaxis_grad_Ldss
+   use rotaxis_grad_Ldsp_m, only: rotaxis_grad_Ldsp
+   use rotaxis_grad_LdsL_m, only: rotaxis_grad_LdsL
+   use rotaxis_grad_Ldsd_m, only: rotaxis_grad_Ldsd
+   use rotaxis_grad_Ldps_m, only: rotaxis_grad_Ldps
+   use rotaxis_grad_Ldpp_m, only: rotaxis_grad_Ldpp
+   use rotaxis_grad_LdpL_m, only: rotaxis_grad_LdpL
+   use rotaxis_grad_Ldpd_m, only: rotaxis_grad_Ldpd
+   use rotaxis_grad_LdLs_m, only: rotaxis_grad_LdLs
+   use rotaxis_grad_LdLp_m, only: rotaxis_grad_LdLp
+   use rotaxis_grad_LdLL_m, only: rotaxis_grad_LdLL
+   use rotaxis_grad_Ldds_m, only: rotaxis_grad_Ldds
+   use rotaxis_grad_Lddp_m, only: rotaxis_grad_Lddp
+   use rotaxis_grad_dsss_m, only: rotaxis_grad_dsss
+   use rotaxis_grad_dssp_m, only: rotaxis_grad_dssp
+   use rotaxis_grad_dssL_m, only: rotaxis_grad_dssL
+   use rotaxis_grad_dssd_m, only: rotaxis_grad_dssd
+   use rotaxis_grad_dsps_m, only: rotaxis_grad_dsps
+   use rotaxis_grad_dspp_m, only: rotaxis_grad_dspp
+   use rotaxis_grad_dspL_m, only: rotaxis_grad_dspL
+   use rotaxis_grad_dspd_m, only: rotaxis_grad_dspd
+   use rotaxis_grad_dsLs_m, only: rotaxis_grad_dsLs
+   use rotaxis_grad_dsLp_m, only: rotaxis_grad_dsLp
+   use rotaxis_grad_dsLL_m, only: rotaxis_grad_dsLL
+   use rotaxis_grad_dsLd_m, only: rotaxis_grad_dsLd
+   use rotaxis_grad_dsds_m, only: rotaxis_grad_dsds
+   use rotaxis_grad_dsdp_m, only: rotaxis_grad_dsdp
+   use rotaxis_grad_dsdL_m, only: rotaxis_grad_dsdL
+   use rotaxis_grad_dsdd_m, only: rotaxis_grad_dsdd
+   use rotaxis_grad_dpss_m, only: rotaxis_grad_dpss
+   use rotaxis_grad_dpsp_m, only: rotaxis_grad_dpsp
+   use rotaxis_grad_dpsL_m, only: rotaxis_grad_dpsL
+   use rotaxis_grad_dpsd_m, only: rotaxis_grad_dpsd
+   use rotaxis_grad_dpps_m, only: rotaxis_grad_dpps
+   use rotaxis_grad_dppp_m, only: rotaxis_grad_dppp
+   use rotaxis_grad_dppL_m, only: rotaxis_grad_dppL
+   use rotaxis_grad_dpLs_m, only: rotaxis_grad_dpLs
+   use rotaxis_grad_dpLp_m, only: rotaxis_grad_dpLp
+   use rotaxis_grad_dpLL_m, only: rotaxis_grad_dpLL
+   use rotaxis_grad_dpds_m, only: rotaxis_grad_dpds
+   use rotaxis_grad_dLss_m, only: rotaxis_grad_dLss
+   use rotaxis_grad_dLsp_m, only: rotaxis_grad_dLsp
+   use rotaxis_grad_dLsL_m, only: rotaxis_grad_dLsL
+   use rotaxis_grad_dLsd_m, only: rotaxis_grad_dLsd
+   use rotaxis_grad_dLps_m, only: rotaxis_grad_dLps
+   use rotaxis_grad_dLpp_m, only: rotaxis_grad_dLpp
+   use rotaxis_grad_dLpL_m, only: rotaxis_grad_dLpL
+   use rotaxis_grad_dLLs_m, only: rotaxis_grad_dLLs
+   use rotaxis_grad_dLLp_m, only: rotaxis_grad_dLLp
+   use rotaxis_grad_dLLL_m, only: rotaxis_grad_dLLL
+   use rotaxis_grad_dLds_m, only: rotaxis_grad_dLds
+   use rotaxis_grad_ddss_m, only: rotaxis_grad_ddss
+   use rotaxis_grad_ddsp_m, only: rotaxis_grad_ddsp
+   use rotaxis_grad_ddsL_m, only: rotaxis_grad_ddsL
+   use rotaxis_grad_ddsd_m, only: rotaxis_grad_ddsd
+   use rotaxis_grad_ddps_m, only: rotaxis_grad_ddps
+   use rotaxis_grad_ddpp_m, only: rotaxis_grad_ddpp
+   use rotaxis_grad_ddLs_m, only: rotaxis_grad_ddLs
+   use rotaxis_grad_ddds_m, only: rotaxis_grad_ddds
    implicit none
    private
    public :: rotaxis_grad_kernel, rotaxis_grad_has_class
@@ -182,13 +482,26 @@ contains
    pure logical function rotaxis_grad_has_class(code) result(yes)
       integer, intent(in) :: code
       select case (code)
-      case (0, 1, 2, 10, 11, 12, 20, 21, 22, 100, 101, 102, &
-            110, 111, 112, 120, 121, 122, 200, 201, 202, 210, 211, 212, &
-            220, 221, 222, 1000, 1001, 1002, 1010, 1011, 1012, 1020, 1021, 1022, &
-            1100, 1101, 1102, 1110, 1111, 1112, 1120, 1121, 1122, 1200, 1201, 1202, &
-            1210, 1211, 1212, 1220, 1221, 1222, 2000, 2001, 2002, 2010, 2011, 2012, &
-            2020, 2021, 2022, 2100, 2101, 2102, 2110, 2111, 2112, 2120, 2121, 2122, &
-            2200, 2201, 2202, 2210, 2211, 2212, 2220, 2221, 2222)
+      case (0, 1, 2, 3, 10, 11, 12, 13, 20, 21, 22, 23, &
+            30, 31, 32, 33, 100, 101, 102, 103, 110, 111, 112, 113, &
+            120, 121, 122, 123, 130, 131, 132, 133, 200, 201, 202, 203, &
+            210, 211, 212, 213, 220, 221, 222, 223, 230, 231, 232, 233, &
+            300, 301, 302, 303, 310, 311, 312, 313, 320, 321, 322, 323, &
+            330, 331, 332, 333, 1000, 1001, 1002, 1003, 1010, 1011, 1012, 1013, &
+            1020, 1021, 1022, 1023, 1030, 1031, 1032, 1033, 1100, 1101, 1102, 1103, &
+            1110, 1111, 1112, 1113, 1120, 1121, 1122, 1123, 1130, 1131, 1132, 1133, &
+            1200, 1201, 1202, 1203, 1210, 1211, 1212, 1213, 1220, 1221, 1222, 1223, &
+            1230, 1231, 1232, 1300, 1301, 1302, 1303, 1310, 1311, 1312, 1313, 1320, &
+            1321, 1322, 1323, 1330, 1331, 1332, 2000, 2001, 2002, 2003, 2010, 2011, &
+            2012, 2013, 2020, 2021, 2022, 2023, 2030, 2031, 2032, 2033, 2100, 2101, &
+            2102, 2103, 2110, 2111, 2112, 2113, 2120, 2121, 2122, 2123, 2130, 2131, &
+            2132, 2200, 2201, 2202, 2203, 2210, 2211, 2212, 2213, 2220, 2221, 2222, &
+            2223, 2230, 2231, 2232, 2300, 2301, 2302, 2303, 2310, 2311, 2312, 2313, &
+            2320, 2321, 2322, 2330, 2331, 3000, 3001, 3002, 3003, 3010, 3011, 3012, &
+            3013, 3020, 3021, 3022, 3023, 3030, 3031, 3032, 3033, 3100, 3101, 3102, &
+            3103, 3110, 3111, 3112, 3120, 3121, 3122, 3130, 3200, 3201, 3202, 3203, &
+            3210, 3211, 3212, 3220, 3221, 3222, 3230, 3300, 3301, 3302, 3303, 3310, &
+            3311, 3320, 3330)
          yes = .true.
       case default
          yes = .false.
@@ -212,6 +525,9 @@ contains
       case (2)
          call rotaxis_grad_sssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (3)
+         call rotaxis_grad_sssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (10)
          call rotaxis_grad_ssps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -220,6 +536,9 @@ contains
                                       gc, cutoff, res, any)
       case (12)
          call rotaxis_grad_sspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (13)
+         call rotaxis_grad_sspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (20)
          call rotaxis_grad_ssLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -230,6 +549,21 @@ contains
       case (22)
          call rotaxis_grad_ssLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (23)
+         call rotaxis_grad_ssLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (30)
+         call rotaxis_grad_ssds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (31)
+         call rotaxis_grad_ssdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (32)
+         call rotaxis_grad_ssdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (33)
+         call rotaxis_grad_ssdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (100)
          call rotaxis_grad_spss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -238,6 +572,9 @@ contains
                                       gc, cutoff, res, any)
       case (102)
          call rotaxis_grad_spsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (103)
+         call rotaxis_grad_spsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (110)
          call rotaxis_grad_spps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -248,6 +585,9 @@ contains
       case (112)
          call rotaxis_grad_sppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (113)
+         call rotaxis_grad_sppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (120)
          call rotaxis_grad_spLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -256,6 +596,21 @@ contains
                                       gc, cutoff, res, any)
       case (122)
          call rotaxis_grad_spLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (123)
+         call rotaxis_grad_spLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (130)
+         call rotaxis_grad_spds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (131)
+         call rotaxis_grad_spdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (132)
+         call rotaxis_grad_spdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (133)
+         call rotaxis_grad_spdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (200)
          call rotaxis_grad_sLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -266,6 +621,9 @@ contains
       case (202)
          call rotaxis_grad_sLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (203)
+         call rotaxis_grad_sLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (210)
          call rotaxis_grad_sLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -274,6 +632,9 @@ contains
                                       gc, cutoff, res, any)
       case (212)
          call rotaxis_grad_sLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (213)
+         call rotaxis_grad_sLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (220)
          call rotaxis_grad_sLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -284,6 +645,69 @@ contains
       case (222)
          call rotaxis_grad_sLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (223)
+         call rotaxis_grad_sLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (230)
+         call rotaxis_grad_sLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (231)
+         call rotaxis_grad_sLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (232)
+         call rotaxis_grad_sLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (233)
+         call rotaxis_grad_sLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (300)
+         call rotaxis_grad_sdss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (301)
+         call rotaxis_grad_sdsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (302)
+         call rotaxis_grad_sdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (303)
+         call rotaxis_grad_sdsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (310)
+         call rotaxis_grad_sdps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (311)
+         call rotaxis_grad_sdpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (312)
+         call rotaxis_grad_sdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (313)
+         call rotaxis_grad_sdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (320)
+         call rotaxis_grad_sdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (321)
+         call rotaxis_grad_sdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (322)
+         call rotaxis_grad_sdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (323)
+         call rotaxis_grad_sdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (330)
+         call rotaxis_grad_sdds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (331)
+         call rotaxis_grad_sddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (332)
+         call rotaxis_grad_sddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (333)
+         call rotaxis_grad_sddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (1000)
          call rotaxis_grad_psss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -292,6 +716,9 @@ contains
                                       gc, cutoff, res, any)
       case (1002)
          call rotaxis_grad_pssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1003)
+         call rotaxis_grad_pssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (1010)
          call rotaxis_grad_psps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -302,6 +729,9 @@ contains
       case (1012)
          call rotaxis_grad_pspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (1013)
+         call rotaxis_grad_pspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (1020)
          call rotaxis_grad_psLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -310,6 +740,21 @@ contains
                                       gc, cutoff, res, any)
       case (1022)
          call rotaxis_grad_psLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1023)
+         call rotaxis_grad_psLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1030)
+         call rotaxis_grad_psds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1031)
+         call rotaxis_grad_psdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1032)
+         call rotaxis_grad_psdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1033)
+         call rotaxis_grad_psdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (1100)
          call rotaxis_grad_ppss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -320,6 +765,9 @@ contains
       case (1102)
          call rotaxis_grad_ppsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (1103)
+         call rotaxis_grad_ppsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (1110)
          call rotaxis_grad_ppps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -328,6 +776,9 @@ contains
                                       gc, cutoff, res, any)
       case (1112)
          call rotaxis_grad_pppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1113)
+         call rotaxis_grad_pppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (1120)
          call rotaxis_grad_ppLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -338,6 +789,21 @@ contains
       case (1122)
          call rotaxis_grad_ppLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (1123)
+         call rotaxis_grad_ppLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1130)
+         call rotaxis_grad_ppds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1131)
+         call rotaxis_grad_ppdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1132)
+         call rotaxis_grad_ppdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1133)
+         call rotaxis_grad_ppdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (1200)
          call rotaxis_grad_pLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -346,6 +812,9 @@ contains
                                       gc, cutoff, res, any)
       case (1202)
          call rotaxis_grad_pLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1203)
+         call rotaxis_grad_pLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (1210)
          call rotaxis_grad_pLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -356,6 +825,9 @@ contains
       case (1212)
          call rotaxis_grad_pLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (1213)
+         call rotaxis_grad_pLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (1220)
          call rotaxis_grad_pLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -364,6 +836,63 @@ contains
                                       gc, cutoff, res, any)
       case (1222)
          call rotaxis_grad_pLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1223)
+         call rotaxis_grad_pLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1230)
+         call rotaxis_grad_pLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1231)
+         call rotaxis_grad_pLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1232)
+         call rotaxis_grad_pLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1300)
+         call rotaxis_grad_pdss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1301)
+         call rotaxis_grad_pdsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1302)
+         call rotaxis_grad_pdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1303)
+         call rotaxis_grad_pdsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1310)
+         call rotaxis_grad_pdps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1311)
+         call rotaxis_grad_pdpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1312)
+         call rotaxis_grad_pdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1313)
+         call rotaxis_grad_pdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1320)
+         call rotaxis_grad_pdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1321)
+         call rotaxis_grad_pdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1322)
+         call rotaxis_grad_pdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1323)
+         call rotaxis_grad_pdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1330)
+         call rotaxis_grad_pdds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1331)
+         call rotaxis_grad_pddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (1332)
+         call rotaxis_grad_pddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (2000)
          call rotaxis_grad_Lsss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -374,6 +903,9 @@ contains
       case (2002)
          call rotaxis_grad_LssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (2003)
+         call rotaxis_grad_Lssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (2010)
          call rotaxis_grad_Lsps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -382,6 +914,9 @@ contains
                                       gc, cutoff, res, any)
       case (2012)
          call rotaxis_grad_LspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2013)
+         call rotaxis_grad_Lspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (2020)
          call rotaxis_grad_LsLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -392,6 +927,21 @@ contains
       case (2022)
          call rotaxis_grad_LsLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (2023)
+         call rotaxis_grad_LsLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2030)
+         call rotaxis_grad_Lsds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2031)
+         call rotaxis_grad_Lsdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2032)
+         call rotaxis_grad_LsdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2033)
+         call rotaxis_grad_Lsdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (2100)
          call rotaxis_grad_Lpss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -400,6 +950,9 @@ contains
                                       gc, cutoff, res, any)
       case (2102)
          call rotaxis_grad_LpsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2103)
+         call rotaxis_grad_Lpsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (2110)
          call rotaxis_grad_Lpps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -410,6 +963,9 @@ contains
       case (2112)
          call rotaxis_grad_LppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (2113)
+         call rotaxis_grad_Lppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (2120)
          call rotaxis_grad_LpLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -418,6 +974,18 @@ contains
                                       gc, cutoff, res, any)
       case (2122)
          call rotaxis_grad_LpLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2123)
+         call rotaxis_grad_LpLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2130)
+         call rotaxis_grad_Lpds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2131)
+         call rotaxis_grad_Lpdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2132)
+         call rotaxis_grad_LpdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case (2200)
          call rotaxis_grad_LLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -428,6 +996,9 @@ contains
       case (2202)
          call rotaxis_grad_LLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (2203)
+         call rotaxis_grad_LLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (2210)
          call rotaxis_grad_LLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -437,6 +1008,9 @@ contains
       case (2212)
          call rotaxis_grad_LLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
+      case (2213)
+         call rotaxis_grad_LLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
       case (2220)
          call rotaxis_grad_LLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
@@ -445,6 +1019,195 @@ contains
                                       gc, cutoff, res, any)
       case (2222)
          call rotaxis_grad_LLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2223)
+         call rotaxis_grad_LLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2230)
+         call rotaxis_grad_LLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2231)
+         call rotaxis_grad_LLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2232)
+         call rotaxis_grad_LLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2300)
+         call rotaxis_grad_Ldss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2301)
+         call rotaxis_grad_Ldsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2302)
+         call rotaxis_grad_LdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2303)
+         call rotaxis_grad_Ldsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2310)
+         call rotaxis_grad_Ldps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2311)
+         call rotaxis_grad_Ldpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2312)
+         call rotaxis_grad_LdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2313)
+         call rotaxis_grad_Ldpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2320)
+         call rotaxis_grad_LdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2321)
+         call rotaxis_grad_LdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2322)
+         call rotaxis_grad_LdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2330)
+         call rotaxis_grad_Ldds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (2331)
+         call rotaxis_grad_Lddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3000)
+         call rotaxis_grad_dsss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3001)
+         call rotaxis_grad_dssp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3002)
+         call rotaxis_grad_dssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3003)
+         call rotaxis_grad_dssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3010)
+         call rotaxis_grad_dsps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3011)
+         call rotaxis_grad_dspp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3012)
+         call rotaxis_grad_dspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3013)
+         call rotaxis_grad_dspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3020)
+         call rotaxis_grad_dsLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3021)
+         call rotaxis_grad_dsLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3022)
+         call rotaxis_grad_dsLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3023)
+         call rotaxis_grad_dsLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3030)
+         call rotaxis_grad_dsds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3031)
+         call rotaxis_grad_dsdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3032)
+         call rotaxis_grad_dsdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3033)
+         call rotaxis_grad_dsdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3100)
+         call rotaxis_grad_dpss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3101)
+         call rotaxis_grad_dpsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3102)
+         call rotaxis_grad_dpsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3103)
+         call rotaxis_grad_dpsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3110)
+         call rotaxis_grad_dpps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3111)
+         call rotaxis_grad_dppp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3112)
+         call rotaxis_grad_dppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3120)
+         call rotaxis_grad_dpLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3121)
+         call rotaxis_grad_dpLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3122)
+         call rotaxis_grad_dpLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3130)
+         call rotaxis_grad_dpds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3200)
+         call rotaxis_grad_dLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3201)
+         call rotaxis_grad_dLsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3202)
+         call rotaxis_grad_dLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3203)
+         call rotaxis_grad_dLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3210)
+         call rotaxis_grad_dLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3211)
+         call rotaxis_grad_dLpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3212)
+         call rotaxis_grad_dLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3220)
+         call rotaxis_grad_dLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3221)
+         call rotaxis_grad_dLLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3222)
+         call rotaxis_grad_dLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3230)
+         call rotaxis_grad_dLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3300)
+         call rotaxis_grad_ddss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3301)
+         call rotaxis_grad_ddsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3302)
+         call rotaxis_grad_ddsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3303)
+         call rotaxis_grad_ddsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3310)
+         call rotaxis_grad_ddps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3311)
+         call rotaxis_grad_ddpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3320)
+         call rotaxis_grad_ddLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                                      gc, cutoff, res, any)
+      case (3330)
+         call rotaxis_grad_ddds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                                       gc, cutoff, res, any)
       case default
          error stop 'cint_rotaxis_grad_kernels: no kernel for this class'
