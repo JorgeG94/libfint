@@ -162,7 +162,7 @@ def emit_kernel(f: Factorised):
         o.append(f"            zq{k} = {prev}*zq")
     # the g monomials of the bra pair
     for gi, g in enumerate(f.g_list):
-        e = mono_expr(["ip", "za", "zb"], g)
+        e = mono_expr(["ip", "za", "zb", "ea"], g)
         o.append(f"            g({gi+1}) = {e if e else '1.0_dp'}")
     # the S values for this primitive quartet, then scattered over columns
     zqpow = {("zq", 1): "zq"}
