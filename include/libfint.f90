@@ -48,6 +48,7 @@ module libcint_fortran
     use cint_hgp_2e,     only: int2e_hgp_cart, int2e_hgp_sph, hgp_supported
     use cint_rotaxis_grad_2e, only: int2e_ip1_rotaxis_cart, int2e_ip1_rotaxis_sph, &
                                     rotaxis_grad_supported
+    use cint_hgp_grad_2e, only: int2e_ip1_hgp_cart, int2e_ip1_hgp_sph, hgp_grad_supported
     use cint_envs,      only: cint_opt_t
     use cint_opt,       only: cint_del_optimizer
     use cint_g1e,       only: cint_all_1e_optimizer
@@ -112,6 +113,7 @@ module libcint_fortran
     public :: libcint_2e_hgp_cart, libcint_2e_hgp_sph, libcint_hgp_supported
     public :: libcint_2e_ip1_rotaxis_cart, libcint_2e_ip1_rotaxis_sph
     public :: libcint_rotaxis_grad_supported
+    public :: libcint_2e_ip1_hgp_cart, libcint_2e_ip1_hgp_sph, libcint_hgp_grad_supported
     public :: libcint_3c2e_sph, libcint_2c2e_sph
     public :: libcint_3c2e_cart, libcint_2c2e_cart
     public :: libcint_2e_ip1_cart, libcint_2e_ip1_sph
@@ -562,9 +564,9 @@ contains
     end function run2e_alt
 
     ! run2e_alt's shape for the gradient path: three blocks rather than one.
-    function run2e_grad(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
+    function run2e_grad_alt(cart, rotaxis, buf, shls, atm, natm, bas, nbas, env) result(ret)
         integer(ip), intent(in) :: natm, nbas
-        logical,     intent(in) :: cart
+        logical,     intent(in) :: cart, rotaxis
         real(dp),    intent(out), target :: buf(*)
         integer(ip), intent(in),  target :: shls(4)
         integer(ip), intent(in),  target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
@@ -584,13 +586,21 @@ contains
         end do
         n = 3*product(dims)
         nenv = env_extent(shls, 4, atm, natm, bas, nbas)
-        if (cart) then
-            hv = int2e_ip1_rotaxis_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+        if (rotaxis) then
+            if (cart) then
+                hv = int2e_ip1_rotaxis_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2e_ip1_rotaxis_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
         else
-            hv = int2e_ip1_rotaxis_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            if (cart) then
+                hv = int2e_ip1_hgp_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2e_ip1_hgp_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
         end if
         ret = merge(1_ip, 0_ip, hv)
-    end function run2e_grad
+    end function run2e_grad_alt
 
     function run_ecp(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
         logical,     intent(in)  :: cart
@@ -926,7 +936,7 @@ contains
         real(dp), intent(in) :: env(*)
         type(c_ptr), intent(in), optional :: opt
         integer(ip) :: ret
-        ret = run2e_grad(.true., buf, shls, atm, natm, bas, nbas, env)
+        ret = run2e_grad_alt(.true., .true., buf, shls, atm, natm, bas, nbas, env)
     end function libcint_2e_ip1_rotaxis_cart
 
     function libcint_2e_ip1_rotaxis_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
@@ -939,7 +949,7 @@ contains
         real(dp), intent(in) :: env(*)
         type(c_ptr), intent(in), optional :: opt
         integer(ip) :: ret
-        ret = run2e_grad(.false., buf, shls, atm, natm, bas, nbas, env)
+        ret = run2e_grad_alt(.false., .true., buf, shls, atm, natm, bas, nbas, env)
     end function libcint_2e_ip1_rotaxis_sph
 
     function libcint_rotaxis_grad_supported(shls, bas, nbas) result(yes)
@@ -954,6 +964,48 @@ contains
         end do
         yes = rotaxis_grad_supported(fshls, fbas)
     end function libcint_rotaxis_grad_supported
+
+    ! d/dA by Obara-Saika/HGP.  Same contract as the rotated-axis gradient
+    ! pair above, including that the quartet is not permuted: the caller's
+    ! slot 0 is the centre differentiated.
+    function libcint_2e_ip1_hgp_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_grad_alt(.true., .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_2e_ip1_hgp_cart
+
+    function libcint_2e_ip1_hgp_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_grad_alt(.false., .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_2e_ip1_hgp_sph
+
+    function libcint_hgp_grad_supported(shls, bas, nbas) result(yes)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        logical :: yes
+        integer :: fshls(0:3), fbas(0:LIBCINT_BAS_SLOTS*nbas - 1), i
+        fshls = int(shls)
+        do i = 1, nbas
+            fbas(LIBCINT_BAS_SLOTS*(i-1):LIBCINT_BAS_SLOTS*i - 1) = int(bas(:, i))
+        end do
+        yes = hgp_grad_supported(fshls, fbas)
+    end function libcint_hgp_grad_supported
 
     function libcint_2e_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
         real(dp), intent(out) :: buf(*)

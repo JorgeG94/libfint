@@ -42,6 +42,7 @@ program grad_bench
    use cint_2e, only: int2e_sph
    use cint_gen_grad2, only: int2e_ip1_sph
    use cint_rotaxis_grad_2e, only: int2e_ip1_rotaxis_sph, rotaxis_grad_supported
+   use cint_hgp_grad_2e, only: int2e_ip1_hgp_sph, hgp_grad_supported
    !$ use omp_lib
    implicit none
 
@@ -52,9 +53,9 @@ program grad_bench
    real(dp), allocatable :: dm(:,:), gr(:,:,:), q(:), gref(:,:)
    integer,  allocatable :: pi(:), pj(:)
    integer   :: npair, nwat, dpol, only, ipath, i, j, nthr
-   real(dp)  :: t0, t1, tsec(0:1), dmax, scal, rel, worst
+   real(dp)  :: t0, t1, tsec(0:3), dmax, scal, rel, worst
    character(len=16) :: arg
-   character(len=8), parameter :: pname(0:1) = ["rys     ", "rotaxis "]
+   character(len=8), parameter :: pname(0:3) = ["rys     ", "rotaxis ", "hgp     ", "hybrid  "]
 
    nwat = 12; dpol = 1; only = 0; worst = 0.0_dp
    if (command_argument_count() >= 1) then
@@ -79,7 +80,7 @@ program grad_bench
    call schwarz()
    print '(A,I0,A,I0,A)', "  shell pairs ", npair, " of ", nbas*(nbas+1)/2, " survive screening"
 
-   do ipath = 0, 1
+   do ipath = 0, 3
       if (only /= 0 .and. ipath /= only-1) cycle
       t0 = wall()
       call fock(ipath)
@@ -183,11 +184,30 @@ contains
    logical function eval(path, buf, dims, shls) result(hv)
       integer,  intent(in) :: path, dims(0:), shls(0:)
       real(dp), intent(inout) :: buf(0:)
-      if (path == 1 .and. rotaxis_grad_supported(shls, bas)) then
-         hv = int2e_ip1_rotaxis_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
-      else
+      select case (path)
+      case (1)
+         if (rotaxis_grad_supported(shls, bas)) then
+            hv = int2e_ip1_rotaxis_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         else
+            hv = int2e_ip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         end if
+      case (2)
+         if (hgp_grad_supported(shls, bas)) then
+            hv = int2e_ip1_hgp_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         else
+            hv = int2e_ip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         end if
+      case (3)
+         if (rotaxis_grad_supported(shls, bas)) then
+            hv = int2e_ip1_rotaxis_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         else if (hgp_grad_supported(shls, bas)) then
+            hv = int2e_ip1_hgp_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         else
+            hv = int2e_ip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
+         end if
+      case default
          hv = int2e_ip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, ws)
-      end if
+      end select
    end function eval
 
    ! ---- screening -------------------------------------------------------
