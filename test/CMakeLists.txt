@@ -191,6 +191,13 @@ target_link_libraries(rotaxis_grad_check fint fint_test_systems cint m)
 target_include_directories(rotaxis_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_grad_check COMMAND $<TARGET_FILE:rotaxis_grad_check>)
 
+# The same path on a real molecule, validated by finite difference of the
+# energy rather than against another integral routine.
+add_executable(rotaxis_grad_molecule rotaxis_grad_molecule.F90)
+target_link_libraries(rotaxis_grad_molecule fint m)
+target_include_directories(rotaxis_grad_molecule PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME rotaxis_grad_molecule COMMAND $<TARGET_FILE:rotaxis_grad_molecule>)
+
 # The Obara-Saika/HGP path against the Rys path, on the same argument as
 # rotaxis_check: two exact algorithms, so a scaled tolerance, not bit
 # identity.
