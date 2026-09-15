@@ -13,174 +13,524 @@
 ! Classes are canonical with the higher kind first in each pair, which is
 ! the direction the transfers run.
 
+!   dddd: vrr=4191 carried=1736x2 hrr=17335 in 1 block(s) comps=3888
+!   dddL: vrr=2281 carried=896x2 hrr=9166 in 2 block(s) comps=2592
+!   dddp: vrr=2281 carried=896x2 hrr=7108 in 1 block(s) comps=1944
+!   ddds: vrr=1011 carried=336x2 hrr=2058 in 1 block(s) comps=648
+!   ddLd: vrr=2535 carried=1120x2 hrr=13775 in 2 block(s) comps=2592
+!   ddLL: vrr=1265 carried=560x2 hrr=6659 in 4 block(s) comps=1728
+!   ddLp: vrr=1265 carried=560x2 hrr=5287 in 2 block(s) comps=1296
+!   ddLs: vrr=505 carried=224x2 hrr=1372 in 2 block(s) comps=432
+!   ddpd: vrr=2480 carried=1064x2 hrr=9607 in 1 block(s) comps=1944
+!   ddpL: vrr=1210 carried=504x2 hrr=4818 in 2 block(s) comps=1296
+!   ddpp: vrr=1210 carried=504x2 hrr=3789 in 1 block(s) comps=972
+!   ddps: vrr=450 carried=168x2 hrr=1029 in 1 block(s) comps=324
+!   ddsd: vrr=1265 carried=560x2 hrr=4168 in 1 block(s) comps=648
+!   ddsL: vrr=505 carried=224x2 hrr=1841 in 2 block(s) comps=432
+!   ddsp: vrr=505 carried=224x2 hrr=1498 in 1 block(s) comps=324
+!   ddss: vrr=126 carried=56x2 hrr=343 in 1 block(s) comps=108
+!   dLdd: vrr=2330 carried=1085x2 hrr=9366 in 2 block(s) comps=2592
+!   dLdL: vrr=1260 carried=560x2 hrr=4556 in 4 block(s) comps=1728
+!   dLdp: vrr=1260 carried=560x2 hrr=3608 in 2 block(s) comps=1296
+!   dLds: vrr=550 carried=210x2 hrr=948 in 2 block(s) comps=432
+!   dLLd: vrr=1415 carried=700x2 hrr=7134 in 4 block(s) comps=1728
+!   dLLL: vrr=705 carried=350x2 hrr=3238 in 8 block(s) comps=1152
+!   dLLp: vrr=705 carried=350x2 hrr=2606 in 4 block(s) comps=864
+!   dLLs: vrr=281 carried=140x2 hrr=632 in 4 block(s) comps=288
+!   dLpd: vrr=1381 carried=665x2 hrr=5062 in 2 block(s) comps=1296
+!   dLpL: vrr=671 carried=315x2 hrr=2364 in 4 block(s) comps=864
+!   dLpp: vrr=671 carried=315x2 hrr=1890 in 2 block(s) comps=648
+!   dLps: vrr=247 carried=105x2 hrr=474 in 2 block(s) comps=216
+!   dLsd: vrr=705 carried=350x2 hrr=2072 in 2 block(s) comps=432
+!   dLsL: vrr=281 carried=140x2 hrr=874 in 4 block(s) comps=288
+!   dLsp: vrr=281 carried=140x2 hrr=716 in 2 block(s) comps=216
+!   dLss: vrr=70 carried=35x2 hrr=158 in 2 block(s) comps=72
+!   dpdd: vrr=2330 carried=1085x2 hrr=7288 in 1 block(s) comps=1944
+!   dpdL: vrr=1260 carried=560x2 hrr=3604 in 2 block(s) comps=1296
+!   dpdp: vrr=1260 carried=560x2 hrr=2842 in 1 block(s) comps=972
+!   dpds: vrr=550 carried=210x2 hrr=762 in 1 block(s) comps=324
+!   dpLd: vrr=1415 carried=700x2 hrr=5597 in 2 block(s) comps=1296
+!   dpLL: vrr=705 carried=350x2 hrr=2573 in 4 block(s) comps=864
+!   dpLp: vrr=705 carried=350x2 hrr=2065 in 2 block(s) comps=648
+!   dpLs: vrr=281 carried=140x2 hrr=508 in 2 block(s) comps=216
+!   dppd: vrr=1381 carried=665x2 hrr=3958 in 1 block(s) comps=972
+!   dppL: vrr=671 carried=315x2 hrr=1875 in 2 block(s) comps=648
+!   dppp: vrr=671 carried=315x2 hrr=1494 in 1 block(s) comps=486
+!   dpps: vrr=247 carried=105x2 hrr=381 in 1 block(s) comps=162
+!   dpsd: vrr=705 carried=350x2 hrr=1639 in 1 block(s) comps=324
+!   dpsL: vrr=281 carried=140x2 hrr=698 in 2 block(s) comps=216
+!   dpsp: vrr=281 carried=140x2 hrr=571 in 1 block(s) comps=162
+!   dpss: vrr=70 carried=35x2 hrr=127 in 1 block(s) comps=54
+!   dsdd: vrr=1175 carried=620x2 hrr=2078 in 1 block(s) comps=648
+!   dsdL: vrr=630 carried=320x2 hrr=952 in 2 block(s) comps=432
+!   dsdp: vrr=630 carried=320x2 hrr=766 in 1 block(s) comps=324
+!   dsds: vrr=270 carried=120x2 hrr=186 in 1 block(s) comps=108
+!   dsLd: vrr=715 carried=400x2 hrr=1537 in 2 block(s) comps=432
+!   dsLL: vrr=355 carried=200x2 hrr=665 in 4 block(s) comps=288
+!   dsLp: vrr=355 carried=200x2 hrr=541 in 2 block(s) comps=216
+!   dsLs: vrr=141 carried=80x2 hrr=124 in 2 block(s) comps=72
+!   dspd: vrr=696 carried=380x2 hrr=1104 in 1 block(s) comps=324
+!   dspL: vrr=336 carried=180x2 hrr=489 in 2 block(s) comps=216
+!   dspp: vrr=336 carried=180x2 hrr=396 in 1 block(s) comps=162
+!   dsps: vrr=122 carried=60x2 hrr=93 in 1 block(s) comps=54
+!   dssd: vrr=355 carried=200x2 hrr=433 in 1 block(s) comps=108
+!   dssL: vrr=141 carried=80x2 hrr=176 in 2 block(s) comps=72
+!   dssp: vrr=141 carried=80x2 hrr=145 in 1 block(s) comps=54
+!   dsss: vrr=35 carried=20x2 hrr=31 in 1 block(s) comps=18
+!   Lddd: vrr=2330 carried=1085x2 hrr=13377 in 2 block(s) comps=2592
+!   LddL: vrr=1260 carried=560x2 hrr=7098 in 4 block(s) comps=1728
+!   Lddp: vrr=1260 carried=560x2 hrr=5496 in 2 block(s) comps=1296
+!   Ldds: vrr=550 carried=210x2 hrr=1602 in 2 block(s) comps=432
+!   LdLd: vrr=1415 carried=700x2 hrr=10743 in 4 block(s) comps=1728
+!   LdLL: vrr=705 carried=350x2 hrr=5187 in 8 block(s) comps=1152
+!   LdLp: vrr=705 carried=350x2 hrr=4119 in 4 block(s) comps=864
+!   LdLs: vrr=281 carried=140x2 hrr=1068 in 4 block(s) comps=288
+!   Ldpd: vrr=1381 carried=665x2 hrr=7461 in 2 block(s) comps=1296
+!   LdpL: vrr=671 carried=315x2 hrr=3744 in 4 block(s) comps=864
+!   Ldpp: vrr=671 carried=315x2 hrr=2943 in 2 block(s) comps=648
+!   Ldps: vrr=247 carried=105x2 hrr=801 in 2 block(s) comps=216
+!   Ldsd: vrr=705 carried=350x2 hrr=3282 in 2 block(s) comps=432
+!   LdsL: vrr=281 carried=140x2 hrr=1443 in 4 block(s) comps=288
+!   Ldsp: vrr=281 carried=140x2 hrr=1176 in 2 block(s) comps=216
+!   Ldss: vrr=70 carried=35x2 hrr=267 in 2 block(s) comps=72
+!   LLdd: vrr=1175 carried=620x2 hrr=7027 in 4 block(s) comps=1728
+!   LLdL: vrr=630 carried=320x2 hrr=3390 in 8 block(s) comps=1152
+!   LLdp: vrr=630 carried=320x2 hrr=2688 in 4 block(s) comps=864
+!   LLds: vrr=270 carried=120x2 hrr=702 in 4 block(s) comps=288
+!   LLLd: vrr=715 carried=400x2 hrr=5393 in 8 block(s) comps=1152
 !   LLLL: vrr=355 carried=200x2 hrr=2421 in 16 block(s) comps=768
 !   LLLp: vrr=355 carried=200x2 hrr=1953 in 8 block(s) comps=576
 !   LLLs: vrr=141 carried=80x2 hrr=468 in 8 block(s) comps=192
+!   LLpd: vrr=696 carried=380x2 hrr=3815 in 4 block(s) comps=864
 !   LLpL: vrr=336 carried=180x2 hrr=1764 in 8 block(s) comps=576
 !   LLpp: vrr=336 carried=180x2 hrr=1413 in 4 block(s) comps=432
 !   LLps: vrr=122 carried=60x2 hrr=351 in 4 block(s) comps=144
+!   LLsd: vrr=355 carried=200x2 hrr=1578 in 4 block(s) comps=288
 !   LLsL: vrr=141 carried=80x2 hrr=657 in 8 block(s) comps=192
 !   LLsp: vrr=141 carried=80x2 hrr=540 in 4 block(s) comps=144
 !   LLss: vrr=35 carried=20x2 hrr=117 in 4 block(s) comps=48
+!   Lpdd: vrr=1175 carried=620x2 hrr=5495 in 2 block(s) comps=1296
+!   LpdL: vrr=630 carried=320x2 hrr=2702 in 4 block(s) comps=864
+!   Lpdp: vrr=630 carried=320x2 hrr=2132 in 2 block(s) comps=648
+!   Lpds: vrr=270 carried=120x2 hrr=570 in 2 block(s) comps=216
+!   LpLd: vrr=715 carried=400x2 hrr=4255 in 4 block(s) comps=864
 !   LpLL: vrr=355 carried=200x2 hrr=1939 in 8 block(s) comps=576
 !   LpLp: vrr=355 carried=200x2 hrr=1559 in 4 block(s) comps=432
 !   LpLs: vrr=141 carried=80x2 hrr=380 in 4 block(s) comps=144
+!   Lppd: vrr=696 carried=380x2 hrr=2999 in 2 block(s) comps=648
 !   LppL: vrr=336 carried=180x2 hrr=1410 in 4 block(s) comps=432
 !   Lppp: vrr=336 carried=180x2 hrr=1125 in 2 block(s) comps=324
 !   Lpps: vrr=122 carried=60x2 hrr=285 in 2 block(s) comps=108
+!   Lpsd: vrr=355 carried=200x2 hrr=1256 in 2 block(s) comps=216
 !   LpsL: vrr=141 carried=80x2 hrr=529 in 4 block(s) comps=144
 !   Lpsp: vrr=141 carried=80x2 hrr=434 in 2 block(s) comps=108
 !   Lpss: vrr=35 carried=20x2 hrr=95 in 2 block(s) comps=36
+!   Lsdd: vrr=521 carried=310x2 hrr=1532 in 2 block(s) comps=432
+!   LsdL: vrr=276 carried=160x2 hrr=688 in 4 block(s) comps=288
+!   Lsdp: vrr=276 carried=160x2 hrr=556 in 2 block(s) comps=216
+!   Lsds: vrr=116 carried=60x2 hrr=132 in 2 block(s) comps=72
+!   LsLd: vrr=315 carried=200x2 hrr=1138 in 4 block(s) comps=288
 !   LsLL: vrr=155 carried=100x2 hrr=482 in 8 block(s) comps=192
 !   LsLp: vrr=155 carried=100x2 hrr=394 in 4 block(s) comps=144
 !   LsLs: vrr=61 carried=40x2 hrr=88 in 4 block(s) comps=48
+!   Lspd: vrr=306 carried=190x2 hrr=816 in 2 block(s) comps=216
 !   LspL: vrr=146 carried=90x2 hrr=354 in 4 block(s) comps=144
 !   Lspp: vrr=146 carried=90x2 hrr=288 in 2 block(s) comps=108
 !   Lsps: vrr=52 carried=30x2 hrr=66 in 2 block(s) comps=36
+!   Lssd: vrr=155 carried=100x2 hrr=322 in 2 block(s) comps=72
 !   LssL: vrr=61 carried=40x2 hrr=128 in 4 block(s) comps=48
 !   Lssp: vrr=61 carried=40x2 hrr=106 in 2 block(s) comps=36
 !   Lsss: vrr=15 carried=10x2 hrr=22 in 2 block(s) comps=12
+!   pddd: vrr=2330 carried=1085x2 hrr=9447 in 1 block(s) comps=1944
+!   pddL: vrr=1260 carried=560x2 hrr=5022 in 2 block(s) comps=1296
+!   pddp: vrr=1260 carried=560x2 hrr=3888 in 1 block(s) comps=972
+!   pdds: vrr=550 carried=210x2 hrr=1134 in 1 block(s) comps=324
+!   pdLd: vrr=1415 carried=700x2 hrr=7563 in 2 block(s) comps=1296
+!   pdLL: vrr=705 carried=350x2 hrr=3663 in 4 block(s) comps=864
+!   pdLp: vrr=705 carried=350x2 hrr=2907 in 2 block(s) comps=648
+!   pdLs: vrr=281 carried=140x2 hrr=756 in 2 block(s) comps=216
+!   pdpd: vrr=1381 carried=665x2 hrr=5259 in 1 block(s) comps=972
+!   pdpL: vrr=671 carried=315x2 hrr=2646 in 2 block(s) comps=648
+!   pdpp: vrr=671 carried=315x2 hrr=2079 in 1 block(s) comps=486
+!   pdps: vrr=247 carried=105x2 hrr=567 in 1 block(s) comps=162
+!   pdsd: vrr=705 carried=350x2 hrr=2304 in 1 block(s) comps=324
+!   pdsL: vrr=281 carried=140x2 hrr=1017 in 2 block(s) comps=216
+!   pdsp: vrr=281 carried=140x2 hrr=828 in 1 block(s) comps=162
+!   pdss: vrr=70 carried=35x2 hrr=189 in 1 block(s) comps=54
+!   pLdd: vrr=1175 carried=620x2 hrr=4996 in 2 block(s) comps=1296
+!   pLdL: vrr=630 carried=320x2 hrr=2424 in 4 block(s) comps=864
+!   pLdp: vrr=630 carried=320x2 hrr=1920 in 2 block(s) comps=648
+!   pLds: vrr=270 carried=120x2 hrr=504 in 2 block(s) comps=216
+!   pLLd: vrr=715 carried=400x2 hrr=3824 in 4 block(s) comps=864
 !   pLLL: vrr=355 carried=200x2 hrr=1728 in 8 block(s) comps=576
 !   pLLp: vrr=355 carried=200x2 hrr=1392 in 4 block(s) comps=432
 !   pLLs: vrr=141 carried=80x2 hrr=336 in 4 block(s) comps=144
+!   pLpd: vrr=696 carried=380x2 hrr=2708 in 2 block(s) comps=648
 !   pLpL: vrr=336 carried=180x2 hrr=1260 in 4 block(s) comps=432
 !   pLpp: vrr=336 carried=180x2 hrr=1008 in 2 block(s) comps=324
 !   pLps: vrr=122 carried=60x2 hrr=252 in 2 block(s) comps=108
+!   pLsd: vrr=355 carried=200x2 hrr=1116 in 2 block(s) comps=216
 !   pLsL: vrr=141 carried=80x2 hrr=468 in 4 block(s) comps=144
 !   pLsp: vrr=141 carried=80x2 hrr=384 in 2 block(s) comps=108
 !   pLss: vrr=35 carried=20x2 hrr=84 in 2 block(s) comps=36
+!   ppdd: vrr=1175 carried=620x2 hrr=3902 in 1 block(s) comps=972
+!   ppdL: vrr=630 carried=320x2 hrr=1928 in 2 block(s) comps=648
+!   ppdp: vrr=630 carried=320x2 hrr=1520 in 1 block(s) comps=486
+!   ppds: vrr=270 carried=120x2 hrr=408 in 1 block(s) comps=162
+!   ppLd: vrr=715 carried=400x2 hrr=3013 in 2 block(s) comps=648
 !   ppLL: vrr=355 carried=200x2 hrr=1381 in 4 block(s) comps=432
 !   ppLp: vrr=355 carried=200x2 hrr=1109 in 2 block(s) comps=324
 !   ppLs: vrr=141 carried=80x2 hrr=272 in 2 block(s) comps=108
+!   pppd: vrr=696 carried=380x2 hrr=2126 in 1 block(s) comps=486
 !   pppL: vrr=336 carried=180x2 hrr=1005 in 2 block(s) comps=324
 !   pppp: vrr=336 carried=180x2 hrr=801 in 1 block(s) comps=243
 !   ppps: vrr=122 carried=60x2 hrr=204 in 1 block(s) comps=81
+!   ppsd: vrr=355 carried=200x2 hrr=887 in 1 block(s) comps=162
 !   ppsL: vrr=141 carried=80x2 hrr=376 in 2 block(s) comps=108
 !   ppsp: vrr=141 carried=80x2 hrr=308 in 1 block(s) comps=81
 !   ppss: vrr=35 carried=20x2 hrr=68 in 1 block(s) comps=27
+!   psdd: vrr=521 carried=310x2 hrr=1094 in 1 block(s) comps=324
+!   psdL: vrr=276 carried=160x2 hrr=496 in 2 block(s) comps=216
+!   psdp: vrr=276 carried=160x2 hrr=400 in 1 block(s) comps=162
+!   psds: vrr=116 carried=60x2 hrr=96 in 1 block(s) comps=54
+!   psLd: vrr=315 carried=200x2 hrr=811 in 2 block(s) comps=216
 !   psLL: vrr=155 carried=100x2 hrr=347 in 4 block(s) comps=144
 !   psLp: vrr=155 carried=100x2 hrr=283 in 2 block(s) comps=108
 !   psLs: vrr=61 carried=40x2 hrr=64 in 2 block(s) comps=36
+!   pspd: vrr=306 carried=190x2 hrr=582 in 1 block(s) comps=162
 !   pspL: vrr=146 carried=90x2 hrr=255 in 2 block(s) comps=108
 !   pspp: vrr=146 carried=90x2 hrr=207 in 1 block(s) comps=81
 !   psps: vrr=52 carried=30x2 hrr=48 in 1 block(s) comps=27
+!   pssd: vrr=155 carried=100x2 hrr=229 in 1 block(s) comps=54
 !   pssL: vrr=61 carried=40x2 hrr=92 in 2 block(s) comps=36
 !   pssp: vrr=61 carried=40x2 hrr=76 in 1 block(s) comps=27
 !   psss: vrr=15 carried=10x2 hrr=16 in 1 block(s) comps=9
+!   sddd: vrr=1175 carried=620x2 hrr=3930 in 1 block(s) comps=648
+!   sddL: vrr=630 carried=320x2 hrr=2076 in 2 block(s) comps=432
+!   sddp: vrr=630 carried=320x2 hrr=1608 in 1 block(s) comps=324
+!   sdds: vrr=270 carried=120x2 hrr=468 in 1 block(s) comps=108
+!   sdLd: vrr=715 carried=400x2 hrr=3180 in 2 block(s) comps=432
+!   sdLL: vrr=355 carried=200x2 hrr=1524 in 4 block(s) comps=288
+!   sdLp: vrr=355 carried=200x2 hrr=1212 in 2 block(s) comps=216
+!   sdLs: vrr=141 carried=80x2 hrr=312 in 2 block(s) comps=72
+!   sdpd: vrr=696 carried=380x2 hrr=2202 in 1 block(s) comps=324
+!   sdpL: vrr=336 carried=180x2 hrr=1098 in 2 block(s) comps=216
+!   sdpp: vrr=336 carried=180x2 hrr=864 in 1 block(s) comps=162
+!   sdps: vrr=122 carried=60x2 hrr=234 in 1 block(s) comps=54
+!   sdsd: vrr=355 carried=200x2 hrr=978 in 1 block(s) comps=108
+!   sdsL: vrr=141 carried=80x2 hrr=426 in 2 block(s) comps=72
+!   sdsp: vrr=141 carried=80x2 hrr=348 in 1 block(s) comps=54
+!   sdss: vrr=35 carried=20x2 hrr=78 in 1 block(s) comps=18
+!   sLdd: vrr=521 carried=310x2 hrr=2031 in 2 block(s) comps=432
+!   sLdL: vrr=276 carried=160x2 hrr=966 in 4 block(s) comps=288
+!   sLdp: vrr=276 carried=160x2 hrr=768 in 2 block(s) comps=216
+!   sLds: vrr=116 carried=60x2 hrr=198 in 2 block(s) comps=72
+!   sLLd: vrr=315 carried=200x2 hrr=1569 in 4 block(s) comps=288
 !   sLLL: vrr=155 carried=100x2 hrr=693 in 8 block(s) comps=192
 !   sLLp: vrr=155 carried=100x2 hrr=561 in 4 block(s) comps=144
 !   sLLs: vrr=61 carried=40x2 hrr=132 in 4 block(s) comps=48
+!   sLpd: vrr=306 carried=190x2 hrr=1107 in 2 block(s) comps=216
 !   sLpL: vrr=146 carried=90x2 hrr=504 in 4 block(s) comps=144
 !   sLpp: vrr=146 carried=90x2 hrr=405 in 2 block(s) comps=108
 !   sLps: vrr=52 carried=30x2 hrr=99 in 2 block(s) comps=36
+!   sLsd: vrr=155 carried=100x2 hrr=462 in 2 block(s) comps=72
 !   sLsL: vrr=61 carried=40x2 hrr=189 in 4 block(s) comps=48
 !   sLsp: vrr=61 carried=40x2 hrr=156 in 2 block(s) comps=36
 !   sLss: vrr=15 carried=10x2 hrr=33 in 2 block(s) comps=12
+!   spdd: vrr=521 carried=310x2 hrr=1593 in 1 block(s) comps=324
+!   spdL: vrr=276 carried=160x2 hrr=774 in 2 block(s) comps=216
+!   spdp: vrr=276 carried=160x2 hrr=612 in 1 block(s) comps=162
+!   spds: vrr=116 carried=60x2 hrr=162 in 1 block(s) comps=54
+!   spLd: vrr=315 carried=200x2 hrr=1242 in 2 block(s) comps=216
 !   spLL: vrr=155 carried=100x2 hrr=558 in 4 block(s) comps=144
 !   spLp: vrr=155 carried=100x2 hrr=450 in 2 block(s) comps=108
 !   spLs: vrr=61 carried=40x2 hrr=108 in 2 block(s) comps=36
+!   sppd: vrr=306 carried=190x2 hrr=873 in 1 block(s) comps=162
 !   sppL: vrr=146 carried=90x2 hrr=405 in 2 block(s) comps=108
 !   sppp: vrr=146 carried=90x2 hrr=324 in 1 block(s) comps=81
 !   spps: vrr=52 carried=30x2 hrr=81 in 1 block(s) comps=27
+!   spsd: vrr=155 carried=100x2 hrr=369 in 1 block(s) comps=54
 !   spsL: vrr=61 carried=40x2 hrr=153 in 2 block(s) comps=36
 !   spsp: vrr=61 carried=40x2 hrr=126 in 1 block(s) comps=27
 !   spss: vrr=15 carried=10x2 hrr=27 in 1 block(s) comps=9
+!   ssdd: vrr=198 carried=124x2 hrr=438 in 1 block(s) comps=108
+!   ssdL: vrr=103 carried=64x2 hrr=192 in 2 block(s) comps=72
+!   ssdp: vrr=103 carried=64x2 hrr=156 in 1 block(s) comps=54
+!   ssds: vrr=43 carried=24x2 hrr=36 in 1 block(s) comps=18
+!   ssLd: vrr=115 carried=80x2 hrr=327 in 2 block(s) comps=72
 !   ssLL: vrr=55 carried=40x2 hrr=135 in 4 block(s) comps=48
 !   ssLp: vrr=55 carried=40x2 hrr=111 in 2 block(s) comps=36
 !   ssLs: vrr=21 carried=16x2 hrr=24 in 2 block(s) comps=12
+!   sspd: vrr=112 carried=76x2 hrr=234 in 1 block(s) comps=54
 !   sspL: vrr=52 carried=36x2 hrr=99 in 2 block(s) comps=36
 !   sspp: vrr=52 carried=36x2 hrr=81 in 1 block(s) comps=27
 !   ssps: vrr=18 carried=12x2 hrr=18 in 1 block(s) comps=9
+!   sssd: vrr=55 carried=40x2 hrr=93 in 1 block(s) comps=18
 !   sssL: vrr=21 carried=16x2 hrr=36 in 2 block(s) comps=12
 !   sssp: vrr=21 carried=16x2 hrr=30 in 1 block(s) comps=9
 !   ssss: vrr=5 carried=4x2 hrr=6 in 1 block(s) comps=3
 module cint_hgp_grad_kernels
    use cint_const, only: dp
+   use hgp_grad_dddd_m, only: hgp_grad_dddd
+   use hgp_grad_dddL_m, only: hgp_grad_dddL
+   use hgp_grad_dddp_m, only: hgp_grad_dddp
+   use hgp_grad_ddds_m, only: hgp_grad_ddds
+   use hgp_grad_ddLd_m, only: hgp_grad_ddLd
+   use hgp_grad_ddLL_m, only: hgp_grad_ddLL
+   use hgp_grad_ddLp_m, only: hgp_grad_ddLp
+   use hgp_grad_ddLs_m, only: hgp_grad_ddLs
+   use hgp_grad_ddpd_m, only: hgp_grad_ddpd
+   use hgp_grad_ddpL_m, only: hgp_grad_ddpL
+   use hgp_grad_ddpp_m, only: hgp_grad_ddpp
+   use hgp_grad_ddps_m, only: hgp_grad_ddps
+   use hgp_grad_ddsd_m, only: hgp_grad_ddsd
+   use hgp_grad_ddsL_m, only: hgp_grad_ddsL
+   use hgp_grad_ddsp_m, only: hgp_grad_ddsp
+   use hgp_grad_ddss_m, only: hgp_grad_ddss
+   use hgp_grad_dLdd_m, only: hgp_grad_dLdd
+   use hgp_grad_dLdL_m, only: hgp_grad_dLdL
+   use hgp_grad_dLdp_m, only: hgp_grad_dLdp
+   use hgp_grad_dLds_m, only: hgp_grad_dLds
+   use hgp_grad_dLLd_m, only: hgp_grad_dLLd
+   use hgp_grad_dLLL_m, only: hgp_grad_dLLL
+   use hgp_grad_dLLp_m, only: hgp_grad_dLLp
+   use hgp_grad_dLLs_m, only: hgp_grad_dLLs
+   use hgp_grad_dLpd_m, only: hgp_grad_dLpd
+   use hgp_grad_dLpL_m, only: hgp_grad_dLpL
+   use hgp_grad_dLpp_m, only: hgp_grad_dLpp
+   use hgp_grad_dLps_m, only: hgp_grad_dLps
+   use hgp_grad_dLsd_m, only: hgp_grad_dLsd
+   use hgp_grad_dLsL_m, only: hgp_grad_dLsL
+   use hgp_grad_dLsp_m, only: hgp_grad_dLsp
+   use hgp_grad_dLss_m, only: hgp_grad_dLss
+   use hgp_grad_dpdd_m, only: hgp_grad_dpdd
+   use hgp_grad_dpdL_m, only: hgp_grad_dpdL
+   use hgp_grad_dpdp_m, only: hgp_grad_dpdp
+   use hgp_grad_dpds_m, only: hgp_grad_dpds
+   use hgp_grad_dpLd_m, only: hgp_grad_dpLd
+   use hgp_grad_dpLL_m, only: hgp_grad_dpLL
+   use hgp_grad_dpLp_m, only: hgp_grad_dpLp
+   use hgp_grad_dpLs_m, only: hgp_grad_dpLs
+   use hgp_grad_dppd_m, only: hgp_grad_dppd
+   use hgp_grad_dppL_m, only: hgp_grad_dppL
+   use hgp_grad_dppp_m, only: hgp_grad_dppp
+   use hgp_grad_dpps_m, only: hgp_grad_dpps
+   use hgp_grad_dpsd_m, only: hgp_grad_dpsd
+   use hgp_grad_dpsL_m, only: hgp_grad_dpsL
+   use hgp_grad_dpsp_m, only: hgp_grad_dpsp
+   use hgp_grad_dpss_m, only: hgp_grad_dpss
+   use hgp_grad_dsdd_m, only: hgp_grad_dsdd
+   use hgp_grad_dsdL_m, only: hgp_grad_dsdL
+   use hgp_grad_dsdp_m, only: hgp_grad_dsdp
+   use hgp_grad_dsds_m, only: hgp_grad_dsds
+   use hgp_grad_dsLd_m, only: hgp_grad_dsLd
+   use hgp_grad_dsLL_m, only: hgp_grad_dsLL
+   use hgp_grad_dsLp_m, only: hgp_grad_dsLp
+   use hgp_grad_dsLs_m, only: hgp_grad_dsLs
+   use hgp_grad_dspd_m, only: hgp_grad_dspd
+   use hgp_grad_dspL_m, only: hgp_grad_dspL
+   use hgp_grad_dspp_m, only: hgp_grad_dspp
+   use hgp_grad_dsps_m, only: hgp_grad_dsps
+   use hgp_grad_dssd_m, only: hgp_grad_dssd
+   use hgp_grad_dssL_m, only: hgp_grad_dssL
+   use hgp_grad_dssp_m, only: hgp_grad_dssp
+   use hgp_grad_dsss_m, only: hgp_grad_dsss
+   use hgp_grad_Lddd_m, only: hgp_grad_Lddd
+   use hgp_grad_LddL_m, only: hgp_grad_LddL
+   use hgp_grad_Lddp_m, only: hgp_grad_Lddp
+   use hgp_grad_Ldds_m, only: hgp_grad_Ldds
+   use hgp_grad_LdLd_m, only: hgp_grad_LdLd
+   use hgp_grad_LdLL_m, only: hgp_grad_LdLL
+   use hgp_grad_LdLp_m, only: hgp_grad_LdLp
+   use hgp_grad_LdLs_m, only: hgp_grad_LdLs
+   use hgp_grad_Ldpd_m, only: hgp_grad_Ldpd
+   use hgp_grad_LdpL_m, only: hgp_grad_LdpL
+   use hgp_grad_Ldpp_m, only: hgp_grad_Ldpp
+   use hgp_grad_Ldps_m, only: hgp_grad_Ldps
+   use hgp_grad_Ldsd_m, only: hgp_grad_Ldsd
+   use hgp_grad_LdsL_m, only: hgp_grad_LdsL
+   use hgp_grad_Ldsp_m, only: hgp_grad_Ldsp
+   use hgp_grad_Ldss_m, only: hgp_grad_Ldss
+   use hgp_grad_LLdd_m, only: hgp_grad_LLdd
+   use hgp_grad_LLdL_m, only: hgp_grad_LLdL
+   use hgp_grad_LLdp_m, only: hgp_grad_LLdp
+   use hgp_grad_LLds_m, only: hgp_grad_LLds
+   use hgp_grad_LLLd_m, only: hgp_grad_LLLd
    use hgp_grad_LLLL_m, only: hgp_grad_LLLL
    use hgp_grad_LLLp_m, only: hgp_grad_LLLp
    use hgp_grad_LLLs_m, only: hgp_grad_LLLs
+   use hgp_grad_LLpd_m, only: hgp_grad_LLpd
    use hgp_grad_LLpL_m, only: hgp_grad_LLpL
    use hgp_grad_LLpp_m, only: hgp_grad_LLpp
    use hgp_grad_LLps_m, only: hgp_grad_LLps
+   use hgp_grad_LLsd_m, only: hgp_grad_LLsd
    use hgp_grad_LLsL_m, only: hgp_grad_LLsL
    use hgp_grad_LLsp_m, only: hgp_grad_LLsp
    use hgp_grad_LLss_m, only: hgp_grad_LLss
+   use hgp_grad_Lpdd_m, only: hgp_grad_Lpdd
+   use hgp_grad_LpdL_m, only: hgp_grad_LpdL
+   use hgp_grad_Lpdp_m, only: hgp_grad_Lpdp
+   use hgp_grad_Lpds_m, only: hgp_grad_Lpds
+   use hgp_grad_LpLd_m, only: hgp_grad_LpLd
    use hgp_grad_LpLL_m, only: hgp_grad_LpLL
    use hgp_grad_LpLp_m, only: hgp_grad_LpLp
    use hgp_grad_LpLs_m, only: hgp_grad_LpLs
+   use hgp_grad_Lppd_m, only: hgp_grad_Lppd
    use hgp_grad_LppL_m, only: hgp_grad_LppL
    use hgp_grad_Lppp_m, only: hgp_grad_Lppp
    use hgp_grad_Lpps_m, only: hgp_grad_Lpps
+   use hgp_grad_Lpsd_m, only: hgp_grad_Lpsd
    use hgp_grad_LpsL_m, only: hgp_grad_LpsL
    use hgp_grad_Lpsp_m, only: hgp_grad_Lpsp
    use hgp_grad_Lpss_m, only: hgp_grad_Lpss
+   use hgp_grad_Lsdd_m, only: hgp_grad_Lsdd
+   use hgp_grad_LsdL_m, only: hgp_grad_LsdL
+   use hgp_grad_Lsdp_m, only: hgp_grad_Lsdp
+   use hgp_grad_Lsds_m, only: hgp_grad_Lsds
+   use hgp_grad_LsLd_m, only: hgp_grad_LsLd
    use hgp_grad_LsLL_m, only: hgp_grad_LsLL
    use hgp_grad_LsLp_m, only: hgp_grad_LsLp
    use hgp_grad_LsLs_m, only: hgp_grad_LsLs
+   use hgp_grad_Lspd_m, only: hgp_grad_Lspd
    use hgp_grad_LspL_m, only: hgp_grad_LspL
    use hgp_grad_Lspp_m, only: hgp_grad_Lspp
    use hgp_grad_Lsps_m, only: hgp_grad_Lsps
+   use hgp_grad_Lssd_m, only: hgp_grad_Lssd
    use hgp_grad_LssL_m, only: hgp_grad_LssL
    use hgp_grad_Lssp_m, only: hgp_grad_Lssp
    use hgp_grad_Lsss_m, only: hgp_grad_Lsss
+   use hgp_grad_pddd_m, only: hgp_grad_pddd
+   use hgp_grad_pddL_m, only: hgp_grad_pddL
+   use hgp_grad_pddp_m, only: hgp_grad_pddp
+   use hgp_grad_pdds_m, only: hgp_grad_pdds
+   use hgp_grad_pdLd_m, only: hgp_grad_pdLd
+   use hgp_grad_pdLL_m, only: hgp_grad_pdLL
+   use hgp_grad_pdLp_m, only: hgp_grad_pdLp
+   use hgp_grad_pdLs_m, only: hgp_grad_pdLs
+   use hgp_grad_pdpd_m, only: hgp_grad_pdpd
+   use hgp_grad_pdpL_m, only: hgp_grad_pdpL
+   use hgp_grad_pdpp_m, only: hgp_grad_pdpp
+   use hgp_grad_pdps_m, only: hgp_grad_pdps
+   use hgp_grad_pdsd_m, only: hgp_grad_pdsd
+   use hgp_grad_pdsL_m, only: hgp_grad_pdsL
+   use hgp_grad_pdsp_m, only: hgp_grad_pdsp
+   use hgp_grad_pdss_m, only: hgp_grad_pdss
+   use hgp_grad_pLdd_m, only: hgp_grad_pLdd
+   use hgp_grad_pLdL_m, only: hgp_grad_pLdL
+   use hgp_grad_pLdp_m, only: hgp_grad_pLdp
+   use hgp_grad_pLds_m, only: hgp_grad_pLds
+   use hgp_grad_pLLd_m, only: hgp_grad_pLLd
    use hgp_grad_pLLL_m, only: hgp_grad_pLLL
    use hgp_grad_pLLp_m, only: hgp_grad_pLLp
    use hgp_grad_pLLs_m, only: hgp_grad_pLLs
+   use hgp_grad_pLpd_m, only: hgp_grad_pLpd
    use hgp_grad_pLpL_m, only: hgp_grad_pLpL
    use hgp_grad_pLpp_m, only: hgp_grad_pLpp
    use hgp_grad_pLps_m, only: hgp_grad_pLps
+   use hgp_grad_pLsd_m, only: hgp_grad_pLsd
    use hgp_grad_pLsL_m, only: hgp_grad_pLsL
    use hgp_grad_pLsp_m, only: hgp_grad_pLsp
    use hgp_grad_pLss_m, only: hgp_grad_pLss
+   use hgp_grad_ppdd_m, only: hgp_grad_ppdd
+   use hgp_grad_ppdL_m, only: hgp_grad_ppdL
+   use hgp_grad_ppdp_m, only: hgp_grad_ppdp
+   use hgp_grad_ppds_m, only: hgp_grad_ppds
+   use hgp_grad_ppLd_m, only: hgp_grad_ppLd
    use hgp_grad_ppLL_m, only: hgp_grad_ppLL
    use hgp_grad_ppLp_m, only: hgp_grad_ppLp
    use hgp_grad_ppLs_m, only: hgp_grad_ppLs
+   use hgp_grad_pppd_m, only: hgp_grad_pppd
    use hgp_grad_pppL_m, only: hgp_grad_pppL
    use hgp_grad_pppp_m, only: hgp_grad_pppp
    use hgp_grad_ppps_m, only: hgp_grad_ppps
+   use hgp_grad_ppsd_m, only: hgp_grad_ppsd
    use hgp_grad_ppsL_m, only: hgp_grad_ppsL
    use hgp_grad_ppsp_m, only: hgp_grad_ppsp
    use hgp_grad_ppss_m, only: hgp_grad_ppss
+   use hgp_grad_psdd_m, only: hgp_grad_psdd
+   use hgp_grad_psdL_m, only: hgp_grad_psdL
+   use hgp_grad_psdp_m, only: hgp_grad_psdp
+   use hgp_grad_psds_m, only: hgp_grad_psds
+   use hgp_grad_psLd_m, only: hgp_grad_psLd
    use hgp_grad_psLL_m, only: hgp_grad_psLL
    use hgp_grad_psLp_m, only: hgp_grad_psLp
    use hgp_grad_psLs_m, only: hgp_grad_psLs
+   use hgp_grad_pspd_m, only: hgp_grad_pspd
    use hgp_grad_pspL_m, only: hgp_grad_pspL
    use hgp_grad_pspp_m, only: hgp_grad_pspp
    use hgp_grad_psps_m, only: hgp_grad_psps
+   use hgp_grad_pssd_m, only: hgp_grad_pssd
    use hgp_grad_pssL_m, only: hgp_grad_pssL
    use hgp_grad_pssp_m, only: hgp_grad_pssp
    use hgp_grad_psss_m, only: hgp_grad_psss
+   use hgp_grad_sddd_m, only: hgp_grad_sddd
+   use hgp_grad_sddL_m, only: hgp_grad_sddL
+   use hgp_grad_sddp_m, only: hgp_grad_sddp
+   use hgp_grad_sdds_m, only: hgp_grad_sdds
+   use hgp_grad_sdLd_m, only: hgp_grad_sdLd
+   use hgp_grad_sdLL_m, only: hgp_grad_sdLL
+   use hgp_grad_sdLp_m, only: hgp_grad_sdLp
+   use hgp_grad_sdLs_m, only: hgp_grad_sdLs
+   use hgp_grad_sdpd_m, only: hgp_grad_sdpd
+   use hgp_grad_sdpL_m, only: hgp_grad_sdpL
+   use hgp_grad_sdpp_m, only: hgp_grad_sdpp
+   use hgp_grad_sdps_m, only: hgp_grad_sdps
+   use hgp_grad_sdsd_m, only: hgp_grad_sdsd
+   use hgp_grad_sdsL_m, only: hgp_grad_sdsL
+   use hgp_grad_sdsp_m, only: hgp_grad_sdsp
+   use hgp_grad_sdss_m, only: hgp_grad_sdss
+   use hgp_grad_sLdd_m, only: hgp_grad_sLdd
+   use hgp_grad_sLdL_m, only: hgp_grad_sLdL
+   use hgp_grad_sLdp_m, only: hgp_grad_sLdp
+   use hgp_grad_sLds_m, only: hgp_grad_sLds
+   use hgp_grad_sLLd_m, only: hgp_grad_sLLd
    use hgp_grad_sLLL_m, only: hgp_grad_sLLL
    use hgp_grad_sLLp_m, only: hgp_grad_sLLp
    use hgp_grad_sLLs_m, only: hgp_grad_sLLs
+   use hgp_grad_sLpd_m, only: hgp_grad_sLpd
    use hgp_grad_sLpL_m, only: hgp_grad_sLpL
    use hgp_grad_sLpp_m, only: hgp_grad_sLpp
    use hgp_grad_sLps_m, only: hgp_grad_sLps
+   use hgp_grad_sLsd_m, only: hgp_grad_sLsd
    use hgp_grad_sLsL_m, only: hgp_grad_sLsL
    use hgp_grad_sLsp_m, only: hgp_grad_sLsp
    use hgp_grad_sLss_m, only: hgp_grad_sLss
+   use hgp_grad_spdd_m, only: hgp_grad_spdd
+   use hgp_grad_spdL_m, only: hgp_grad_spdL
+   use hgp_grad_spdp_m, only: hgp_grad_spdp
+   use hgp_grad_spds_m, only: hgp_grad_spds
+   use hgp_grad_spLd_m, only: hgp_grad_spLd
    use hgp_grad_spLL_m, only: hgp_grad_spLL
    use hgp_grad_spLp_m, only: hgp_grad_spLp
    use hgp_grad_spLs_m, only: hgp_grad_spLs
+   use hgp_grad_sppd_m, only: hgp_grad_sppd
    use hgp_grad_sppL_m, only: hgp_grad_sppL
    use hgp_grad_sppp_m, only: hgp_grad_sppp
    use hgp_grad_spps_m, only: hgp_grad_spps
+   use hgp_grad_spsd_m, only: hgp_grad_spsd
    use hgp_grad_spsL_m, only: hgp_grad_spsL
    use hgp_grad_spsp_m, only: hgp_grad_spsp
    use hgp_grad_spss_m, only: hgp_grad_spss
+   use hgp_grad_ssdd_m, only: hgp_grad_ssdd
+   use hgp_grad_ssdL_m, only: hgp_grad_ssdL
+   use hgp_grad_ssdp_m, only: hgp_grad_ssdp
+   use hgp_grad_ssds_m, only: hgp_grad_ssds
+   use hgp_grad_ssLd_m, only: hgp_grad_ssLd
    use hgp_grad_ssLL_m, only: hgp_grad_ssLL
    use hgp_grad_ssLp_m, only: hgp_grad_ssLp
    use hgp_grad_ssLs_m, only: hgp_grad_ssLs
+   use hgp_grad_sspd_m, only: hgp_grad_sspd
    use hgp_grad_sspL_m, only: hgp_grad_sspL
    use hgp_grad_sspp_m, only: hgp_grad_sspp
    use hgp_grad_ssps_m, only: hgp_grad_ssps
+   use hgp_grad_sssd_m, only: hgp_grad_sssd
    use hgp_grad_sssL_m, only: hgp_grad_sssL
    use hgp_grad_sssp_m, only: hgp_grad_sssp
    use hgp_grad_ssss_m, only: hgp_grad_ssss
    implicit none
    private
    public :: hgp_grad_kernel, hgp_grad_has_class
-   integer, parameter, public :: HGP_LMAX = 1
+   integer, parameter, public :: HGP_LMAX = 2
    ! Kind ranks, the digits of the class code: s, p, L, d.
    integer, parameter, public :: HGP_KIND_S = 0, HGP_KIND_P = 1, &
                                  HGP_KIND_L = 2, HGP_KIND_D = 3
@@ -190,13 +540,28 @@ contains
    pure logical function hgp_grad_has_class(code) result(yes)
       integer, intent(in) :: code
       select case (code)
-      case (2222, 2221, 2220, 2212, 2211, 2210, 2202, 2201, 2200, 2122, 2121, 2120, &
-            2112, 2111, 2110, 2102, 2101, 2100, 2022, 2021, 2020, 2012, 2011, 2010, &
-            2002, 2001, 2000, 1222, 1221, 1220, 1212, 1211, 1210, 1202, 1201, 1200, &
-            1122, 1121, 1120, 1112, 1111, 1110, 1102, 1101, 1100, 1022, 1021, 1020, &
-            1012, 1011, 1010, 1002, 1001, 1000, 222, 221, 220, 212, 211, 210, &
-            202, 201, 200, 122, 121, 120, 112, 111, 110, 102, 101, 100, &
-            22, 21, 20, 12, 11, 10, 2, 1, 0)
+      case (3333, 3332, 3331, 3330, 3323, 3322, 3321, 3320, 3313, 3312, 3311, 3310, &
+            3303, 3302, 3301, 3300, 3233, 3232, 3231, 3230, 3223, 3222, 3221, 3220, &
+            3213, 3212, 3211, 3210, 3203, 3202, 3201, 3200, 3133, 3132, 3131, 3130, &
+            3123, 3122, 3121, 3120, 3113, 3112, 3111, 3110, 3103, 3102, 3101, 3100, &
+            3033, 3032, 3031, 3030, 3023, 3022, 3021, 3020, 3013, 3012, 3011, 3010, &
+            3003, 3002, 3001, 3000, 2333, 2332, 2331, 2330, 2323, 2322, 2321, 2320, &
+            2313, 2312, 2311, 2310, 2303, 2302, 2301, 2300, 2233, 2232, 2231, 2230, &
+            2223, 2222, 2221, 2220, 2213, 2212, 2211, 2210, 2203, 2202, 2201, 2200, &
+            2133, 2132, 2131, 2130, 2123, 2122, 2121, 2120, 2113, 2112, 2111, 2110, &
+            2103, 2102, 2101, 2100, 2033, 2032, 2031, 2030, 2023, 2022, 2021, 2020, &
+            2013, 2012, 2011, 2010, 2003, 2002, 2001, 2000, 1333, 1332, 1331, 1330, &
+            1323, 1322, 1321, 1320, 1313, 1312, 1311, 1310, 1303, 1302, 1301, 1300, &
+            1233, 1232, 1231, 1230, 1223, 1222, 1221, 1220, 1213, 1212, 1211, 1210, &
+            1203, 1202, 1201, 1200, 1133, 1132, 1131, 1130, 1123, 1122, 1121, 1120, &
+            1113, 1112, 1111, 1110, 1103, 1102, 1101, 1100, 1033, 1032, 1031, 1030, &
+            1023, 1022, 1021, 1020, 1013, 1012, 1011, 1010, 1003, 1002, 1001, 1000, &
+            333, 332, 331, 330, 323, 322, 321, 320, 313, 312, 311, 310, &
+            303, 302, 301, 300, 233, 232, 231, 230, 223, 222, 221, 220, &
+            213, 212, 211, 210, 203, 202, 201, 200, 133, 132, 131, 130, &
+            123, 122, 121, 120, 113, 112, 111, 110, 103, 102, 101, 100, &
+            33, 32, 31, 30, 23, 22, 21, 20, 13, 12, 11, 10, &
+            3, 2, 1, 0)
          yes = .true.
       case default
          yes = .false.
@@ -211,6 +576,261 @@ contains
       real(dp), intent(out) :: res(*)
       logical,  intent(out) :: any
       select case (code)
+      case (3333)
+         call hgp_grad_dddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3332)
+         call hgp_grad_dddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3331)
+         call hgp_grad_dddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3330)
+         call hgp_grad_ddds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3323)
+         call hgp_grad_ddLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3322)
+         call hgp_grad_ddLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3321)
+         call hgp_grad_ddLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3320)
+         call hgp_grad_ddLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3313)
+         call hgp_grad_ddpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3312)
+         call hgp_grad_ddpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3311)
+         call hgp_grad_ddpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3310)
+         call hgp_grad_ddps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3303)
+         call hgp_grad_ddsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3302)
+         call hgp_grad_ddsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3301)
+         call hgp_grad_ddsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3300)
+         call hgp_grad_ddss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3233)
+         call hgp_grad_dLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3232)
+         call hgp_grad_dLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3231)
+         call hgp_grad_dLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3230)
+         call hgp_grad_dLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3223)
+         call hgp_grad_dLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3222)
+         call hgp_grad_dLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3221)
+         call hgp_grad_dLLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3220)
+         call hgp_grad_dLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3213)
+         call hgp_grad_dLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3212)
+         call hgp_grad_dLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3211)
+         call hgp_grad_dLpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3210)
+         call hgp_grad_dLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3203)
+         call hgp_grad_dLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3202)
+         call hgp_grad_dLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3201)
+         call hgp_grad_dLsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3200)
+         call hgp_grad_dLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3133)
+         call hgp_grad_dpdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3132)
+         call hgp_grad_dpdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3131)
+         call hgp_grad_dpdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3130)
+         call hgp_grad_dpds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3123)
+         call hgp_grad_dpLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3122)
+         call hgp_grad_dpLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3121)
+         call hgp_grad_dpLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3120)
+         call hgp_grad_dpLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3113)
+         call hgp_grad_dppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3112)
+         call hgp_grad_dppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3111)
+         call hgp_grad_dppp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3110)
+         call hgp_grad_dpps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3103)
+         call hgp_grad_dpsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3102)
+         call hgp_grad_dpsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3101)
+         call hgp_grad_dpsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3100)
+         call hgp_grad_dpss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3033)
+         call hgp_grad_dsdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3032)
+         call hgp_grad_dsdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3031)
+         call hgp_grad_dsdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3030)
+         call hgp_grad_dsds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3023)
+         call hgp_grad_dsLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3022)
+         call hgp_grad_dsLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3021)
+         call hgp_grad_dsLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3020)
+         call hgp_grad_dsLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3013)
+         call hgp_grad_dspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3012)
+         call hgp_grad_dspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3011)
+         call hgp_grad_dspp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3010)
+         call hgp_grad_dsps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3003)
+         call hgp_grad_dssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3002)
+         call hgp_grad_dssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3001)
+         call hgp_grad_dssp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3000)
+         call hgp_grad_dsss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2333)
+         call hgp_grad_Lddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2332)
+         call hgp_grad_LddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2331)
+         call hgp_grad_Lddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2330)
+         call hgp_grad_Ldds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2323)
+         call hgp_grad_LdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2322)
+         call hgp_grad_LdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2321)
+         call hgp_grad_LdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2320)
+         call hgp_grad_LdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2313)
+         call hgp_grad_Ldpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2312)
+         call hgp_grad_LdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2311)
+         call hgp_grad_Ldpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2310)
+         call hgp_grad_Ldps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2303)
+         call hgp_grad_Ldsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2302)
+         call hgp_grad_LdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2301)
+         call hgp_grad_Ldsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2300)
+         call hgp_grad_Ldss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2233)
+         call hgp_grad_LLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2232)
+         call hgp_grad_LLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2231)
+         call hgp_grad_LLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2230)
+         call hgp_grad_LLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2223)
+         call hgp_grad_LLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (2222)
          call hgp_grad_LLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -219,6 +839,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (2220)
          call hgp_grad_LLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2213)
+         call hgp_grad_LLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (2212)
          call hgp_grad_LLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -229,6 +852,9 @@ contains
       case (2210)
          call hgp_grad_LLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (2203)
+         call hgp_grad_LLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (2202)
          call hgp_grad_LLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -237,6 +863,21 @@ contains
                              ab, cd, cutoff, res, any)
       case (2200)
          call hgp_grad_LLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2133)
+         call hgp_grad_Lpdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2132)
+         call hgp_grad_LpdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2131)
+         call hgp_grad_Lpdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2130)
+         call hgp_grad_Lpds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2123)
+         call hgp_grad_LpLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (2122)
          call hgp_grad_LpLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -247,6 +888,9 @@ contains
       case (2120)
          call hgp_grad_LpLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (2113)
+         call hgp_grad_Lppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (2112)
          call hgp_grad_LppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -255,6 +899,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (2110)
          call hgp_grad_Lpps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2103)
+         call hgp_grad_Lpsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (2102)
          call hgp_grad_LpsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -265,6 +912,21 @@ contains
       case (2100)
          call hgp_grad_Lpss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (2033)
+         call hgp_grad_Lsdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2032)
+         call hgp_grad_LsdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2031)
+         call hgp_grad_Lsdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2030)
+         call hgp_grad_Lsds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2023)
+         call hgp_grad_LsLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (2022)
          call hgp_grad_LsLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -273,6 +935,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (2020)
          call hgp_grad_LsLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (2013)
+         call hgp_grad_Lspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (2012)
          call hgp_grad_LspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -283,6 +948,9 @@ contains
       case (2010)
          call hgp_grad_Lsps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (2003)
+         call hgp_grad_Lssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (2002)
          call hgp_grad_LssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -291,6 +959,69 @@ contains
                              ab, cd, cutoff, res, any)
       case (2000)
          call hgp_grad_Lsss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1333)
+         call hgp_grad_pddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1332)
+         call hgp_grad_pddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1331)
+         call hgp_grad_pddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1330)
+         call hgp_grad_pdds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1323)
+         call hgp_grad_pdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1322)
+         call hgp_grad_pdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1321)
+         call hgp_grad_pdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1320)
+         call hgp_grad_pdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1313)
+         call hgp_grad_pdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1312)
+         call hgp_grad_pdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1311)
+         call hgp_grad_pdpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1310)
+         call hgp_grad_pdps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1303)
+         call hgp_grad_pdsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1302)
+         call hgp_grad_pdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1301)
+         call hgp_grad_pdsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1300)
+         call hgp_grad_pdss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1233)
+         call hgp_grad_pLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1232)
+         call hgp_grad_pLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1231)
+         call hgp_grad_pLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1230)
+         call hgp_grad_pLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1223)
+         call hgp_grad_pLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (1222)
          call hgp_grad_pLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -301,6 +1032,9 @@ contains
       case (1220)
          call hgp_grad_pLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (1213)
+         call hgp_grad_pLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (1212)
          call hgp_grad_pLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -309,6 +1043,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (1210)
          call hgp_grad_pLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1203)
+         call hgp_grad_pLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (1202)
          call hgp_grad_pLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -319,6 +1056,21 @@ contains
       case (1200)
          call hgp_grad_pLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (1133)
+         call hgp_grad_ppdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1132)
+         call hgp_grad_ppdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1131)
+         call hgp_grad_ppdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1130)
+         call hgp_grad_ppds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1123)
+         call hgp_grad_ppLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (1122)
          call hgp_grad_ppLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -327,6 +1079,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (1120)
          call hgp_grad_ppLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1113)
+         call hgp_grad_pppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (1112)
          call hgp_grad_pppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -337,6 +1092,9 @@ contains
       case (1110)
          call hgp_grad_ppps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (1103)
+         call hgp_grad_ppsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (1102)
          call hgp_grad_ppsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -345,6 +1103,21 @@ contains
                              ab, cd, cutoff, res, any)
       case (1100)
          call hgp_grad_ppss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1033)
+         call hgp_grad_psdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1032)
+         call hgp_grad_psdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1031)
+         call hgp_grad_psdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1030)
+         call hgp_grad_psds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1023)
+         call hgp_grad_psLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (1022)
          call hgp_grad_psLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -355,6 +1128,9 @@ contains
       case (1020)
          call hgp_grad_psLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (1013)
+         call hgp_grad_pspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (1012)
          call hgp_grad_pspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -363,6 +1139,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (1010)
          call hgp_grad_psps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (1003)
+         call hgp_grad_pssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (1002)
          call hgp_grad_pssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -373,6 +1152,69 @@ contains
       case (1000)
          call hgp_grad_psss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (333)
+         call hgp_grad_sddd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (332)
+         call hgp_grad_sddL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (331)
+         call hgp_grad_sddp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (330)
+         call hgp_grad_sdds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (323)
+         call hgp_grad_sdLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (322)
+         call hgp_grad_sdLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (321)
+         call hgp_grad_sdLp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (320)
+         call hgp_grad_sdLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (313)
+         call hgp_grad_sdpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (312)
+         call hgp_grad_sdpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (311)
+         call hgp_grad_sdpp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (310)
+         call hgp_grad_sdps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (303)
+         call hgp_grad_sdsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (302)
+         call hgp_grad_sdsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (301)
+         call hgp_grad_sdsp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (300)
+         call hgp_grad_sdss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (233)
+         call hgp_grad_sLdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (232)
+         call hgp_grad_sLdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (231)
+         call hgp_grad_sLdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (230)
+         call hgp_grad_sLds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (223)
+         call hgp_grad_sLLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (222)
          call hgp_grad_sLLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -381,6 +1223,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (220)
          call hgp_grad_sLLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (213)
+         call hgp_grad_sLpd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (212)
          call hgp_grad_sLpL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -391,6 +1236,9 @@ contains
       case (210)
          call hgp_grad_sLps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (203)
+         call hgp_grad_sLsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (202)
          call hgp_grad_sLsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -399,6 +1247,21 @@ contains
                              ab, cd, cutoff, res, any)
       case (200)
          call hgp_grad_sLss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (133)
+         call hgp_grad_spdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (132)
+         call hgp_grad_spdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (131)
+         call hgp_grad_spdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (130)
+         call hgp_grad_spds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (123)
+         call hgp_grad_spLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (122)
          call hgp_grad_spLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -409,6 +1272,9 @@ contains
       case (120)
          call hgp_grad_spLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (113)
+         call hgp_grad_sppd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (112)
          call hgp_grad_sppL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -417,6 +1283,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (110)
          call hgp_grad_spps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (103)
+         call hgp_grad_spsd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (102)
          call hgp_grad_spsL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
@@ -427,6 +1296,21 @@ contains
       case (100)
          call hgp_grad_spss(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (33)
+         call hgp_grad_ssdd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (32)
+         call hgp_grad_ssdL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (31)
+         call hgp_grad_ssdp(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (30)
+         call hgp_grad_ssds(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (23)
+         call hgp_grad_ssLd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (22)
          call hgp_grad_ssLL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -436,6 +1320,9 @@ contains
       case (20)
          call hgp_grad_ssLs(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
+      case (13)
+         call hgp_grad_sspd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
       case (12)
          call hgp_grad_sspL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
@@ -444,6 +1331,9 @@ contains
                              ab, cd, cutoff, res, any)
       case (10)
          call hgp_grad_ssps(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
+                             ab, cd, cutoff, res, any)
+      case (3)
+         call hgp_grad_sssd(nbra, ncb, bp, kab, nket, nck, kp, kcd, &
                              ab, cd, cutoff, res, any)
       case (2)
          call hgp_grad_sssL(nbra, ncb, bp, kab, nket, nck, kp, kcd, &

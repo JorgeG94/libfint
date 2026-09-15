@@ -165,6 +165,30 @@ McMurchie-Davidson reference before any Fortran exists (183 values through
 `hgp_grad_check` holds the built path to libfint's own `int2e_ip1`:
 1,354,578 values, worst scaled difference 5.9e-14.
 
+**The d gradient classes are generated**, all 256 ordered ones: 793k lines,
+`hgp_grad_check` passing over 3,972,501 values at 3.9e-13. That is what
+makes a gradient hybrid worth routing. On a water cluster with a d shell
+on every oxygen, 384 functions, four threads (LTO off, so compare within
+the run):
+
+| path | s per gradient build | ratio to Rys |
+|---|---|---|
+| Rys | 47.66 | 1.00x |
+| rotated-axis, d on Rys | 32.95 | 1.45x |
+| HGP, covering d | 37.44 | 1.27x |
+| hybrid | 31.52 | 1.51x |
+
+The hybrid is ahead of either path alone, which it was not before these
+classes existed -- rotated-axis for s, p and L, HGP for anything touching
+d. The margin over plain rotated-axis is small here because this basis has
+one uncontracted d per oxygen; the energy evidence says it widens with a
+properly polarised, contracted basis.
+
+**Build cost, which is a real constraint.** 793k lines of generated
+Fortran compiles, but the link-time optimisation step does not fit in
+memory on a 4-core box and has to be turned off (`-DWITH_FORTRAN_LTO=OFF`).
+Anyone generating this set should know that before starting.
+
 Cost, against the rotated-axis gradients for the same classes, in
 arithmetic terms:
 
