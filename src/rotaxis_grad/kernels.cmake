@@ -3,232 +3,82 @@ set(cintRotaxisGradSrc
   rotaxis_grad/rotaxis_grad_ssss.f90
   rotaxis_grad/rotaxis_grad_sssp.f90
   rotaxis_grad/rotaxis_grad_sssL.f90
-  rotaxis_grad/rotaxis_grad_sssd.f90
   rotaxis_grad/rotaxis_grad_ssps.f90
   rotaxis_grad/rotaxis_grad_sspp.f90
   rotaxis_grad/rotaxis_grad_sspL.f90
-  rotaxis_grad/rotaxis_grad_sspd.f90
   rotaxis_grad/rotaxis_grad_ssLs.f90
   rotaxis_grad/rotaxis_grad_ssLp.f90
   rotaxis_grad/rotaxis_grad_ssLL.f90
-  rotaxis_grad/rotaxis_grad_ssLd.f90
-  rotaxis_grad/rotaxis_grad_ssds.f90
-  rotaxis_grad/rotaxis_grad_ssdp.f90
-  rotaxis_grad/rotaxis_grad_ssdL.f90
-  rotaxis_grad/rotaxis_grad_ssdd.f90
   rotaxis_grad/rotaxis_grad_spss.f90
   rotaxis_grad/rotaxis_grad_spsp.f90
   rotaxis_grad/rotaxis_grad_spsL.f90
-  rotaxis_grad/rotaxis_grad_spsd.f90
   rotaxis_grad/rotaxis_grad_spps.f90
   rotaxis_grad/rotaxis_grad_sppp.f90
   rotaxis_grad/rotaxis_grad_sppL.f90
-  rotaxis_grad/rotaxis_grad_sppd.f90
   rotaxis_grad/rotaxis_grad_spLs.f90
   rotaxis_grad/rotaxis_grad_spLp.f90
   rotaxis_grad/rotaxis_grad_spLL.f90
-  rotaxis_grad/rotaxis_grad_spLd.f90
-  rotaxis_grad/rotaxis_grad_spds.f90
-  rotaxis_grad/rotaxis_grad_spdp.f90
-  rotaxis_grad/rotaxis_grad_spdL.f90
-  rotaxis_grad/rotaxis_grad_spdd.f90
   rotaxis_grad/rotaxis_grad_sLss.f90
   rotaxis_grad/rotaxis_grad_sLsp.f90
   rotaxis_grad/rotaxis_grad_sLsL.f90
-  rotaxis_grad/rotaxis_grad_sLsd.f90
   rotaxis_grad/rotaxis_grad_sLps.f90
   rotaxis_grad/rotaxis_grad_sLpp.f90
   rotaxis_grad/rotaxis_grad_sLpL.f90
-  rotaxis_grad/rotaxis_grad_sLpd.f90
   rotaxis_grad/rotaxis_grad_sLLs.f90
   rotaxis_grad/rotaxis_grad_sLLp.f90
   rotaxis_grad/rotaxis_grad_sLLL.f90
-  rotaxis_grad/rotaxis_grad_sLLd.f90
-  rotaxis_grad/rotaxis_grad_sLds.f90
-  rotaxis_grad/rotaxis_grad_sLdp.f90
-  rotaxis_grad/rotaxis_grad_sLdL.f90
-  rotaxis_grad/rotaxis_grad_sLdd.f90
-  rotaxis_grad/rotaxis_grad_sdss.f90
-  rotaxis_grad/rotaxis_grad_sdsp.f90
-  rotaxis_grad/rotaxis_grad_sdsL.f90
-  rotaxis_grad/rotaxis_grad_sdsd.f90
-  rotaxis_grad/rotaxis_grad_sdps.f90
-  rotaxis_grad/rotaxis_grad_sdpp.f90
-  rotaxis_grad/rotaxis_grad_sdpL.f90
-  rotaxis_grad/rotaxis_grad_sdpd.f90
-  rotaxis_grad/rotaxis_grad_sdLs.f90
-  rotaxis_grad/rotaxis_grad_sdLp.f90
-  rotaxis_grad/rotaxis_grad_sdLL.f90
-  rotaxis_grad/rotaxis_grad_sdLd.f90
-  rotaxis_grad/rotaxis_grad_sdds.f90
-  rotaxis_grad/rotaxis_grad_sddp.f90
-  rotaxis_grad/rotaxis_grad_sddL.f90
-  rotaxis_grad/rotaxis_grad_sddd.f90
   rotaxis_grad/rotaxis_grad_psss.f90
   rotaxis_grad/rotaxis_grad_pssp.f90
   rotaxis_grad/rotaxis_grad_pssL.f90
-  rotaxis_grad/rotaxis_grad_pssd.f90
   rotaxis_grad/rotaxis_grad_psps.f90
   rotaxis_grad/rotaxis_grad_pspp.f90
   rotaxis_grad/rotaxis_grad_pspL.f90
-  rotaxis_grad/rotaxis_grad_pspd.f90
   rotaxis_grad/rotaxis_grad_psLs.f90
   rotaxis_grad/rotaxis_grad_psLp.f90
   rotaxis_grad/rotaxis_grad_psLL.f90
-  rotaxis_grad/rotaxis_grad_psLd.f90
-  rotaxis_grad/rotaxis_grad_psds.f90
-  rotaxis_grad/rotaxis_grad_psdp.f90
-  rotaxis_grad/rotaxis_grad_psdL.f90
-  rotaxis_grad/rotaxis_grad_psdd.f90
   rotaxis_grad/rotaxis_grad_ppss.f90
   rotaxis_grad/rotaxis_grad_ppsp.f90
   rotaxis_grad/rotaxis_grad_ppsL.f90
-  rotaxis_grad/rotaxis_grad_ppsd.f90
   rotaxis_grad/rotaxis_grad_ppps.f90
   rotaxis_grad/rotaxis_grad_pppp.f90
   rotaxis_grad/rotaxis_grad_pppL.f90
-  rotaxis_grad/rotaxis_grad_pppd.f90
   rotaxis_grad/rotaxis_grad_ppLs.f90
   rotaxis_grad/rotaxis_grad_ppLp.f90
   rotaxis_grad/rotaxis_grad_ppLL.f90
-  rotaxis_grad/rotaxis_grad_ppLd.f90
-  rotaxis_grad/rotaxis_grad_ppds.f90
-  rotaxis_grad/rotaxis_grad_ppdp.f90
-  rotaxis_grad/rotaxis_grad_ppdL.f90
-  rotaxis_grad/rotaxis_grad_ppdd.f90
   rotaxis_grad/rotaxis_grad_pLss.f90
   rotaxis_grad/rotaxis_grad_pLsp.f90
   rotaxis_grad/rotaxis_grad_pLsL.f90
-  rotaxis_grad/rotaxis_grad_pLsd.f90
   rotaxis_grad/rotaxis_grad_pLps.f90
   rotaxis_grad/rotaxis_grad_pLpp.f90
   rotaxis_grad/rotaxis_grad_pLpL.f90
-  rotaxis_grad/rotaxis_grad_pLpd.f90
   rotaxis_grad/rotaxis_grad_pLLs.f90
   rotaxis_grad/rotaxis_grad_pLLp.f90
   rotaxis_grad/rotaxis_grad_pLLL.f90
-  rotaxis_grad/rotaxis_grad_pLLd.f90
-  rotaxis_grad/rotaxis_grad_pLds.f90
-  rotaxis_grad/rotaxis_grad_pLdp.f90
-  rotaxis_grad/rotaxis_grad_pLdL.f90
-  rotaxis_grad/rotaxis_grad_pdss.f90
-  rotaxis_grad/rotaxis_grad_pdsp.f90
-  rotaxis_grad/rotaxis_grad_pdsL.f90
-  rotaxis_grad/rotaxis_grad_pdsd.f90
-  rotaxis_grad/rotaxis_grad_pdps.f90
-  rotaxis_grad/rotaxis_grad_pdpp.f90
-  rotaxis_grad/rotaxis_grad_pdpL.f90
-  rotaxis_grad/rotaxis_grad_pdpd.f90
-  rotaxis_grad/rotaxis_grad_pdLs.f90
-  rotaxis_grad/rotaxis_grad_pdLp.f90
-  rotaxis_grad/rotaxis_grad_pdLL.f90
-  rotaxis_grad/rotaxis_grad_pdLd.f90
-  rotaxis_grad/rotaxis_grad_pdds.f90
-  rotaxis_grad/rotaxis_grad_pddp.f90
-  rotaxis_grad/rotaxis_grad_pddL.f90
   rotaxis_grad/rotaxis_grad_Lsss.f90
   rotaxis_grad/rotaxis_grad_Lssp.f90
   rotaxis_grad/rotaxis_grad_LssL.f90
-  rotaxis_grad/rotaxis_grad_Lssd.f90
   rotaxis_grad/rotaxis_grad_Lsps.f90
   rotaxis_grad/rotaxis_grad_Lspp.f90
   rotaxis_grad/rotaxis_grad_LspL.f90
-  rotaxis_grad/rotaxis_grad_Lspd.f90
   rotaxis_grad/rotaxis_grad_LsLs.f90
   rotaxis_grad/rotaxis_grad_LsLp.f90
   rotaxis_grad/rotaxis_grad_LsLL.f90
-  rotaxis_grad/rotaxis_grad_LsLd.f90
-  rotaxis_grad/rotaxis_grad_Lsds.f90
-  rotaxis_grad/rotaxis_grad_Lsdp.f90
-  rotaxis_grad/rotaxis_grad_LsdL.f90
-  rotaxis_grad/rotaxis_grad_Lsdd.f90
   rotaxis_grad/rotaxis_grad_Lpss.f90
   rotaxis_grad/rotaxis_grad_Lpsp.f90
   rotaxis_grad/rotaxis_grad_LpsL.f90
-  rotaxis_grad/rotaxis_grad_Lpsd.f90
   rotaxis_grad/rotaxis_grad_Lpps.f90
   rotaxis_grad/rotaxis_grad_Lppp.f90
   rotaxis_grad/rotaxis_grad_LppL.f90
-  rotaxis_grad/rotaxis_grad_Lppd.f90
   rotaxis_grad/rotaxis_grad_LpLs.f90
   rotaxis_grad/rotaxis_grad_LpLp.f90
   rotaxis_grad/rotaxis_grad_LpLL.f90
-  rotaxis_grad/rotaxis_grad_LpLd.f90
-  rotaxis_grad/rotaxis_grad_Lpds.f90
-  rotaxis_grad/rotaxis_grad_Lpdp.f90
-  rotaxis_grad/rotaxis_grad_LpdL.f90
   rotaxis_grad/rotaxis_grad_LLss.f90
   rotaxis_grad/rotaxis_grad_LLsp.f90
   rotaxis_grad/rotaxis_grad_LLsL.f90
-  rotaxis_grad/rotaxis_grad_LLsd.f90
   rotaxis_grad/rotaxis_grad_LLps.f90
   rotaxis_grad/rotaxis_grad_LLpp.f90
   rotaxis_grad/rotaxis_grad_LLpL.f90
-  rotaxis_grad/rotaxis_grad_LLpd.f90
   rotaxis_grad/rotaxis_grad_LLLs.f90
   rotaxis_grad/rotaxis_grad_LLLp.f90
   rotaxis_grad/rotaxis_grad_LLLL.f90
-  rotaxis_grad/rotaxis_grad_LLLd.f90
-  rotaxis_grad/rotaxis_grad_LLds.f90
-  rotaxis_grad/rotaxis_grad_LLdp.f90
-  rotaxis_grad/rotaxis_grad_LLdL.f90
-  rotaxis_grad/rotaxis_grad_Ldss.f90
-  rotaxis_grad/rotaxis_grad_Ldsp.f90
-  rotaxis_grad/rotaxis_grad_LdsL.f90
-  rotaxis_grad/rotaxis_grad_Ldsd.f90
-  rotaxis_grad/rotaxis_grad_Ldps.f90
-  rotaxis_grad/rotaxis_grad_Ldpp.f90
-  rotaxis_grad/rotaxis_grad_LdpL.f90
-  rotaxis_grad/rotaxis_grad_Ldpd.f90
-  rotaxis_grad/rotaxis_grad_LdLs.f90
-  rotaxis_grad/rotaxis_grad_LdLp.f90
-  rotaxis_grad/rotaxis_grad_LdLL.f90
-  rotaxis_grad/rotaxis_grad_Ldds.f90
-  rotaxis_grad/rotaxis_grad_Lddp.f90
-  rotaxis_grad/rotaxis_grad_dsss.f90
-  rotaxis_grad/rotaxis_grad_dssp.f90
-  rotaxis_grad/rotaxis_grad_dssL.f90
-  rotaxis_grad/rotaxis_grad_dssd.f90
-  rotaxis_grad/rotaxis_grad_dsps.f90
-  rotaxis_grad/rotaxis_grad_dspp.f90
-  rotaxis_grad/rotaxis_grad_dspL.f90
-  rotaxis_grad/rotaxis_grad_dspd.f90
-  rotaxis_grad/rotaxis_grad_dsLs.f90
-  rotaxis_grad/rotaxis_grad_dsLp.f90
-  rotaxis_grad/rotaxis_grad_dsLL.f90
-  rotaxis_grad/rotaxis_grad_dsLd.f90
-  rotaxis_grad/rotaxis_grad_dsds.f90
-  rotaxis_grad/rotaxis_grad_dsdp.f90
-  rotaxis_grad/rotaxis_grad_dsdL.f90
-  rotaxis_grad/rotaxis_grad_dsdd.f90
-  rotaxis_grad/rotaxis_grad_dpss.f90
-  rotaxis_grad/rotaxis_grad_dpsp.f90
-  rotaxis_grad/rotaxis_grad_dpsL.f90
-  rotaxis_grad/rotaxis_grad_dpsd.f90
-  rotaxis_grad/rotaxis_grad_dpps.f90
-  rotaxis_grad/rotaxis_grad_dppp.f90
-  rotaxis_grad/rotaxis_grad_dppL.f90
-  rotaxis_grad/rotaxis_grad_dpLs.f90
-  rotaxis_grad/rotaxis_grad_dpLp.f90
-  rotaxis_grad/rotaxis_grad_dpLL.f90
-  rotaxis_grad/rotaxis_grad_dpds.f90
-  rotaxis_grad/rotaxis_grad_dLss.f90
-  rotaxis_grad/rotaxis_grad_dLsp.f90
-  rotaxis_grad/rotaxis_grad_dLsL.f90
-  rotaxis_grad/rotaxis_grad_dLsd.f90
-  rotaxis_grad/rotaxis_grad_dLps.f90
-  rotaxis_grad/rotaxis_grad_dLpp.f90
-  rotaxis_grad/rotaxis_grad_dLpL.f90
-  rotaxis_grad/rotaxis_grad_dLLs.f90
-  rotaxis_grad/rotaxis_grad_dLLp.f90
-  rotaxis_grad/rotaxis_grad_dLLL.f90
-  rotaxis_grad/rotaxis_grad_dLds.f90
-  rotaxis_grad/rotaxis_grad_ddss.f90
-  rotaxis_grad/rotaxis_grad_ddsp.f90
-  rotaxis_grad/rotaxis_grad_ddsL.f90
-  rotaxis_grad/rotaxis_grad_ddsd.f90
-  rotaxis_grad/rotaxis_grad_ddps.f90
-  rotaxis_grad/rotaxis_grad_ddpp.f90
-  rotaxis_grad/rotaxis_grad_ddLs.f90
-  rotaxis_grad/rotaxis_grad_ddds.f90
 )
