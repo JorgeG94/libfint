@@ -210,6 +210,15 @@ endif()
 target_include_directories(fock_bench PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME fock_bench COMMAND $<TARGET_FILE:fock_bench> 4 1)
 
+# The gradient contraction, Rys against rotated-axis.
+add_executable(grad_bench grad_bench.F90)
+target_link_libraries(grad_bench fint m)
+if(OpenMP_Fortran_FOUND)
+  target_link_libraries(grad_bench OpenMP::OpenMP_Fortran)
+endif()
+target_include_directories(grad_bench PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME grad_bench COMMAND $<TARGET_FILE:grad_bench> 4 1)
+
 # The same contract for the gradient kernel int2e_ip1, which exercises the
 # one thing int2e cannot: contraction buffers with n_comp > 1, where the
 # stride of the s/p coefficient pattern carries a factor the plain integral
