@@ -173,6 +173,14 @@ endif()
 # The rotated-axis kernels, one file per class, listed by their generator.
 include(${CMAKE_CURRENT_SOURCE_DIR}/rotaxis/kernels.cmake)
 list(APPEND cintFortranSrc ${cintRotaxisSrc})
+
+# ... and the gradient set beside them.
+include(${CMAKE_CURRENT_SOURCE_DIR}/rotaxis_grad/kernels.cmake)
+list(APPEND cintFortranSrc cint_rotaxis_grad_2e.f90 cint_rotaxis_grad_kernels.f90
+                           ${cintRotaxisGradSrc})
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(cint_rotaxis_grad_2e.f90 PROPERTIES COMPILE_OPTIONS "-fstack-arrays")
+endif()
 # The driver sizes its pair tables and block as automatic arrays, which
 # gfortran puts on the heap unless told otherwise; measured, malloc and
 # free were 7% of the instructions of an s/p quartet.

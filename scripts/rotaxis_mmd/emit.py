@@ -100,11 +100,11 @@ def coef_term(c, expr):
     return f"{fnum(c)}*{expr}"
 
 
-def emit_kernel(f: Factorised):
+def emit_kernel(f: Factorised, grad=False):
     d = f.d
     k = d.kinds
     L = d.L
-    name = f"rotaxis_{lname(k)}"
+    name = ("rotaxis_grad_" if grad else "rotaxis_") + lname(k)
     NS, NR, NG = len(f.s_list), len(f.r_list), len(f.g_list)
     NKM, NCM = len(f.km_list), len(f.cm_list)
     NCOMP = len(f.components)
@@ -114,14 +114,14 @@ def emit_kernel(f: Factorised):
              f"L={L}: {NS} bra accumulators, {NR} ket accumulators, {NCOMP} components")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(5, nbra), kab({NTTB}*ncb, nbra)")
+    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
     o.append(f"      real(dp) :: s({max(NS,1)}, ncb), r({max(NR,1)}, ncb, nck), t({max(NR,1)})")
     o.append(f"      real(dp) :: f(0:{L}), b(0:{L})")
     o.append("      real(dp) :: p, ip, za, zb, eab, q, iq, yc, yd, ax, az, ecd")
-    o.append("      real(dp) :: zq, alpha, tt, w, m2a, Rs, Rc, cy")
+    o.append("      real(dp) :: zq, alpha, tt, w, m2a, Rs, Rc, cy" + (", ea" if grad else ""))
     decl = []
     if NG:
         decl.append(f"g({NG})")
@@ -147,6 +147,8 @@ def emit_kernel(f: Factorised):
     o.append("            if (eab + ecd > cutoff) cycle")
     o.append("            any = .true.")
     o.append("            p = bp(1,bq); ip = bp(2,bq); za = bp(3,bq); zb = bp(4,bq)")
+    if grad:
+        o.append("            ea = bp(6,bq)")
     o.append("            zq = za - az")
     o.append("            alpha = p*q/(p + q)")
     o.append("            tt = alpha*(ax*ax + cy*cy + zq*zq)")
@@ -278,14 +280,14 @@ def data_table(name, values, per_line=16):
     return o
 
 
-def emit_kernel_tabled(f: Factorised):
+def emit_kernel_tabled(f: Factorised, grad=False):
     """The same three levels as emit_kernel, driven by index tables instead
     of unrolled statements.  Slower per term, but a (dd|dd) class has 96k
     ket-level terms and its unrolled form takes gfortran minutes."""
     d = f.d
     k = d.kinds
     L = d.L
-    name = f"rotaxis_{lname(k)}"
+    name = ("rotaxis_grad_" if grad else "rotaxis_") + lname(k)
     NS, NR, NG = len(f.s_list), len(f.r_list), len(f.g_list)
     NKM, NCM = len(f.km_list), len(f.cm_list)
     NCOMP = len(f.components)
@@ -321,7 +323,7 @@ def emit_kernel_tabled(f: Factorised):
     tab.append(f"   integer, save :: s_g({NS}), s_n({NS}), s_k({NS}), s_tt({NS})")
     tab.append(f"   integer, save :: rt_r({NT}), rt_km({NT}), rt_s({NT}), rt_c({NT}), rt_d({NT}), r_tt({NR})")
     tab.append(f"   integer, save :: at_comp({NA}), at_cm({NA}), at_r({NA}), at_c({NA}), at_d({NA})")
-    tab.append(f"   integer, save :: g_e({3*NG}), km_e({4*NKM}), cm_e({3*NCM})   ! (3,NG), (4,NKM), (3,NCM) flat")
+    tab.append(f"   integer, save :: g_e({4*NG}), km_e({4*NKM}), cm_e({3*NCM})   ! (4,NG), (4,NKM), (3,NCM) flat")
     for nm, vals in [("s_g", s_g), ("s_n", s_n), ("s_k", s_k), ("s_tt", s_tt),
                      ("rt_r", rt_r), ("rt_km", rt_km), ("rt_s", rt_s), ("rt_c", rt_c), ("rt_d", rt_d),
                      ("r_tt", r_tt),
@@ -334,14 +336,14 @@ def emit_kernel_tabled(f: Factorised):
              f"({NT} terms), {NCOMP} components -- table driven")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(5, nbra), kab({NTTB}*ncb, nbra)")
+    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
     o.append(f"      real(dp) :: s({NS}, ncb), r({NR}, ncb, nck), t({NR})")
     o.append(f"      real(dp) :: f(0:{L}), b(0:{L}), g({NG}), km({NKM}), cm({NCM}), zqp(0:{KMAX}), v")
     o.append("      real(dp) :: p, ip, za, zb, eab, q, iq, yc, yd, ax, az, ecd")
-    o.append("      real(dp) :: zq, alpha, tt, w, m2a, Rs, Rc, cy")
+    o.append("      real(dp) :: zq, alpha, tt, w, m2a, Rs, Rc, cy, ea")
     o.append("      integer :: kq, bq, cc, ck, n, i, j, col")
     o.append("")
     o.append("      Rs = gc(1); Rc = gc(2); cy = gc(3)")
@@ -356,6 +358,8 @@ def emit_kernel_tabled(f: Factorised):
     o.append("            if (eab + ecd > cutoff) cycle")
     o.append("            any = .true.")
     o.append("            p = bp(1,bq); ip = bp(2,bq); za = bp(3,bq); zb = bp(4,bq)")
+    if grad:
+        o.append("            ea = bp(6,bq)")
     o.append("            zq = za - az")
     o.append("            alpha = p*q/(p + q)")
     o.append("            tt = alpha*(ax*ax + cy*cy + zq*zq)")
@@ -372,9 +376,10 @@ def emit_kernel_tabled(f: Factorised):
     o.append("            end do")
     o.append(f"            do i = 1, {NG}")
     o.append("               g(i) = 1.0_dp")
-    o.append("               do j = 1, g_e(3*i-2); g(i) = g(i)*ip; end do")
-    o.append("               do j = 1, g_e(3*i-1); g(i) = g(i)*za; end do")
-    o.append("               do j = 1, g_e(3*i); g(i) = g(i)*zb; end do")
+    o.append("               do j = 1, g_e(4*i-3); g(i) = g(i)*ip; end do")
+    o.append("               do j = 1, g_e(4*i-2); g(i) = g(i)*za; end do")
+    o.append("               do j = 1, g_e(4*i-1); g(i) = g(i)*zb; end do")
+    o.append("               do j = 1, g_e(4*i);   g(i) = g(i)*ea; end do")
     o.append("            end do")
     o.append(f"            do i = 1, {NS}")
     o.append("               v = g(s_g(i))*b(s_n(i))*zqp(s_k(i))")
@@ -475,6 +480,105 @@ contains
    end subroutine boys
 end module cint_rotaxis_boys
 """
+
+
+def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT):
+    """The gradient kernels: d/dA of every component, in libcint's ip1
+    layout -- three derivative directions slowest, then (i,j,k,l) with i
+    fastest -- and NEGATED, because int2e_ip1 is <nabla i|, which is minus
+    the derivative with respect to the centre."""
+    from .derive import KIND_LMAX
+    facts = []
+    orig = Derivation.all_components
+    try:
+        Derivation.all_components = Derivation.all_grad_components
+        for k in classes:
+            facts.append(Factorised(Derivation(*k, extra=1)))
+    finally:
+        Derivation.all_components = orig
+
+    files = {}
+    for f in facts:
+        nm = f"rotaxis_grad_{lname(f.d.kinds)}"
+        nterms = sum(len(r) for r, _ in f.r_list)
+        if nterms > unroll_limit:
+            tables, body = emit_kernel_tabled(f, grad=True)
+        else:
+            tables, body = "", emit_kernel(f, grad=True)
+        o = ["! GENERATED by scripts/rotaxis_mmd -- do not edit.",
+             f"! {f.summary()}",
+             f"module {nm}_m",
+             "   use cint_const, only: dp",
+             "   use cint_rotaxis_boys, only: boys",
+             "   implicit none",
+             "   private",
+             f"   public :: {nm}"]
+        if tables:
+            o.append(tables)
+        o += ["contains", body, f"end module {nm}_m"]
+        files[f"src/rotaxis_grad/{nm}.f90"] = "\n".join(o) + "\n"
+
+    o = ["! GENERATED by scripts/rotaxis_mmd -- do not edit.",
+         "!",
+         "! Rotated-axis gradient kernels: the dispatcher.",
+         "!",
+         "! d/dA of the two-electron Coulomb integral, in libcint's int2e_ip1",
+         "! sign and layout.  A derivative raises the bra's angular momentum",
+         "! with a factor 2a and lowers it with the old power, so each target",
+         "! is a combination of ordinary integrals -- frame-independent in",
+         "! value, hence built in the local frame and rotated back as a vector,",
+         "! with no term from the frame itself moving.  doc/ROT_AXIS_MMD.md.",
+         "!"]
+    for f in facts:
+        o.append(f"!   {f.summary()}")
+    o.append("module cint_rotaxis_grad_kernels")
+    o.append("   use cint_const, only: dp")
+    for f in facts:
+        nm = f"rotaxis_grad_{lname(f.d.kinds)}"
+        o.append(f"   use {nm}_m, only: {nm}")
+    o.append("   implicit none")
+    o.append("   private")
+    o.append("   public :: rotaxis_grad_kernel, rotaxis_grad_has_class")
+    o.append("")
+    o.append("contains")
+    o.append("")
+    o.append("   pure logical function rotaxis_grad_has_class(code) result(yes)")
+    o.append("      integer, intent(in) :: code")
+    o.append("      select case (code)")
+    codes = [str(class_code(k)) for k in classes]
+    o.append("      case (" + ", &\n            ".join(
+        ", ".join(codes[i:i+12]) for i in range(0, len(codes), 12)) + ")")
+    o.append("         yes = .true.")
+    o.append("      case default")
+    o.append("         yes = .false.")
+    o.append("      end select")
+    o.append("   end function rotaxis_grad_has_class")
+    o.append("")
+    o.append("   subroutine rotaxis_grad_kernel(code, nbra, ncb, bp, kab, nket, nck, kp, kcd, &")
+    o.append("                                  gc, cutoff, res, any)")
+    o.append("      integer,  intent(in)  :: code, nbra, ncb, nket, nck")
+    o.append("      real(dp), intent(in)  :: bp(6, nbra), kab(*)")
+    o.append("      real(dp), intent(in)  :: kp(7, nket), kcd(*), gc(3), cutoff")
+    o.append("      real(dp), intent(out) :: res(*)")
+    o.append("      logical,  intent(out) :: any")
+    o.append("      select case (code)")
+    for k in classes:
+        o.append(f"      case ({class_code(k)})")
+        o.append(f"         call rotaxis_grad_{lname(k)}(nbra, ncb, bp, kab, nket, nck, kp, kcd, &")
+        o.append("                                      gc, cutoff, res, any)")
+    o.append("      case default")
+    o.append("         error stop 'cint_rotaxis_grad_kernels: no kernel for this class'")
+    o.append("      end select")
+    o.append("   end subroutine rotaxis_grad_kernel")
+    o.append("end module cint_rotaxis_grad_kernels")
+    files["src/cint_rotaxis_grad_kernels.f90"] = "\n".join(o) + "\n"
+
+    cm = ["# GENERATED by scripts/rotaxis_mmd -- do not edit.",
+          "set(cintRotaxisGradSrc"]
+    cm += [f"  rotaxis_grad/{p.split('/')[-1]}" for p in files if p.startswith("src/rotaxis_grad/")]
+    cm.append(")")
+    files["src/rotaxis_grad/kernels.cmake"] = "\n".join(cm) + "\n"
+    return files, facts
 
 
 def emit_class_file(f, unroll_limit=UNROLL_LIMIT):
