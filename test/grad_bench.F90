@@ -23,15 +23,15 @@
 ! its own: an OpenMP `private` copy of a derived type with allocatable
 ! components is undefined on entry, and the integral drivers bump-allocate
 ! from it.
-module fb_ws
+module gb_ws
    use cint_workspace, only: cint_ws
    implicit none
    type(cint_ws), save :: ws
    !$omp threadprivate(ws)
-end module fb_ws
+end module gb_ws
 
 program grad_bench
-   use fb_ws, only: ws
+   use gb_ws, only: ws
    use iso_c_binding
    use cint_const, only: dp
    use cint_bas, only: ATM_SLOTS, BAS_SLOTS, ANG_OF, NCTR_OF, NPRIM_OF, KAPPA_OF, &
