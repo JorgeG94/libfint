@@ -142,6 +142,52 @@ nest removes every division, and it is what took the d classes from behind
 Rys to ahead of it. The rotated-axis driver had the same scatter and the
 same fix.
 
+## 7b. Gradients
+
+`int2e_ip1_hgp_cart/sph` (module `cint_hgp_grad_2e`) compute d/dA in
+libcint's `int2e_ip1` sign and layout.
+
+d/dA raises the bra with a factor of the bra exponent and lowers it with
+the old power, so a gradient is a combination of ordinary targets. What is
+particular to HGP is *where the exponent can be applied*: the transfers
+run once per contracted quartet and the exponent varies per primitive, so
+they cannot see it. It is folded in at the contraction instead, the last
+stage that still has it, giving a second contracted set weighted by 2a.
+The raised term reads that set, the lowered term reads the plain one, and
+the transfers run over both unchanged -- so the horizontal half of a
+derivative needs no new algebra, only a tag saying which set a node reads.
+This is why Head-Gordon and Pople's paper is framed around derivatives.
+
+Verified twice, as the energy path was: `scripts/hgp/check_numeric.py`
+checks the gradient graph against a finite difference of the
+McMurchie-Davidson reference before any Fortran exists (183 values through
+(ds|ps), worst 5.0e-10, which is central-difference accuracy), and
+`hgp_grad_check` holds the built path to libfint's own `int2e_ip1`:
+1,354,578 values, worst scaled difference 5.9e-14.
+
+Cost, against the rotated-axis gradients for the same classes, in
+arithmetic terms:
+
+| class | rotated-axis | HGP |
+|---|---|---|
+| pppp | 2,431 | 1,080 |
+| ppdd | 35,626 | 5,916 |
+| ddpp | 37,346 | 5,922 |
+| dddd | (not generated) | 28,696 |
+
+The rotated-axis gradients win at s, p and L -- measured 3.19x Rys in a
+contracted gradient build -- and blow up once d appears, for the reason
+§2 gives for the energies. HGP is the path for d gradients, by about a
+factor of six in emitted arithmetic.
+
+**Both gradient paths decline to permute.** The energy drivers reorder a
+quartet into a canonical class because the integral is symmetric under
+those swaps; d/dA names one centre, so the caller's slot 0 stays slot 0
+and every *ordered* combination of kinds needs its own kernel: 81 for s, p
+and L rather than 21. Their `supported` predicates ask the dispatcher
+rather than testing an angular-momentum bound, because which classes exist
+depends on what the generator was last run over.
+
 ## 8. Status
 
 * Coulomb (ab|cd) only, Cartesian and spherical, contracted and generally

@@ -191,6 +191,12 @@ target_link_libraries(rotaxis_grad_check fint fint_test_systems cint m)
 target_include_directories(rotaxis_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_grad_check COMMAND $<TARGET_FILE:rotaxis_grad_check>)
 
+# The HGP gradients against libfint's own int2e_ip1.
+add_executable(hgp_grad_check hgp_grad_check.F90)
+target_link_libraries(hgp_grad_check fint fint_test_systems cint m)
+target_include_directories(hgp_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME hgp_grad_check COMMAND $<TARGET_FILE:hgp_grad_check>)
+
 # The same path on a real molecule, validated by finite difference of the
 # energy rather than against another integral routine.
 add_executable(rotaxis_grad_molecule rotaxis_grad_molecule.F90)

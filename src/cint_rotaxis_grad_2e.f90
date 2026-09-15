@@ -66,14 +66,30 @@ contains
 
    ! Can this quartet go through the rotated-axis path at all?  An L shell
    ! counts as p for the purpose.
+   ! Ask the DISPATCHER, not a constant: which classes exist is decided by
+   ! what the generator was last run over, and a quartet that passes a
+   ! blanket l test but has no kernel is an error stop rather than a
+   ! fallback.
    pure logical function rotaxis_grad_supported(shls, bas) result(yes)
       integer, intent(in) :: shls(0:), bas(0:)
-      integer :: x, l(0:3)
+      integer :: x, l, code
+      code = 0
       do x = 0, 3
-         l(x) = bas(BAS_SLOTS*shls(x) + ANG_OF)
-         if (cint_bas_is_sp(shls(x), bas)) l(x) = 1
+         l = bas(BAS_SLOTS*shls(x) + ANG_OF)
+         if (cint_bas_is_sp(shls(x), bas)) then
+            code = 10*code + ROTAXIS_KIND_L
+         else
+            select case (l)
+            case (0); code = 10*code + ROTAXIS_KIND_S
+            case (1); code = 10*code + ROTAXIS_KIND_P
+            case (2); code = 10*code + ROTAXIS_KIND_D
+            case default
+               yes = .false.
+               return
+            end select
+         end if
       end do
-      yes = all(l <= ROTAXIS_LMAX)
+      yes = rotaxis_grad_has_class(code)
    end function rotaxis_grad_supported
 
    function int2e_ip1_rotaxis_cart(out, dims, shls, atm, natm, bas, nbas, env, ws) result(has_value)

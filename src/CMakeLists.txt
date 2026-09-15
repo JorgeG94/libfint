@@ -170,6 +170,13 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
   set_source_files_properties(cint_hgp_2e.f90 PROPERTIES COMPILE_OPTIONS "-fstack-arrays")
 endif()
 
+# The HGP gradient kernels.
+include(${CMAKE_CURRENT_SOURCE_DIR}/hgp_grad/kernels.cmake)
+list(APPEND cintFortranSrc cint_hgp_grad_2e.f90 cint_hgp_grad_kernels.f90 ${cintHgpGradSrc})
+if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  set_source_files_properties(cint_hgp_grad_2e.f90 PROPERTIES COMPILE_OPTIONS "-fstack-arrays")
+endif()
+
 # The rotated-axis kernels, one file per class, listed by their generator.
 include(${CMAKE_CURRENT_SOURCE_DIR}/rotaxis/kernels.cmake)
 list(APPEND cintFortranSrc ${cintRotaxisSrc})
