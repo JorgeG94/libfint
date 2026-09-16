@@ -142,6 +142,87 @@ nest removes every division, and it is what took the d classes from behind
 Rys to ahead of it. The rotated-axis driver had the same scatter and the
 same fix.
 
+## 7b. Gradients
+
+`int2e_ip1_hgp_cart/sph` (module `cint_hgp_grad_2e`) compute d/dA in
+libcint's `int2e_ip1` sign and layout.
+
+d/dA raises the bra with a factor of the bra exponent and lowers it with
+the old power, so a gradient is a combination of ordinary targets. What is
+particular to HGP is *where the exponent can be applied*: the transfers
+run once per contracted quartet and the exponent varies per primitive, so
+they cannot see it. It is folded in at the contraction instead, the last
+stage that still has it, giving a second contracted set weighted by 2a.
+The raised term reads that set, the lowered term reads the plain one, and
+the transfers run over both unchanged -- so the horizontal half of a
+derivative needs no new algebra, only a tag saying which set a node reads.
+This is why Head-Gordon and Pople's paper is framed around derivatives.
+
+Verified twice, as the energy path was: `scripts/hgp/check_numeric.py`
+checks the gradient graph against a finite difference of the
+McMurchie-Davidson reference before any Fortran exists (183 values through
+(ds|ps), worst 5.0e-10, which is central-difference accuracy), and
+`hgp_grad_check` holds the built path to libfint's own `int2e_ip1`:
+1,354,578 values, worst scaled difference 5.9e-14.
+
+**The d gradient classes work, and are not shipped.** Generated -- all 256
+ordered ones, 793k lines, 29 MB -- `hgp_grad_check` passes over 3,972,501
+values at 3.9e-13, and they are what makes a gradient hybrid worth
+routing. On a water cluster with a d shell
+on every oxygen, 384 functions, four threads (LTO off, so compare within
+the run):
+
+| path | s per gradient build | ratio to Rys |
+|---|---|---|
+| Rys | 47.66 | 1.00x |
+| rotated-axis, d on Rys | 32.95 | 1.45x |
+| HGP, covering d | 37.44 | 1.27x |
+| hybrid | 31.52 | 1.51x |
+
+The hybrid is ahead of either path alone, which it was not before these
+classes existed -- rotated-axis for s, p and L, HGP for anything touching
+d. The margin over plain rotated-axis is small here because this basis has
+one uncontracted d per oxygen; the energy evidence says it widens with a
+properly polarised, contracted basis.
+
+**The build cost is why they are not committed.** 793k lines compiles, but
+the link-time optimisation step runs out of memory even on a 251 GB
+machine and needs `-DWITH_FORTRAN_LTO=OFF`. CI runners are 4 CPU and
+16 GB, across roughly ten lanes, and a clean build of the shipped tree
+already takes three minutes there. Committing 29 MB of generated Fortran
+that cannot link under the project's default options is not a trade worth
+making for a 1.51x against 1.45x.
+
+So the committed gradient set is s, p and L on both paths, and
+`scripts/hgp/generate.py --lmax 2 --grad` reproduces the d experiment.
+Making it shippable is a real piece of work -- emitting the d classes in a
+form that links under LTO, or making the set a build option that does not
+put the source in the repo -- and it should be done before the hybrid is
+routed at d.
+
+Cost, against the rotated-axis gradients for the same classes, in
+arithmetic terms:
+
+| class | rotated-axis | HGP |
+|---|---|---|
+| pppp | 2,431 | 1,080 |
+| ppdd | 35,626 | 5,916 |
+| ddpp | 37,346 | 5,922 |
+| dddd | (not generated) | 28,696 |
+
+The rotated-axis gradients win at s, p and L -- measured 3.19x Rys in a
+contracted gradient build -- and blow up once d appears, for the reason
+§2 gives for the energies. HGP is the path for d gradients, by about a
+factor of six in emitted arithmetic.
+
+**Both gradient paths decline to permute.** The energy drivers reorder a
+quartet into a canonical class because the integral is symmetric under
+those swaps; d/dA names one centre, so the caller's slot 0 stays slot 0
+and every *ordered* combination of kinds needs its own kernel: 81 for s, p
+and L rather than 21. Their `supported` predicates ask the dispatcher
+rather than testing an angular-momentum bound, because which classes exist
+depends on what the generator was last run over.
+
 ## 8. Status
 
 * Coulomb (ab|cd) only, Cartesian and spherical, contracted and generally

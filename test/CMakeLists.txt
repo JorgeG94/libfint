@@ -185,6 +185,25 @@ target_link_libraries(rotaxis_check fint fint_test_systems cint m)
 target_include_directories(rotaxis_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_check COMMAND $<TARGET_FILE:rotaxis_check>)
 
+# The rotated-axis gradients against libfint's own int2e_ip1.
+add_executable(rotaxis_grad_check rotaxis_grad_check.F90)
+target_link_libraries(rotaxis_grad_check fint fint_test_systems cint m)
+target_include_directories(rotaxis_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME rotaxis_grad_check COMMAND $<TARGET_FILE:rotaxis_grad_check>)
+
+# The HGP gradients against libfint's own int2e_ip1.
+add_executable(hgp_grad_check hgp_grad_check.F90)
+target_link_libraries(hgp_grad_check fint fint_test_systems cint m)
+target_include_directories(hgp_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME hgp_grad_check COMMAND $<TARGET_FILE:hgp_grad_check>)
+
+# The same path on a real molecule, validated by finite difference of the
+# energy rather than against another integral routine.
+add_executable(rotaxis_grad_molecule rotaxis_grad_molecule.F90)
+target_link_libraries(rotaxis_grad_molecule fint m)
+target_include_directories(rotaxis_grad_molecule PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME rotaxis_grad_molecule COMMAND $<TARGET_FILE:rotaxis_grad_molecule>)
+
 # The Obara-Saika/HGP path against the Rys path, on the same argument as
 # rotaxis_check: two exact algorithms, so a scaled tolerance, not bit
 # identity.
@@ -203,6 +222,15 @@ if(OpenMP_Fortran_FOUND)
 endif()
 target_include_directories(fock_bench PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME fock_bench COMMAND $<TARGET_FILE:fock_bench> 4 1)
+
+# The gradient contraction, Rys against rotated-axis.
+add_executable(grad_bench grad_bench.F90)
+target_link_libraries(grad_bench fint m)
+if(OpenMP_Fortran_FOUND)
+  target_link_libraries(grad_bench OpenMP::OpenMP_Fortran)
+endif()
+target_include_directories(grad_bench PRIVATE ${PROJECT_BINARY_DIR}/include)
+add_test(NAME grad_bench COMMAND $<TARGET_FILE:grad_bench> 4 1)
 
 # The same contract for the gradient kernel int2e_ip1, which exercises the
 # one thing int2e cannot: contraction buffers with n_comp > 1, where the

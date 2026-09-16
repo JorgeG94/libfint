@@ -169,3 +169,69 @@ def check(classes, seed=7):
                 ncmp += 1
         print(f"  {cls}  worst so far {worst:.2e}  ({ncmp} values)")
     return worst
+
+
+def evaluate_grad(g, order, geom, a_exp, la, lb, lc, ld):
+    """Evaluate a gradient graph.  The two contracted sets are the single
+    primitive quartet's vertical values, plain and times 2a -- which is
+    what the contraction does when there is one primitive."""
+    from .recur import vrr_targets
+    vord = g.order([g.vrr(ce, cf, 0) for ce, cf in vrr_targets(la + 1, lb, lc, ld)])
+    val = evaluate(g, vord, geom)
+    a, A, b, B, c, C, d, D, _ = geom
+    p, q = a + b, c + d
+    P = [(a * A[i] + b * B[i]) / p for i in range(3)]
+    Q = [(c * C[i] + d * D[i]) / q for i in range(3)]
+    sym = {}
+    for i in range(3):
+        sym[f'AB{i}'] = A[i] - B[i]
+        sym[f'CD{i}'] = C[i] - D[i]
+    for k in order:
+        if k in val:
+            continue
+        if k[0] == 'c':
+            val[k] = val[('v', k[1], k[2], 0)] * (2.0 * a_exp if k[3] == 1 else 1.0)
+            continue
+        acc = 0.0
+        for coef, syms, dep in g.expr[k]:
+            x = float(coef)
+            for s in syms:
+                x *= sym[s]
+            acc += x * val[dep]
+        val[k] = acc
+    return val
+
+
+def check_grad(classes, seed=17):
+    """d/dA from the gradient graph against a finite difference of the
+    McMurchie-Davidson reference."""
+    import random
+    from .recur import grad_build
+    rng = random.Random(seed)
+    worst, ncmp = 0.0, 0
+    h = 1e-6
+    for cls in classes:
+        la, lb, lc, ld = cls
+        g, targets = grad_build(*cls)
+        order = g.order([k for _, k in targets])
+        ea = rng.uniform(0.4, 1.8)
+        B = [rng.uniform(-1.4, 1.4) for _ in range(3)]
+        Cc = [rng.uniform(-1.4, 1.4) for _ in range(3)]
+        Dd = [rng.uniform(-1.4, 1.4) for _ in range(3)]
+        eb, ec, ed = rng.uniform(.4, 2.), rng.uniform(.4, 2.), rng.uniform(.4, 2.)
+        A0 = [0.1, -0.2, 0.3]
+        def gm(A):
+            return (ea, list(A), eb, B, ec, Cc, ed, Dd, sum(cls) + 1)
+        val = evaluate_grad(g, order, gm(A0), ea, la, lb, lc, ld)
+        scale = max(abs(val[k]) for _, k in targets)
+        for (ca, cb, cc, cd, axis), k in targets:
+            i = "xyz".index(axis)
+            Ap = list(A0); Ap[i] += h
+            Am = list(A0); Am[i] -= h
+            fd = (reference(ca, cb, cc, cd, gm(Ap))
+                  - reference(ca, cb, cc, cd, gm(Am))) / (2 * h)
+            rel = abs(val[k] - fd) / max(scale, 1e-30)
+            worst = max(worst, rel)
+            ncmp += 1
+        print(f"  {cls}  worst so far {worst:.2e}  ({ncmp} values)")
+    return worst

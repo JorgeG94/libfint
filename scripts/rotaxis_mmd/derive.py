@@ -70,12 +70,19 @@ KIND_RANK = {"s": 0, "p": 1, "L": 2, "d": 3, "f": 4}
 
 
 class Derivation:
-    def __init__(self, ka, kb, kc, kd):
+    def __init__(self, ka, kb, kc, kd, extra=0):
+        # `extra` raises the Boys ladder: a gradient target reaches one
+        # angular momentum higher on the bra, so it needs B_{L+1}.
         self.kinds = (ka, kb, kc, kd)
         self.l = tuple(KIND_LMAX[k] for k in self.kinds)
-        self.L = sum(self.l)
+        self.L = sum(self.l) + extra
         L = self.L
-        self.bra_names = ["ip", "za", "zb", "zq"] + [f"B{n}" for n in range(L + 1)]
+        # `ea` is the bra exponent a itself, needed only by the gradient
+        # targets: d/dA of a Gaussian on A raises its angular momentum with
+        # a factor 2a and lowers it with the old power.  It is a
+        # bra-primitive quantity like the rest, so it costs one more
+        # accumulator family and nothing structural.
+        self.bra_names = ["ip", "za", "zb", "zq", "ea"] + [f"B{n}" for n in range(L + 1)]
         self.ket_names = ["iq", "yc", "yd", "ax"]
         self.const_names = ["Rs", "Rc", "cy"]
         self.ring = Ring(self.bra_names + self.ket_names + self.const_names)
@@ -180,6 +187,36 @@ class Derivation:
                 for v, pz in qz.items():
                     total = total + pxy * pz * self.R(0, t, u, v)
         return total
+
+    def dA(self, ca, cb, cc, cd, axis):
+        """d/dA of one Cartesian component, as a polynomial.
+
+        Frame-independent in value, so it can be built in the local frame
+        and rotated back as a vector afterwards -- the rotation carries no
+        extra term because the frame is fixed while A moves.  libcint's
+        int2e_ip1 is MINUS this.
+        """
+        i = "xyz".index(axis)
+        up = tuple(ca[j] + 1 if j == i else ca[j] for j in range(3))
+        val = 2 * self.s["ea"] * self.integral(up, cb, cc, cd)
+        if ca[i] > 0:
+            dn = tuple(ca[j] - 1 if j == i else ca[j] for j in range(3))
+            val = val - ca[i] * self.integral(dn, cb, cc, cd)
+        return val
+
+    def all_grad_components(self):
+        """Every component of d/dA, in libcint's ip1 order: the three
+        derivative directions slowest, then (i,j,k,l) with i fastest."""
+        ka, kb, kc, kd = (KINDS[k] for k in self.kinds)
+        comps = []
+        for axis in "xyz":
+            for cd, td in kd:
+                for cc, tc in kc:
+                    for cb, tb in kb:
+                        for ca, ta in ka:
+                            comps.append((((ca, cb, cc, cd), (ta, tb, tc, td)),
+                                          -self.dA(ca, cb, cc, cd, axis)))
+        return comps
 
     def all_components(self):
         """Every component of the class, in libcint's (i,j,k,l) column-major

@@ -89,33 +89,56 @@ class Graph:
 
     # ---- horizontal, on contracted quantities ---------------------------
 
-    def hrr_bra(self, a, b, f):
+    def hrr_bra(self, a, b, f, buf=0):
         """(a b| f0) from ((a+1) b'| f0) and (a b'| f0)."""
         if sum(b) == 0:
-            return ('v', a, f, 0)          # a contracted vertical result
-        key = ('h', a, b, f)
+            return ('c', a, f, buf)        # a contracted vertical result
+        key = ('h', a, b, f, buf)
         if key in self.expr:
             return key
         i = _first_dir(b)
         b1 = _dec(b, i)
         self.expr[key] = [
-            (1, (), self.hrr_bra(_inc(a, i), b1, f)),
-            (1, (f'AB{i}',), self.hrr_bra(a, b1, f)),
+            (1, (), self.hrr_bra(_inc(a, i), b1, f, buf)),
+            (1, (f'AB{i}',), self.hrr_bra(a, b1, f, buf)),
         ]
         return key
 
-    def hrr_ket(self, a, b, c, d):
+    def hrr_ket(self, a, b, c, d, buf=0):
         if sum(d) == 0:
-            return self.hrr_bra(a, b, c)   # nothing left to move onto D
-        key = ('g', a, b, c, d)
+            return self.hrr_bra(a, b, c, buf)  # nothing left to move onto D
+        key = ('g', a, b, c, d, buf)
         if key in self.expr:
             return key
         i = _first_dir(d)
         d1 = _dec(d, i)
         self.expr[key] = [
-            (1, (), self.hrr_ket(a, b, _inc(c, i), d1)),
-            (1, (f'CD{i}',), self.hrr_ket(a, b, c, d1)),
+            (1, (), self.hrr_ket(a, b, _inc(c, i), d1, buf)),
+            (1, (f'CD{i}',), self.hrr_ket(a, b, c, d1, buf)),
         ]
+        return key
+
+    def grad(self, a, b, c, d, axis):
+        """d/dA of (ab|cd): the raised term read out of the 2a-weighted
+        contraction, the lowered term out of the plain one.
+
+        d/dA raises the bra with a factor of the bra EXPONENT, which varies
+        per primitive, while the transfers run once per contracted quartet
+        and cannot see it.  So the exponent is folded in at the contraction
+        -- the last stage that still has it -- giving a second contracted
+        set, and the transfers then run over both unchanged.  That is why
+        the horizontal half of a derivative HGP needs no new algebra.
+
+        libcint's int2e_ip1 is MINUS this; the caller negates.
+        """
+        i = "xyz".index(axis)
+        key = ('d', a, b, c, d, axis)
+        if key in self.expr:
+            return key
+        terms = [(1, (), self.hrr_ket(_inc(a, i), b, c, d, 1))]
+        if a[i] > 0:
+            terms.append((-a[i], (), self.hrr_ket(_dec(a, i), b, c, d, 0)))
+        self.expr[key] = terms
         return key
 
     # ---- ordering --------------------------------------------------------
@@ -145,6 +168,26 @@ def vrr_targets(la, lb, lc, ld):
                 for cf in cart_components(f):
                     out.append((ce, cf))
     return out
+
+
+def grad_build(la, lb, lc, ld):
+    """(graph, targets) for d/dA of one plain class.
+
+    The vertical set spans the RAISED bra range, because the 2a term needs
+    e up to la+lb+1; the lowering term reuses what is already there.
+    """
+    g = Graph()
+    for ce, cf in vrr_targets(la + 1, lb, lc, ld):
+        g.vrr(ce, cf, 0)
+    targets = []
+    for axis in "xyz":
+        for cd_ in cart_components(ld):
+            for cc_ in cart_components(lc):
+                for cb in cart_components(lb):
+                    for ca in cart_components(la):
+                        targets.append(((ca, cb, cc_, cd_, axis),
+                                        g.grad(ca, cb, cc_, cd_, axis)))
+    return g, targets
 
 
 def build(la, lb, lc, ld):

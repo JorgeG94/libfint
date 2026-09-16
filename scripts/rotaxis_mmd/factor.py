@@ -100,11 +100,15 @@ class Factorised:
         self.max_zq_power = max((k for _, _, k, _ in self.s_list), default=0)
 
     def _s_id(self, bra, tt_bra):
-        ip, za, zb, zq = bra[:4]
-        bs = bra[4:]
+        # bra symbols are ip, za, zb, zq, ea, then B_0..B_L.  `ea` joins the
+        # g monomial: like ip/za/zb it is a bra-primitive scalar, so a
+        # gradient's factor of 2a rides in the level-1 accumulator and costs
+        # nothing beyond another (g, n, k) combination.
+        ip, za, zb, zq, ea = bra[:5]
+        bs = bra[5:]
         nz = [i for i, e in enumerate(bs) if e]
         assert len(nz) == 1 and bs[nz[0]] == 1, "R must be linear in the Boys terms"
-        key = ((ip, za, zb), nz[0], zq, tt_bra)
+        key = ((ip, za, zb, ea), nz[0], zq, tt_bra)
         if key not in self.s_index:
             self.s_index[key] = len(self.s_list)
             self.s_list.append(key)

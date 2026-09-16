@@ -305,3 +305,200 @@ def emit_class_file(pl):
          body,
          f"end module {name}_m"]
     return "\n".join(o) + "\n"
+
+
+class GradClassPlan:
+    """What one gradient class needs.  Same shape as ClassPlan, with two
+    contracted sets rather than one -- see Graph.grad."""
+
+    def __init__(self, kinds):
+        from .recur import grad_build
+        self.kinds = kinds
+        self.blocks = [kind_blocks(k) for k in kinds]
+        self.ncomp = [kind_ncomp(k) for k in kinds]
+        self.ntb = KIND_NTYPE[kinds[0]] * KIND_NTYPE[kinds[1]]
+        self.ntk = KIND_NTYPE[kinds[2]] * KIND_NTYPE[kinds[3]]
+        self.bra_pairs = [(a, b) for a in self.blocks[0] for b in self.blocks[1]]
+        self.ket_pairs = [(c, d) for c in self.blocks[2] for d in self.blocks[3]]
+
+        # the vertical set, over the RAISED bra range of every block
+        ef = set()
+        for (la, _, _, _), (lb, _, _, _) in self.bra_pairs:
+            for (lc, _, _, _), (ld, _, _, _) in self.ket_pairs:
+                for e in range(0, la + lb + 2):
+                    for f in range(lc, lc + ld + 1):
+                        ef.add((e, f))
+        self.targets = []
+        for e, f in sorted(ef):
+            for ce in cart_components(e):
+                for cf in cart_components(f):
+                    self.targets.append((ce, cf))
+        self.tindex = {t: i for i, t in enumerate(self.targets)}
+
+        self.g = Graph()
+        vroots = [self.g.vrr(ce, cf, 0) for ce, cf in self.targets]
+        self.vorder = self.g.order(vroots)
+        self.vname = {k: i + 1 for i, k in enumerate(self.vorder)}
+
+        self.hblocks = []
+        for (la, ta, oa, _), (lb, tb, ob, _) in self.bra_pairs:
+            for (lc, tc, oc, _), (ld, td, od, _) in self.ket_pairs:
+                hg, roots = grad_build(la, lb, lc, ld)
+                order = hg.order([k for _, k in roots])
+                # drop the vertical nodes: this block's transfers read the
+                # contracted sets, which the shared vertical part produced
+                order = [k for k in order if k[0] != 'v']
+                self.hblocks.append(dict(
+                    bcol=ta + KIND_NTYPE[kinds[0]] * tb + 1,
+                    kcol=tc + KIND_NTYPE[kinds[2]] * td + 1,
+                    offs=(oa, ob, oc, od), ls=(la, lb, lc, ld),
+                    g=hg, order=order, roots=roots,
+                    name={k: i + 1 for i, k in enumerate(order)}))
+
+    def summary(self):
+        nv = len(self.vorder)
+        nh = sum(len(b["order"]) for b in self.hblocks)
+        nc = 3 * self.ncomp[0] * self.ncomp[1] * self.ncomp[2] * self.ncomp[3]
+        return (f"{cname(self.kinds)}: vrr={nv} carried={len(self.targets)}x2 "
+                f"hrr={nh} in {len(self.hblocks)} block(s) comps={nc}")
+
+
+def emit_grad_kernel(pl):
+    k = pl.kinds
+    L = sum(KIND_LMAX[x] for x in k) + 1
+    name = f"hgp_grad_{cname(k)}"
+    NV, NT = len(pl.vorder), len(pl.targets)
+    NCOMP = 3 * pl.ncomp[0] * pl.ncomp[1] * pl.ncomp[2] * pl.ncomp[3]
+    NCART = pl.ncomp[0] * pl.ncomp[1] * pl.ncomp[2] * pl.ncomp[3]
+    o = []
+    o.append(f"   ! d/dA ({k[0]}{k[1]}|{k[2]}{k[3]})  {pl.summary()}")
+    o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, ab, cd, cutoff, res, any)")
+    o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
+    o.append(f"      real(dp), intent(in)  :: bp(11, nbra), kab({pl.ntb}*ncb, nbra)")
+    o.append(f"      real(dp), intent(in)  :: kp(11, nket), kcd({pl.ntk}*nck, nket)")
+    o.append("      real(dp), intent(in)  :: ab(3), cd(3), cutoff")
+    o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
+    o.append("      logical,  intent(out) :: any")
+    o.append("      ! TWO contracted sets: plain, and weighted by 2a.  d/dA")
+    o.append("      ! raises the bra with the bra exponent, which varies per")
+    o.append("      ! primitive while the transfers run once per contracted")
+    o.append("      ! quartet -- so the exponent is folded in here, the last")
+    o.append("      ! stage that still has it.")
+    o.append(f"      real(dp) :: c({NT}, 2, {pl.ntb}*ncb, {pl.ntk}*nck)")
+    o.append(f"      real(dp) :: cb({NT}, 2, {pl.ntb}*ncb)")
+    o.append(f"      real(dp) :: t({NV}), tv({NT}), f(0:{L}), b(0:{L})")
+    o.append(f"      real(dp) :: h({max(1, max(len(b['order']) for b in pl.hblocks))})")
+    o.append("      real(dp) :: p, q, pq, rho, oo2p, oo2q, oo2pq, rp, rq, tt, w, eab, ecd, ea")
+    o.append("      real(dp) :: PA0, PA1, PA2, QC0, QC1, QC2, WP0, WP1, WP2, WQ0, WQ1, WQ2")
+    o.append("      real(dp) :: PQ0, PQ1, PQ2, AB0, AB1, AB2, CD0, CD1, CD2, wq_, wp_")
+    o.append("      logical  :: hit")
+    o.append("      integer  :: kq, bq, bc, kc, cc, ck, n, col")
+    o.append("")
+    o.append("      AB0 = ab(1); AB1 = ab(2); AB2 = ab(3)")
+    o.append("      CD0 = cd(1); CD1 = cd(2); CD2 = cd(3)")
+    o.append("      any = .false.")
+    o.append("      c = 0.0_dp")
+    o.append("      do kq = 1, nket")
+    o.append("         q = kp(1,kq); oo2q = kp(2,kq)")
+    o.append("         QC0 = kp(3,kq); QC1 = kp(4,kq); QC2 = kp(5,kq)")
+    o.append("         ecd = kp(10,kq)")
+    o.append("         cb = 0.0_dp")
+    o.append("         hit = .false.")
+    o.append("         do bq = 1, nbra")
+    o.append("            eab = bp(10,bq)")
+    o.append("            if (eab + ecd > cutoff) cycle")
+    o.append("            hit = .true.")
+    o.append("            p = bp(1,bq); oo2p = bp(2,bq); ea = bp(11,bq)")
+    o.append("            PA0 = bp(3,bq); PA1 = bp(4,bq); PA2 = bp(5,bq)")
+    o.append("            PQ0 = bp(6,bq) - kp(6,kq)")
+    o.append("            PQ1 = bp(7,bq) - kp(7,kq)")
+    o.append("            PQ2 = bp(8,bq) - kp(8,kq)")
+    o.append("            pq = p + q")
+    o.append("            rho = p*q/pq")
+    o.append("            oo2pq = 0.5_dp/pq")
+    o.append("            rp = rho/p; rq = rho/q")
+    o.append("            wp_ = -q/pq; wq_ = p/pq")
+    o.append("            WP0 = wp_*PQ0; WP1 = wp_*PQ1; WP2 = wp_*PQ2")
+    o.append("            WQ0 = wq_*PQ0; WQ1 = wq_*PQ1; WQ2 = wq_*PQ2")
+    o.append("            tt = rho*(PQ0*PQ0 + PQ1*PQ1 + PQ2*PQ2)")
+    o.append(f"            call boys(f, tt, {L})")
+    o.append("            w = TWO_PI_52*bp(9,bq)*kp(9,kq)/sqrt(pq)")
+    o.append(f"            do n = 0, {L}")
+    o.append("               b(n) = w*f(n)")
+    o.append("            end do")
+    vlines = []
+    for key in pl.vorder:
+        i = pl.vname[key]
+        e = pl.g.expr[key]
+        if e is None:
+            vlines.append([f"      t({i}) = b({key[3]})"])
+        else:
+            terms = [term_text(cf, sy, f"t({pl.vname[dep]})") for cf, sy, dep in e]
+            vlines.append(wrap(f"t({i})", terms, "      "))
+    contained = []
+    for ci, start in enumerate(range(0, len(vlines), CHUNK)):
+        nm = f"vrr_{ci+1:03d}"
+        o.append(f"            call {nm}()")
+        body = [f"   subroutine {nm}()"]
+        for grp in vlines[start:start+CHUNK]:
+            body.extend(grp)
+        body.append(f"   end subroutine {nm}")
+        contained.append("\n".join(body))
+    for j, tgt in enumerate(pl.targets):
+        o.append(f"            tv({j+1}) = t({pl.vname[('v', tgt[0], tgt[1], 0)]})")
+    o.append(f"            do bc = 1, {pl.ntb}*ncb")
+    o.append(f"               cb(1:{NT},1,bc) = cb(1:{NT},1,bc) + kab(bc,bq)*tv(1:{NT})")
+    o.append(f"               cb(1:{NT},2,bc) = cb(1:{NT},2,bc) + (2.0_dp*ea)*kab(bc,bq)*tv(1:{NT})")
+    o.append("            end do")
+    o.append("         end do")
+    o.append("         if (.not. hit) cycle")
+    o.append("         any = .true.")
+    o.append(f"         do kc = 1, {pl.ntk}*nck")
+    o.append(f"            do bc = 1, {pl.ntb}*ncb")
+    o.append(f"               c(1:{NT},1:2,bc,kc) = c(1:{NT},1:2,bc,kc) + kcd(kc,kq)*cb(1:{NT},1:2,bc)")
+    o.append("            end do")
+    o.append("         end do")
+    o.append("      end do")
+    o.append("      res = 0.0_dp")
+    o.append("      if (.not. any) return")
+    o.append("      do ck = 1, nck")
+    o.append("         do cc = 1, ncb")
+    o.append("            col = cc + ncb*(ck-1)")
+    for blk in pl.hblocks:
+        bc = f"{blk['bcol']} + {pl.ntb}*(cc-1)" if pl.ntb > 1 else "cc"
+        kc = f"{blk['kcol']} + {pl.ntk}*(ck-1)" if pl.ntk > 1 else "ck"
+        o.append(f"            bc = {bc}; kc = {kc}")
+        hg, nm = blk["g"], blk["name"]
+        hlines = []
+        for key in blk["order"]:
+            i = nm[key]
+            if key[0] == 'c':
+                j = pl.tindex[(key[1], key[2])] + 1
+                hlines.append([f"      h({i}) = c({j},{key[3]+1},bc,kc)"])
+            else:
+                terms = [term_text(cf, sy, f"h({nm[dep]})") for cf, sy, dep in hg.expr[key]]
+                hlines.append(wrap(f"h({i})", terms, "      "))
+        for start in range(0, len(hlines), CHUNK):
+            cn_ = f"hrr_{len(contained)+1:03d}"
+            o.append(f"            call {cn_}()")
+            body = [f"   subroutine {cn_}()"]
+            for grp in hlines[start:start+CHUNK]:
+                body.extend(grp)
+            body.append(f"   end subroutine {cn_}")
+            contained.append("\n".join(body))
+        oa, ob, oc, od = blk["offs"]
+        na, nb, nc2 = pl.ncomp[0], pl.ncomp[1], pl.ncomp[2]
+        for (ca, cb_, cc_, cd_, axis), key in blk["roots"]:
+            ia = oa + cart_index(*ca); ib = ob + cart_index(*cb_)
+            ic = oc + cart_index(*cc_); id_ = od + cart_index(*cd_)
+            ax = "xyz".index(axis)
+            idx = ia + na*(ib + nb*(ic + nc2*id_)) + ax*NCART + 1
+            o.append(f"            res({idx},col) = -h({nm[key]})")
+    o.append("         end do")
+    o.append("      end do")
+    if contained:
+        o.append("")
+        o.append("   contains")
+        o.extend(contained)
+    o.append(f"   end subroutine {name}")
+    return "\n".join(o)

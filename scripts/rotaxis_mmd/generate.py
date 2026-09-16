@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from rotaxis_mmd.emit import emit_files
+from rotaxis_mmd.emit import emit_files, emit_grad_files
 from rotaxis_mmd.derive import KIND_RANK, KIND_LMAX
 
 
@@ -36,17 +36,39 @@ def main():
         os.path.dirname(os.path.abspath(__file__)))), help="libfint checkout to write into")
     ap.add_argument("--summary", action="store_true", help="print the per-class sizes only")
     ap.add_argument("--no-L", action="store_true", help="leave out the L-shell kernels")
+    ap.add_argument("--grad", action="store_true",
+                    help="emit the gradient kernels (d/dA, libcint int2e_ip1 layout)")
+    ap.add_argument("--max-terms", type=int, default=0,
+                    help="skip classes above this many level-2 terms; 0 = keep all. "
+                         "The supported() predicates ask the dispatcher, so a "
+                         "partial set is declined cleanly rather than trusted.")
     ap.add_argument("--unroll-limit", type=int, default=3000,
                     help="classes with more ket-level terms than this are table driven")
     args = ap.parse_args()
-    classes = canonical_classes(args.lmax, not args.no_L)
-    files, facts = emit_files(classes, args.unroll_limit)
+    if args.grad:
+        # NO canonicalisation for gradients.  The energy driver is free to
+        # permute a quartet into a canonical class because the integral is
+        # symmetric under those swaps; d/dA is not -- it names one centre,
+        # so whichever shell the caller put in slot 0 has to stay there.
+        # Every ordered combination of kinds therefore gets its own kernel.
+        kinds = [k for k in sorted(KIND_RANK, key=KIND_RANK.get)
+                 if KIND_LMAX[k] <= args.lmax and (not args.no_L or k != "L")]
+        classes = [(a, b, c, d) for a in kinds for b in kinds
+                   for c in kinds for d in kinds]
+    else:
+        classes = canonical_classes(args.lmax, not args.no_L)
+    if args.grad:
+        files, facts = emit_grad_files(classes, args.unroll_limit, args.max_terms)
+    else:
+        files, facts = emit_files(classes, args.unroll_limit)
     for f in facts:
         print(f.summary(), file=sys.stderr)
     if args.summary:
         return
     import glob
-    for stale in glob.glob(os.path.join(args.root, "src", "rotaxis", "rotaxis_*.f90")):
+    sub = "rotaxis_grad" if args.grad else "rotaxis"
+    pat = "rotaxis_grad_*.f90" if args.grad else "rotaxis_*.f90"
+    for stale in glob.glob(os.path.join(args.root, "src", sub, pat)):
         os.remove(stale)
     for rel, text in files.items():
         path = os.path.join(args.root, rel)
