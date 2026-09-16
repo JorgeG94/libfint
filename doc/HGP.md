@@ -273,6 +273,41 @@ geometric symbols (P−A loses x and y, A−B likewise, Q−C and C−D lose y),
 which is a 24–32% cut in emitted arithmetic. Worth having at d. It does
 not change the low-l picture: 27% off 402 is still far above 43.
 
+## 9b. The crossover is contraction depth, not angular momentum
+
+§9 counts the arithmetic by loop level and gets, for (pp|pp) with P bra
+primitive pairs and Q ket ones, rotated-axis 43PQ + 549Q + 271 against
+HGP's 402PQ + 324. Those cross near one primitive pair, so the rotated
+frame should *lose* on a fully decontracted shell and only pull ahead from
+two primitives up. Measured on the gradients, per quartet, s and p shells
+with every shell carrying the same number of primitives:
+
+| primitives/shell | Rys us | rot-axis us | HGP us | rot/HGP | rot/Rys |
+|---|---|---|---|---|---|
+| 1 | 2.27 | 3.13 | 2.20 | 1.43 | **0.72** |
+| 2 | 13.23 | 6.57 | 10.23 | 0.64 | 2.01 |
+| 3 | 58.68 | 17.80 | 40.96 | 0.43 | 3.30 |
+| 6 | 893.7 | 186.7 | 588.3 | 0.32 | 4.79 |
+
+The prediction holds and the crossover sits between one and two primitive
+pairs. At one, the rotated-axis gradient is 1.43x slower than HGP's and
+0.72x of Rys -- the worst of the three. From two up it wins, and by six
+primitives it is 4.79x Rys and 3.1x HGP.
+
+**So a dispatcher keyed on angular momentum alone is incomplete.** A basis
+with many single-primitive shells -- 6-311G, where carbon carries an extra
+uncontracted L -- puts a large share of pairs at P = 1, and a rule that
+sends every s/p/L quartet to the rotated-axis path picks the worse of the
+two there. metalquicha found exactly that in a gradient build, 1.42x on
+adenine/6-31G against 0.87x on 6-311G with the same class mix, and
+predicted the cause from these counts before either side measured it.
+
+The primitive count sits in the `bas` table beside the angular momentum,
+so keying on it costs a caller nothing. libfint does not make the choice
+-- it offers the algorithms and answers `supported` -- but the measurement
+belongs here, because it is a property of the kernels rather than of any
+caller.
+
 ## 10. Measured in a Fock build
 
 `test/fock_bench` builds a Fock matrix over all four paths -- Schwarz
