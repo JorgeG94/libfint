@@ -71,8 +71,9 @@ class ClassPlan:
     """What one class needs: the shared vertical targets and one transfer
     block per pair of coefficient types."""
 
-    def __init__(self, kinds):
+    def __init__(self, kinds, order="libcint"):
         self.kinds = kinds
+        self.order = order
         self.blocks = [kind_blocks(k) for k in kinds]
         self.ncomp = [kind_ncomp(k) for k in kinds]
         self.ntb = KIND_NTYPE[kinds[0]] * KIND_NTYPE[kinds[1]]
@@ -89,6 +90,9 @@ class ClassPlan:
                     for f in range(lc, lc + ld + 1):
                         ef.add((e, f))
         self.targets = []
+        # internal intermediates, addressed through tindex -- their sequence
+        # is invisible outside the kernel and their l runs above the output l,
+        # so they keep the complete order.  See recur.vrr_targets.
         for e, f in sorted(ef):
             for ce in cart_components(e):
                 for cf in cart_components(f):
@@ -106,19 +110,19 @@ class ClassPlan:
             for ik, ((lc, tc, oc, _), (ld, td, od, _)) in enumerate(self.ket_pairs):
                 hg = Graph()
                 roots = []
-                for cd_ in cart_components(ld):
-                    for cc_ in cart_components(lc):
-                        for cb in cart_components(lb):
-                            for ca in cart_components(la):
+                for cd_ in cart_components(ld, order):
+                    for cc_ in cart_components(lc, order):
+                        for cb in cart_components(lb, order):
+                            for ca in cart_components(la, order):
                                 roots.append(((ca, cb, cc_, cd_),
                                               hg.hrr_ket(ca, cb, cc_, cd_)))
-                order = hg.order([k for _, k in roots])
+                hord = hg.order([k for _, k in roots])
                 self.hblocks.append(dict(
                     bcol=ta + KIND_NTYPE[kinds[0]] * tb + 1,
                     kcol=tc + KIND_NTYPE[kinds[2]] * td + 1,
                     offs=(oa, ob, oc, od), ls=(la, lb, lc, ld),
-                    g=hg, order=order, roots=roots,
-                    name={k: i + 1 for i, k in enumerate(order)}))
+                    g=hg, order=hord, roots=roots,
+                    name={k: i + 1 for i, k in enumerate(hord)}))
 
     def summary(self):
         nv = len(self.vorder)
@@ -262,8 +266,8 @@ def emit_kernel(pl):
         la, lb, lc, ld = blk["ls"]
         na, nb, nc = pl.ncomp[0], pl.ncomp[1], pl.ncomp[2]
         for (ca, cb, cc_, cd_), key in blk["roots"]:
-            ia = oa + cart_index(*ca); ib = ob + cart_index(*cb)
-            ic = oc + cart_index(*cc_); id_ = od + cart_index(*cd_)
+            ia = oa + cart_index(*ca, order=pl.order); ib = ob + cart_index(*cb, order=pl.order)
+            ic = oc + cart_index(*cc_, order=pl.order); id_ = od + cart_index(*cd_, order=pl.order)
             idx = ia + na*(ib + nb*(ic + nc*id_)) + 1
             o.append(f"            res({idx},col) = h({nm[key]})")
     o.append("         end do")
@@ -311,9 +315,10 @@ class GradClassPlan:
     """What one gradient class needs.  Same shape as ClassPlan, with two
     contracted sets rather than one -- see Graph.grad."""
 
-    def __init__(self, kinds):
+    def __init__(self, kinds, order="libcint"):
         from .recur import grad_build
         self.kinds = kinds
+        self.order = order
         self.blocks = [kind_blocks(k) for k in kinds]
         self.ncomp = [kind_ncomp(k) for k in kinds]
         self.ntb = KIND_NTYPE[kinds[0]] * KIND_NTYPE[kinds[1]]
@@ -329,6 +334,9 @@ class GradClassPlan:
                     for f in range(lc, lc + ld + 1):
                         ef.add((e, f))
         self.targets = []
+        # internal intermediates, addressed through tindex -- their sequence
+        # is invisible outside the kernel and their l runs above the output l,
+        # so they keep the complete order.  See recur.vrr_targets.
         for e, f in sorted(ef):
             for ce in cart_components(e):
                 for cf in cart_components(f):
@@ -343,17 +351,17 @@ class GradClassPlan:
         self.hblocks = []
         for (la, ta, oa, _), (lb, tb, ob, _) in self.bra_pairs:
             for (lc, tc, oc, _), (ld, td, od, _) in self.ket_pairs:
-                hg, roots = grad_build(la, lb, lc, ld)
-                order = hg.order([k for _, k in roots])
+                hg, roots = grad_build(la, lb, lc, ld, order)
+                hord = hg.order([k for _, k in roots])
                 # drop the vertical nodes: this block's transfers read the
                 # contracted sets, which the shared vertical part produced
-                order = [k for k in order if k[0] != 'v']
+                hord = [k for k in hord if k[0] != 'v']
                 self.hblocks.append(dict(
                     bcol=ta + KIND_NTYPE[kinds[0]] * tb + 1,
                     kcol=tc + KIND_NTYPE[kinds[2]] * td + 1,
                     offs=(oa, ob, oc, od), ls=(la, lb, lc, ld),
-                    g=hg, order=order, roots=roots,
-                    name={k: i + 1 for i, k in enumerate(order)}))
+                    g=hg, order=hord, roots=roots,
+                    name={k: i + 1 for i, k in enumerate(hord)}))
 
     def summary(self):
         nv = len(self.vorder)
@@ -489,8 +497,8 @@ def emit_grad_kernel(pl):
         oa, ob, oc, od = blk["offs"]
         na, nb, nc2 = pl.ncomp[0], pl.ncomp[1], pl.ncomp[2]
         for (ca, cb_, cc_, cd_, axis), key in blk["roots"]:
-            ia = oa + cart_index(*ca); ib = ob + cart_index(*cb_)
-            ic = oc + cart_index(*cc_); id_ = od + cart_index(*cd_)
+            ia = oa + cart_index(*ca, order=pl.order); ib = ob + cart_index(*cb_, order=pl.order)
+            ic = oc + cart_index(*cc_, order=pl.order); id_ = od + cart_index(*cd_, order=pl.order)
             ax = "xyz".index(axis)
             idx = ia + na*(ib + nb*(ic + nc2*id_)) + ax*NCART + 1
             o.append(f"            res({idx},col) = -h({nm[key]})")

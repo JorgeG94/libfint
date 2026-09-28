@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from cartorder import ORDERS
 from hgp.emit import ClassPlan, emit_class_file, cname, class_code, \
                      GradClassPlan, emit_grad_kernel
 from hgp.kinds import KIND_RANK, KIND_LMAX
@@ -54,6 +55,10 @@ def main():
                     help="emit the gradient kernels (d/dA, libcint int2e_ip1 layout)")
     ap.add_argument("--root", default=os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__)))))
+    ap.add_argument("--order", default="libcint", choices=sorted(ORDERS),
+                    help="Cartesian component order of the emitted kernels. "
+                         "Affects the output layout only -- the recurrences are "
+                         "keyed by exponent triples either way.")
     args = ap.parse_args()
 
     if args.grad:
@@ -64,10 +69,10 @@ def main():
                  if KIND_LMAX[k] <= args.lmax and (not args.no_L or k != "L")]
         classes = [(a, b, c, d) for a in kinds for b in kinds
                    for c in kinds for d in kinds]
-        plans = [GradClassPlan(k) for k in classes]
+        plans = [GradClassPlan(k, order=args.order) for k in classes]
     else:
         classes = canonical_classes(args.lmax, not args.no_L)
-        plans = [ClassPlan(k) for k in classes]
+        plans = [ClassPlan(k, order=args.order) for k in classes]
     for p in plans:
         print(p.summary(), file=sys.stderr)
     if args.summary:

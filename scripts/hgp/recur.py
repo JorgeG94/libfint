@@ -160,7 +160,16 @@ class Graph:
 
 
 def vrr_targets(la, lb, lc, ld):
-    """The [e0|f0] the horizontal recurrence will consume."""
+    """The [e0|f0] the horizontal recurrence will consume.
+
+    Deliberately NOT ordered by the caller's output order.  These are
+    internal intermediates addressed through `tindex`, so their sequence is
+    invisible outside the kernel -- and the range runs to la+lb (la+lb+1 for
+    a gradient), above the output l.  An output order that stops at d, as the
+    gamess one does, would refuse to enumerate an f intermediate that a
+    perfectly ordinary p gradient class needs.  Output order belongs on the
+    transfer roots and on cart_index, not here.
+    """
     out = []
     for e in range(la, la + lb + 1):
         for f in range(lc, lc + ld + 1):
@@ -170,7 +179,7 @@ def vrr_targets(la, lb, lc, ld):
     return out
 
 
-def grad_build(la, lb, lc, ld):
+def grad_build(la, lb, lc, ld, order="libcint"):
     """(graph, targets) for d/dA of one plain class.
 
     The vertical set spans the RAISED bra range, because the 2a term needs
@@ -181,16 +190,16 @@ def grad_build(la, lb, lc, ld):
         g.vrr(ce, cf, 0)
     targets = []
     for axis in "xyz":
-        for cd_ in cart_components(ld):
-            for cc_ in cart_components(lc):
-                for cb in cart_components(lb):
-                    for ca in cart_components(la):
+        for cd_ in cart_components(ld, order):
+            for cc_ in cart_components(lc, order):
+                for cb in cart_components(lb, order):
+                    for ca in cart_components(la, order):
                         targets.append(((ca, cb, cc_, cd_, axis),
                                         g.grad(ca, cb, cc_, cd_, axis)))
     return g, targets
 
 
-def build(la, lb, lc, ld):
+def build(la, lb, lc, ld, order="libcint"):
     """Return (graph, vrr_roots, targets) for one plain class.
 
     `targets` is the list of ((a,b,c,d) exponent tuples, node key) in
@@ -201,10 +210,10 @@ def build(la, lb, lc, ld):
     vroots = [g.vrr(ce, cf, 0) for ce, cf in vrr_targets(la, lb, lc, ld)]
     # the transfers
     targets = []
-    for cd_ in cart_components(ld):
-        for cc_ in cart_components(lc):
-            for cb in cart_components(lb):
-                for ca in cart_components(la):
+    for cd_ in cart_components(ld, order):
+        for cc_ in cart_components(lc, order):
+            for cb in cart_components(lb, order):
+                for ca in cart_components(la, order):
                     targets.append(((ca, cb, cc_, cd_),
                                     g.hrr_ket(ca, cb, cc_, cd_)))
     return g, vroots, targets

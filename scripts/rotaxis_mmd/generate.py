@@ -14,6 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from cartorder import ORDERS
 from rotaxis_mmd.emit import emit_files, emit_grad_files
 from rotaxis_mmd.derive import KIND_RANK, KIND_LMAX
 
@@ -44,6 +45,10 @@ def main():
                          "partial set is declined cleanly rather than trusted.")
     ap.add_argument("--unroll-limit", type=int, default=3000,
                     help="classes with more ket-level terms than this are table driven")
+    ap.add_argument("--order", default="libcint", choices=sorted(ORDERS),
+                    help="Cartesian component order of the emitted kernels. "
+                         "Affects the output layout only -- the derivation is "
+                         "keyed by exponent triples either way.")
     args = ap.parse_args()
     if args.grad:
         # NO canonicalisation for gradients.  The energy driver is free to
@@ -58,9 +63,10 @@ def main():
     else:
         classes = canonical_classes(args.lmax, not args.no_L)
     if args.grad:
-        files, facts = emit_grad_files(classes, args.unroll_limit, args.max_terms)
+        files, facts = emit_grad_files(classes, args.unroll_limit, args.max_terms,
+                                       order=args.order)
     else:
-        files, facts = emit_files(classes, args.unroll_limit)
+        files, facts = emit_files(classes, args.unroll_limit, order=args.order)
     for f in facts:
         print(f.summary(), file=sys.stderr)
     if args.summary:
