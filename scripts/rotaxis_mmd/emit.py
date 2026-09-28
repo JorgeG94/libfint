@@ -114,7 +114,12 @@ def emit_kernel(f: Factorised, grad=False):
              f"L={L}: {NS} bra accumulators, {NR} ket accumulators, {NCOMP} components")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
+    # bp carries a sixth row, the bra exponent a, ONLY for gradients: d/dA
+    # raises the bra with a factor 2a, so `ea` is a bra-primitive scalar the
+    # energy kernels never ask for.  The energy driver fills bp(5, *) and the
+    # gradient driver bp(6, *) -- declaring 6 unconditionally strides the
+    # energy array wrongly and misreads every primitive past the first.
+    o.append(f"      real(dp), intent(in)  :: bp({6 if grad else 5}, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
@@ -336,7 +341,12 @@ def emit_kernel_tabled(f: Factorised, grad=False):
              f"({NT} terms), {NCOMP} components -- table driven")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
+    # bp carries a sixth row, the bra exponent a, ONLY for gradients: d/dA
+    # raises the bra with a factor 2a, so `ea` is a bra-primitive scalar the
+    # energy kernels never ask for.  The energy driver fills bp(5, *) and the
+    # gradient driver bp(6, *) -- declaring 6 unconditionally strides the
+    # energy array wrongly and misreads every primitive past the first.
+    o.append(f"      real(dp), intent(in)  :: bp({6 if grad else 5}, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
