@@ -55,7 +55,7 @@ def main():
                     help="emit the gradient kernels (d/dA, libcint int2e_ip1 layout)")
     ap.add_argument("--root", default=os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__)))))
-    ap.add_argument("--order", default="libcint", choices=sorted(ORDERS),
+    ap.add_argument("--order", default="lexicographic", choices=sorted(ORDERS),
                     help="Cartesian component order of the emitted kernels. "
                          "Affects the output layout only -- the recurrences are "
                          "keyed by exponent triples either way.")

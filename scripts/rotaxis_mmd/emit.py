@@ -493,7 +493,7 @@ end module cint_rotaxis_boys
 
 
 def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT, max_terms=0,
-                    order="libcint"):
+                    order="lexicographic"):
     """The gradient kernels: d/dA of every component, in libcint's ip1
     layout -- three derivative directions slowest, then (i,j,k,l) with i
     fastest -- and NEGATED, because int2e_ip1 is <nabla i|, which is minus
@@ -620,7 +620,7 @@ def emit_class_file(f, unroll_limit=UNROLL_LIMIT):
     return "\n".join(o) + "\n"
 
 
-def emit_files(classes, unroll_limit=UNROLL_LIMIT, order="libcint"):
+def emit_files(classes, unroll_limit=UNROLL_LIMIT, order="lexicographic"):
     """Return {relative path: text} for everything the generator writes."""
     from .derive import KIND_LMAX
     facts = [Factorised(Derivation(*k, order=order)) for k in classes]

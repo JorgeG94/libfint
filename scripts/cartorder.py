@@ -23,10 +23,26 @@ from fractions import Fraction
 from functools import lru_cache
 
 
-def _libcint(l):
-    """x-power descending, then y-power.  libcint's CINTcart_comp order.
+def _lexicographic(l):
+    """The component labels in ALPHABETICAL order, with x < y < z.
 
-    l=2 is XX XY XZ YY YZ ZZ.
+    l=2 is XX XY XZ YY YZ ZZ; l=3 is XXX XXY XXZ XYY XYZ XZZ YYY YYZ YZZ ZZZ.
+
+    Equivalently the exponent triples (lx, ly, lz) in DESCENDING lexicographic
+    order -- and the direction matters, because ASCENDING lexicographic on the
+    triples is the exact reverse, ZZ YZ YY XZ XY XX, which is a plausible
+    reading of "lexicographic" and wrong.  Ascending on the labels, descending
+    on the triples; they are the same ordering seen from two sides.
+
+    Implemented as x-power descending then y-power, which is that order.
+
+    This is the common convention -- libint, Psi4, PySCF and the CCA standard
+    all use it, as does libcint, whose CINTcart_comp is where libfint inherited
+    it.  Naming it after any one of them would undersell it, so the canonical
+    key is "lexicographic" and "libcint" is kept as an alias.
+
+    GAMESS's order has no such name because it is not a sort of the labels at
+    all; it is a grouping by normalisation factor.  See _gamess.
     """
     return [(lx, ly, l - lx - ly)
             for lx in range(l, -1, -1)
@@ -147,8 +163,18 @@ def gamess_norm(lx, ly, lz):
     return float(gamess_norm_sq(lx, ly, lz)) ** 0.5
 
 
+def _label(c):
+    return "".join(a * n for a, n in zip("xyz", c))
+
+
+for _l in range(7):
+    # the name has to stay true: alphabetical on labels, descending on triples
+    _c = _lexicographic(_l)
+    assert _c == sorted(_c, key=_label), f"lexicographic l={_l} is not label-sorted"
+    assert _c == sorted(_c, reverse=True), f"lexicographic l={_l} is not descending-lex"
+
 for _l, _t in _GAMESS_TABLE.items():
-    assert sorted(_t) == sorted(_libcint(_l)), f"gamess table for l={_l} is not a permutation"
+    assert sorted(_t) == sorted(_lexicographic(_l)), f"gamess table for l={_l} is not a permutation"
     assert len(set(_t)) == len(_t), f"gamess table for l={_l} repeats a component"
     # The order groups components by normalisation factor, in nondecreasing
     # order -- that is what GENRAL's cumulative multiplication means, and it
@@ -157,11 +183,15 @@ for _l, _t in _GAMESS_TABLE.items():
     _f = [gamess_norm_sq(*_c) for _c in _t]
     assert _f == sorted(_f), f"gamess table for l={_l} is not sorted by normalisation factor"
 
-ORDERS = {"libcint": _libcint, "gamess": _gamess}
+# "libcint" is an alias, not a second order: same function, so callers and
+# docs predating the rename keep working and resolve identically.
+ORDERS = {"lexicographic": _lexicographic, "gamess": _gamess,
+          "libcint": _lexicographic}
+assert ORDERS["libcint"] is ORDERS["lexicographic"]
 
 
 @lru_cache(maxsize=None)
-def components(l, order="libcint"):
+def components(l, order="lexicographic"):
     """The Cartesian exponent triples of angular momentum `l`, in `order`.
 
     Returns a tuple: it is cached, so a caller must not be able to mutate it.
@@ -179,7 +209,7 @@ def _index_map(l, order):
     return {c: i for i, c in enumerate(components(l, order))}
 
 
-def index(lx, ly, lz, order="libcint"):
+def index(lx, ly, lz, order="lexicographic"):
     """The offset of (lx,ly,lz) within its shell, in `order`.
 
     A lookup into `components`, not an independent formula.  That is the

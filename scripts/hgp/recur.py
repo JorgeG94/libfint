@@ -179,7 +179,7 @@ def vrr_targets(la, lb, lc, ld):
     return out
 
 
-def grad_build(la, lb, lc, ld, order="libcint"):
+def grad_build(la, lb, lc, ld, order="lexicographic"):
     """(graph, targets) for d/dA of one plain class.
 
     The vertical set spans the RAISED bra range, because the 2a term needs
@@ -199,7 +199,7 @@ def grad_build(la, lb, lc, ld, order="libcint"):
     return g, targets
 
 
-def build(la, lb, lc, ld, order="libcint"):
+def build(la, lb, lc, ld, order="lexicographic"):
     """Return (graph, vrr_roots, targets) for one plain class.
 
     `targets` is the list of ((a,b,c,d) exponent tuples, node key) in

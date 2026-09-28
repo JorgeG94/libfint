@@ -45,7 +45,7 @@ def main():
                          "partial set is declined cleanly rather than trusted.")
     ap.add_argument("--unroll-limit", type=int, default=3000,
                     help="classes with more ket-level terms than this are table driven")
-    ap.add_argument("--order", default="libcint", choices=sorted(ORDERS),
+    ap.add_argument("--order", default="lexicographic", choices=sorted(ORDERS),
                     help="Cartesian component order of the emitted kernels. "
                          "Affects the output layout only -- the derivation is "
                          "keyed by exponent triples either way.")

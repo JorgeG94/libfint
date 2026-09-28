@@ -71,7 +71,7 @@ class ClassPlan:
     """What one class needs: the shared vertical targets and one transfer
     block per pair of coefficient types."""
 
-    def __init__(self, kinds, order="libcint"):
+    def __init__(self, kinds, order="lexicographic"):
         self.kinds = kinds
         self.order = order
         self.blocks = [kind_blocks(k) for k in kinds]
@@ -315,7 +315,7 @@ class GradClassPlan:
     """What one gradient class needs.  Same shape as ClassPlan, with two
     contracted sets rather than one -- see Graph.grad."""
 
-    def __init__(self, kinds, order="libcint"):
+    def __init__(self, kinds, order="lexicographic"):
         from .recur import grad_build
         self.kinds = kinds
         self.order = order

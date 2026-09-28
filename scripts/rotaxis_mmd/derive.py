@@ -61,7 +61,7 @@ KIND_RANK = {"s": 0, "p": 1, "L": 2, "d": 3, "f": 4}
 # so a class that never uses f does not require the requested order to define
 # an f layout -- the gamess order deliberately stops at l = 2.
 @lru_cache(maxsize=None)
-def kind_components(kind, order="libcint"):
+def kind_components(kind, order="lexicographic"):
     """((Cartesian exponents, coefficient type), ...) for one shell kind."""
     cc = lambda l: cart_components(l, order)
     if kind == "s":
@@ -73,7 +73,7 @@ def kind_components(kind, order="libcint"):
 
 
 class Derivation:
-    def __init__(self, ka, kb, kc, kd, extra=0, order="libcint"):
+    def __init__(self, ka, kb, kc, kd, extra=0, order="lexicographic"):
         # `extra` raises the Boys ladder: a gradient target reaches one
         # angular momentum higher on the bra, so it needs B_{L+1}.
         #

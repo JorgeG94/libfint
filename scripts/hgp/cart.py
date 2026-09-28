@@ -9,9 +9,9 @@ definition, so an added order cannot desynchronise them.
 from cartorder import components as _components, index as _index
 
 
-def cart_components(l, order="libcint"):
+def cart_components(l, order="lexicographic"):
     return _components(l, order)
 
 
-def cart_index(lx, ly, lz, order="libcint"):
+def cart_index(lx, ly, lz, order="lexicographic"):
     return _index(lx, ly, lz, order)
