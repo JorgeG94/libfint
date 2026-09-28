@@ -1,0 +1,83 @@
+name: generators
+
+# The generators are Python and need no compiler, so they get their own
+# workflow rather than a step repeated once per toolchain in the build matrix.
+#
+# Two things are checked, and neither was covered before.
+#
+#   1. The recurrences are right.  scripts/hgp/check_numeric.py evaluates the
+#      emitted DAG numerically and compares it with McMurchie-Davidson, and
+#      compares the gradient DAG with a central finite difference.  The file
+#      existed but nothing ran it, so its energy half sat broken -- scoring
+#      every class above (ss|ss) as a 1.95 relative error -- unnoticed.
+#
+#   2. The generators still reproduce what they shipped.  Regenerating in
+#      place must leave the tree clean.  This is the check that would have
+#      caught the bp(5)/bp(6) stride bug when it was introduced rather than
+#      much later: the committed kernels were correct, the generator had
+#      quietly stopped emitting them, and only a regeneration showed it.
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 12 * * 3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  Generators:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.x
+
+    # No pip install: the generators are deliberately dependency-free, and a
+    # requirements file here would be the first step towards them not being.
+    - name: Check the HGP recurrences numerically
+      run: python3 -m hgp.check_numeric
+      working-directory: scripts
+
+    - name: Regenerate every kernel set in place
+      run: |
+        python3 scripts/rotaxis_mmd/generate.py --lmax 1        --root .
+        python3 scripts/rotaxis_mmd/generate.py --lmax 1 --grad --root .
+        python3 scripts/hgp/generate.py         --lmax 2        --root .
+        python3 scripts/hgp/generate.py         --lmax 1 --grad --root .
+
+    - name: The tree must be unchanged
+      run: |
+        if ! git diff --exit-code --stat -- src/; then
+          echo
+          echo "The generators no longer reproduce the committed kernels."
+          echo "Either regenerate and commit the result, or fix the generator."
+          exit 1
+        fi
+
+    # The alternate orders have to stay generatable, not just the default.
+    # gamess coincides with lexicographic for l <= 1, so at --lmax 1 it must
+    # leave the tree clean too -- a free end-to-end check that the order
+    # parameter is a genuine no-op where it should be.
+    - name: The gamess order must agree with the default where the two coincide
+      run: |
+        python3 scripts/rotaxis_mmd/generate.py --lmax 1 --order gamess --root .
+        python3 scripts/hgp/generate.py --lmax 1 --grad --order gamess --root .
+        git diff --exit-code --stat -- src/
+
+    - name: The gamess order must generate with d present
+      run: |
+        python3 scripts/hgp/generate.py --lmax 2 --order gamess --root "$RUNNER_TEMP/gm"
+        python3 scripts/rotaxis_mmd/generate.py --lmax 2 --order gamess --root "$RUNNER_TEMP/gm"
+
+    - name: Restore the tree
+      if: ${{ always() }}
+      run: git checkout -- src/
