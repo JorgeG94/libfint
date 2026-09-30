@@ -32,32 +32,67 @@ def _libcint(l):
             for ly in range(l - lx, -1, -1)]
 
 
+# Transcribed from GAMESS's own table rather than inferred from a rule: the
+# grouping is not a simple one (g interleaves the (2,2,0) family between the
+# (3,1,0) and (2,1,1) ones) and a rule that merely fits d and f would be a
+# silent permutation at g.  Source: gamess-jorge/source/int2a.src, subroutine
+# SHELLS, the DATA LX/LY/LZ tables -- flat indices 5-10 for d, 11-20 for f,
+# 21-35 for g, read across all three tables.  LX alone does not determine the
+# triple wherever it is 0.
+#
+# d and f are corroborated by a second, independent implementation:
+# gamess-libERI/rhf/rys/int3000_rysgen.F90 lines 69-116, whose ix/iy/iz
+# offsets minus one reproduce the f triples exactly, and d additionally by
+# the eri_value(1, 8, 15) diagonal of rhf/rot_axis/int0022.F90.  g rests on
+# int2a.src alone -- which is GAMESS itself, so it is the authority rather
+# than a derived copy, but it has not been cross-checked against a second
+# implementation.
+_GAMESS_TABLE = {
+    0: [(0, 0, 0)],
+    1: [(1, 0, 0), (0, 1, 0), (0, 0, 1)],
+    2: [(2, 0, 0), (0, 2, 0), (0, 0, 2),
+        (1, 1, 0), (1, 0, 1), (0, 1, 1)],
+    3: [(3, 0, 0), (0, 3, 0), (0, 0, 3),
+        (2, 1, 0), (2, 0, 1), (1, 2, 0), (0, 2, 1), (1, 0, 2), (0, 1, 2),
+        (1, 1, 1)],
+    4: [(4, 0, 0), (0, 4, 0), (0, 0, 4),
+        (3, 1, 0), (3, 0, 1), (1, 3, 0), (0, 3, 1), (1, 0, 3), (0, 1, 3),
+        (2, 2, 0), (2, 0, 2), (0, 2, 2),
+        (2, 1, 1), (1, 2, 1), (1, 1, 2)],
+}
+
+
 def _gamess(l):
-    """GAMESS's order: the pure powers first, then the mixed ones in
-    libcint's relative order.
+    """GAMESS's Cartesian component order, l = 0..4.
 
-    l=2 is XX YY ZZ XY XZ YZ.  That was read out of gamess-libERI's own
-    kernels rather than assumed: in rhf/rot_axis/int0022.F90 the 6x6 block's
-    diagonal sits at eri_value(1, 8, 15), and eri_value(1) carries qx**4,
-    eri_value(8) carries no geometry at all (the y direction has none in
-    that frame) and eri_value(15) carries qz**4.  s and p coincide with
-    libcint, so only d actually differs.
+    s and p coincide with libcint; d is XX YY ZZ XY XZ YZ; f is
+    XXX YYY ZZZ XXY XXZ XYY YYZ XZZ YZZ XYZ.  See _GAMESS_TABLE for sources.
 
-    l >= 3 is deliberately absent.  GAMESS's f convention has not been
-    confirmed against the kernels, and guessing it would put a silent
-    permutation into every f integral -- the exact failure this module
-    exists to prevent.  Confirm it the same way d was confirmed, then add
-    it here.
+    NOTE, because it has bitten people: ORDER IS NOT THE ONLY DIFFERENCE.
+    GAMESS also scales components individually within a shell, where libcint
+    (and so libfint) normalise per l only -- int2a.src's GENRAL applies
+    SQRT3, SQRT5 and SQRT7 factors under `IF (NORM)` around line 1262, and
+    gamess-libERI reproduces them (shell_pair.F90 for d, int0030_ericgen.F90
+    for f).  The reported effective factors are sqrt3 on the d off-diagonal
+    components, sqrt5 on the f XXY-type ones and sqrt15 on XYZ.
+
+    This module does ONE thing: it says which component sits in which slot.
+    It deliberately does not touch normalisation, because conflating a
+    permutation with a diagonal rescale is how you get a bug that looks like
+    a permutation bug.  Anyone comparing element by element against GAMESS
+    needs both, and the rescale belongs at the boundary, as a per-AO diagonal.
     """
-    if l > 2:
+    if l not in _GAMESS_TABLE:
         raise NotImplementedError(
-            f"the gamess order is defined here only for l <= 2, not l={l}. "
-            "Confirm the f ordering against gamess-libERI/rhf/rot_axis "
-            "before adding it, the way d was confirmed from int0022.F90.")
-    cs = _libcint(l)
-    pure = [c for c in cs if sum(1 for e in c if e) <= 1]
-    return pure + [c for c in cs if c not in pure]
+            f"the gamess order is transcribed here only for l <= 4, not l={l}. "
+            "Read it out of int2a.src's DATA LX/LY/LZ tables (subroutine "
+            "SHELLS) across all three arrays before adding it.")
+    return list(_GAMESS_TABLE[l])
 
+
+for _l, _t in _GAMESS_TABLE.items():
+    assert sorted(_t) == sorted(_libcint(_l)), f"gamess table for l={_l} is not a permutation"
+    assert len(set(_t)) == len(_t), f"gamess table for l={_l} repeats a component"
 
 ORDERS = {"libcint": _libcint, "gamess": _gamess}
 
