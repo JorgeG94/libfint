@@ -32,10 +32,12 @@ def _libcint(l):
             for ly in range(l - lx, -1, -1)]
 
 
-# Transcribed from GAMESS's own table rather than inferred from a rule: the
-# grouping is not a simple one (g interleaves the (2,2,0) family between the
-# (3,1,0) and (2,1,1) ones) and a rule that merely fits d and f would be a
-# silent permutation at g.  Source: gamess-jorge/source/int2a.src, subroutine
+# Transcribed from GAMESS's own table rather than inferred from a rule.  The
+# order turns out to be a grouping by NORMALISATION FACTOR -- see _gamess --
+# in blocks of constant factor, which is why g puts the (2,2,0) family between
+# the (3,1,0) and the (2,1,1) ones.  That is a useful consistency check on the
+# transcription, but it is not how the table was obtained, and a rule fitted to
+# d and f alone would still have been a silent permutation at g.  Source: gamess-jorge/source/int2a.src, subroutine
 # SHELLS, the DATA LX/LY/LZ tables -- flat indices 5-10 for d, 11-20 for f,
 # 21-35 for g, read across all three tables.  LX alone does not determine the
 # triple wherever it is 0.
@@ -70,13 +72,26 @@ def _gamess(l):
 
     NOTE, because it has bitten people: ORDER IS NOT THE ONLY DIFFERENCE.
     GAMESS also scales components individually within a shell, where libcint
-    (and so libfint) normalise per l only -- int2a.src's GENRAL applies
-    SQRT3, SQRT5 and SQRT7 factors under `IF (NORM)` around line 1262, and
-    gamess-libERI reproduces them (shell_pair.F90 for d, int0030_ericgen.F90
-    for f).  The reported effective factors are sqrt3 on the d off-diagonal
-    components, sqrt5 on the f XXY-type ones and sqrt15 on XYZ.
+    (and so libfint) normalise per l only.  int2a.src's GENRAL carries one
+    running factor DUM1 across the component loop: its computed GO TO (near
+    line 1251, indexed by the flat component number) sends the first component
+    of each l to a label that SETS DUM1 from the contraction coefficient, some
+    later components to labels that MULTIPLY it, and everything else to 220,
+    which leaves it alone.  So the factor is cumulative and applies to a run of
+    components, giving
 
-    This module does ONE thing: it says which component sits in which slot.
+        d   1 for XX YY ZZ            sqrt3 for XY XZ YZ
+        f   1 for XXX YYY ZZZ         sqrt5 for the six XXY-type
+            sqrt15 for XYZ            (sqrt5 then sqrt3, compounded)
+        g   1 for XXXX YYYY ZZZZ      sqrt7 for the six XXXY-type
+            sqrt(35/3) for XXYY XXZZ YYZZ    sqrt35 for XXYZ XYYZ XYZZ
+
+    which is exactly the block structure of the order above -- the two are the
+    same grouping.  Confirmed in gamess-libERI too: int0030_ericgen.F90's
+    `angl` array is 1, sqrt3 ... and 1, sqrt5 ... sqrt15 by component type, in
+    that code's own slot order, and shell_pair.F90 carries the d sqrt3.
+
+    This module still does ONE thing: it says which component sits in which slot.
     It deliberately does not touch normalisation, because conflating a
     permutation with a diagonal rescale is how you get a bug that looks like
     a permutation bug.  Anyone comparing element by element against GAMESS
