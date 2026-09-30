@@ -19,6 +19,7 @@ cross-contaminate silently the first time one process emitted two orders --
 the failure would look like a miscompiled kernel rather than a stale global.
 """
 
+from fractions import Fraction
 from functools import lru_cache
 
 
@@ -101,13 +102,60 @@ def _gamess(l):
         raise NotImplementedError(
             f"the gamess order is transcribed here only for l <= 4, not l={l}. "
             "Read it out of int2a.src's DATA LX/LY/LZ tables (subroutine "
-            "SHELLS) across all three arrays before adding it.")
+            "SHELLS) across all three arrays before adding it.  Note that "
+            "gamess_norm_sq does NOT determine the order and cannot stand in "
+            "for that reading: it fixes the factor groups and their sequence, "
+            "but the largest group at f and at g holds six components whose "
+            "order within the group the factor says nothing about.")
     return list(_GAMESS_TABLE[l])
+
+
+def _dfact(n):
+    """(2n-1)!!, with (-1)!! = 1."""
+    r = 1
+    while n > 0:
+        r *= 2 * n - 1
+        n -= 1
+    return r
+
+
+def gamess_norm_sq(lx, ly, lz):
+    """GAMESS's per-component normalisation factor SQUARED, exactly.
+
+        (2l-1)!! / ((2lx-1)!! (2ly-1)!! (2lz-1)!!)
+
+    the standard Cartesian normalisation ratio.  Squared and as a Fraction
+    because the factors are irrational but their squares are rational, so
+    comparisons stay exact: d XY is 3, f XYZ is 15, g XXYY is 35/3.
+
+    This is what GAMESS's GENRAL builds up by cumulative multiplication (see
+    _gamess), and it agrees with every factor decoded from that jump table.
+    libcint, and so libfint, normalise per l only, so this is the diagonal a
+    caller needs at the GAMESS boundary.
+
+    NOTHING IN THIS MODULE APPLIES IT.  It is here to be called explicitly by
+    whoever crosses that boundary, and to check the ordering tables below.
+    Ordering and normalisation stay separate on purpose: a rescale folded
+    silently into a permutation gives a bug that presents as a permutation bug.
+    """
+    return Fraction(_dfact(lx + ly + lz),
+                    _dfact(lx) * _dfact(ly) * _dfact(lz))
+
+
+def gamess_norm(lx, ly, lz):
+    """gamess_norm_sq as a float."""
+    return float(gamess_norm_sq(lx, ly, lz)) ** 0.5
 
 
 for _l, _t in _GAMESS_TABLE.items():
     assert sorted(_t) == sorted(_libcint(_l)), f"gamess table for l={_l} is not a permutation"
     assert len(set(_t)) == len(_t), f"gamess table for l={_l} repeats a component"
+    # The order groups components by normalisation factor, in nondecreasing
+    # order -- that is what GENRAL's cumulative multiplication means, and it
+    # catches a transcription error that moves a component across a factor
+    # boundary, which a permutation check alone would not.
+    _f = [gamess_norm_sq(*_c) for _c in _t]
+    assert _f == sorted(_f), f"gamess table for l={_l} is not sorted by normalisation factor"
 
 ORDERS = {"libcint": _libcint, "gamess": _gamess}
 
