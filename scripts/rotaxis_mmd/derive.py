@@ -38,42 +38,51 @@ weights and the driver, see emit.py.
 
 from functools import lru_cache
 
+from cartorder import components as cart_components
+
 from .poly import Ring
-
-
-def cart_components(l):
-    """libcint's Cartesian order: x-power descending, then y-power."""
-    out = []
-    for lx in range(l, -1, -1):
-        for ly in range(l - lx, -1, -1):
-            out.append((lx, ly, l - lx - ly))
-    return out
 
 
 # A slot of the quartet is a KIND, not just an angular momentum: an L shell
 # (libcint's KAPPA_SP_SHELL, s and p on shared exponents with a coefficient
 # column for each) is one slot of four components whose s component takes
 # the s coefficient and whose p components take the p coefficient.  Each
-# kind lists (Cartesian exponents, coefficient type) in libcint's output
+# kind lists (Cartesian exponents, coefficient type) in the OUTPUT component
 # order; the type is the column block of the contraction coefficient.
-KINDS = {
-    "s": [((0, 0, 0), 0)],
-    "p": [(c, 0) for c in cart_components(1)],
-    "d": [(c, 0) for c in cart_components(2)],
-    "f": [(c, 0) for c in cart_components(3)],
-    "L": [((0, 0, 0), 0)] + [(c, 1) for c in cart_components(1)],
-}
 KIND_LMAX = {"s": 0, "p": 1, "d": 2, "f": 3, "L": 1}
 KIND_NTYPES = {"s": 1, "p": 1, "d": 1, "f": 1, "L": 2}
 # The canonical order of kinds within a pair and of pairs within a quartet.
 KIND_RANK = {"s": 0, "p": 1, "L": 2, "d": 3, "f": 4}
 
 
+# A cached factory per kind, not a module-level dict, for two reasons.  The
+# component order is a parameter, and a module global would be shared state
+# that a second order silently corrupts.  And it resolves one kind at a time,
+# so a class that never uses f does not require the requested order to define
+# an f layout -- the gamess order deliberately stops at l = 2.
+@lru_cache(maxsize=None)
+def kind_components(kind, order="lexicographic"):
+    """((Cartesian exponents, coefficient type), ...) for one shell kind."""
+    cc = lambda l: cart_components(l, order)
+    if kind == "s":
+        return (((0, 0, 0), 0),)
+    if kind == "L":
+        return (((0, 0, 0), 0),) + tuple((c, 1) for c in cc(1))
+    return tuple((c, 0) for c in cc(KIND_LMAX[kind]))
+
+
+
 class Derivation:
-    def __init__(self, ka, kb, kc, kd, extra=0):
+    def __init__(self, ka, kb, kc, kd, extra=0, order="lexicographic"):
         # `extra` raises the Boys ladder: a gradient target reaches one
         # angular momentum higher on the bra, so it needs B_{L+1}.
+        #
+        # `order` is the Cartesian component order of the OUTPUT only.  The
+        # derivation below is keyed by exponent triples throughout, so the
+        # order changes which column a component lands in and nothing else.
         self.kinds = (ka, kb, kc, kd)
+        self.order = order
+        self._kinds = {k: kind_components(k, order) for k in set(self.kinds)}
         self.l = tuple(KIND_LMAX[k] for k in self.kinds)
         self.L = sum(self.l) + extra
         L = self.L
@@ -207,7 +216,7 @@ class Derivation:
     def all_grad_components(self):
         """Every component of d/dA, in libcint's ip1 order: the three
         derivative directions slowest, then (i,j,k,l) with i fastest."""
-        ka, kb, kc, kd = (KINDS[k] for k in self.kinds)
+        ka, kb, kc, kd = (self._kinds[k] for k in self.kinds)
         comps = []
         for axis in "xyz":
             for cd, td in kd:
@@ -221,7 +230,7 @@ class Derivation:
     def all_components(self):
         """Every component of the class, in libcint's (i,j,k,l) column-major
         order (i fastest), as ((exponents, coefficient types), polynomial)."""
-        ka, kb, kc, kd = (KINDS[k] for k in self.kinds)
+        ka, kb, kc, kd = (self._kinds[k] for k in self.kinds)
         comps = []
         for cd, td in kd:
             for cc, tc in kc:

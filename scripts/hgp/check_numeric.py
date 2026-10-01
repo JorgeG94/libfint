@@ -60,7 +60,16 @@ def evaluate(g, order, geom):
     val = {}
     for k in order:
         e = g.expr.get(k)
-        if e is None:
+        if k[0] == 'c':
+            # A contracted vertical result, ('c', e, f, buf) -- NOT a base.
+            # It carries no expression because the kernel reads it out of the
+            # contracted buffer; with one primitive per shell the contraction
+            # is the identity, so it is just the m = 0 vertical value.  k[3]
+            # is the buffer index here, not a Boys order, and treating it as
+            # one silently returns boys(0, t) for every component of a class
+            # -- which agrees with the reference at (ss|ss) and nowhere else.
+            val[k] = val[('v', k[1], k[2], 0)]
+        elif e is None:
             val[k] = pref * boys(k[3], t)          # a base ('v', 0, 0, m)
         else:
             acc = 0.0
@@ -153,7 +162,10 @@ def check(classes, seed=7):
     worst, ncmp = 0.0, 0
     for cls in classes:
         g, vroots, targets = build(*cls)
-        order = g.order([k for _, k in targets])
+        # vroots as well: the transfers read the contracted vertical results,
+        # so ordering over the targets alone leaves every vertical node
+        # unevaluated and the 'c' lookup above with nothing to find.
+        order = g.order(vroots + [k for _, k in targets])
         for _ in range(2):
             geom = (rng.uniform(0.3, 3.0), [rng.uniform(-1.5, 1.5) for _ in range(3)],
                     rng.uniform(0.3, 3.0), [rng.uniform(-1.5, 1.5) for _ in range(3)],
@@ -235,3 +247,38 @@ def check_grad(classes, seed=17):
             ncmp += 1
         print(f"  {cls}  worst so far {worst:.2e}  ({ncmp} values)")
     return worst
+
+
+# ---- CI entry point ----------------------------------------------------
+
+ENERGY_CLASSES = [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 1),
+                  (2, 0, 0, 0), (2, 0, 1, 1), (2, 1, 1, 0), (2, 2, 1, 1),
+                  (2, 2, 2, 0), (2, 2, 2, 2)]
+GRAD_CLASSES = [(0, 0, 0, 0), (1, 0, 0, 0), (1, 1, 0, 0), (1, 1, 1, 1),
+                (2, 0, 1, 0), (2, 1, 1, 1)]
+
+# The energy path is exact algebra against exact algebra, so it holds to
+# rounding.  The gradient path is compared with a central finite difference,
+# which is limited by the step rather than by the recurrence.
+ENERGY_TOL = 1e-11
+GRAD_TOL = 1e-7
+
+
+def main():
+    print("HGP energy recurrences vs McMurchie-Davidson:")
+    we = check(ENERGY_CLASSES)
+    print("HGP gradient recurrences vs central finite difference:")
+    wg = check_grad(GRAD_CLASSES)
+    print()
+    ok = True
+    for name, worst, tol in (("energy", we, ENERGY_TOL), ("gradient", wg, GRAD_TOL)):
+        verdict = "ok" if worst <= tol else "FAIL"
+        if worst > tol:
+            ok = False
+        print(f"{name:9s} worst relative {worst:.2e}  tolerance {tol:.0e}  {verdict}")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    _sys.exit(main())

@@ -114,7 +114,12 @@ def emit_kernel(f: Factorised, grad=False):
              f"L={L}: {NS} bra accumulators, {NR} ket accumulators, {NCOMP} components")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
+    # bp carries a sixth row, the bra exponent a, ONLY for gradients: d/dA
+    # raises the bra with a factor 2a, so `ea` is a bra-primitive scalar the
+    # energy kernels never ask for.  The energy driver fills bp(5, *) and the
+    # gradient driver bp(6, *) -- declaring 6 unconditionally strides the
+    # energy array wrongly and misreads every primitive past the first.
+    o.append(f"      real(dp), intent(in)  :: bp({6 if grad else 5}, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
@@ -336,7 +341,12 @@ def emit_kernel_tabled(f: Factorised, grad=False):
              f"({NT} terms), {NCOMP} components -- table driven")
     o.append(f"   subroutine {name}(nbra, ncb, bp, kab, nket, nck, kp, kcd, gc, cutoff, res, any)")
     o.append("      integer,  intent(in)  :: nbra, ncb, nket, nck")
-    o.append(f"      real(dp), intent(in)  :: bp(6, nbra), kab({NTTB}*ncb, nbra)")
+    # bp carries a sixth row, the bra exponent a, ONLY for gradients: d/dA
+    # raises the bra with a factor 2a, so `ea` is a bra-primitive scalar the
+    # energy kernels never ask for.  The energy driver fills bp(5, *) and the
+    # gradient driver bp(6, *) -- declaring 6 unconditionally strides the
+    # energy array wrongly and misreads every primitive past the first.
+    o.append(f"      real(dp), intent(in)  :: bp({6 if grad else 5}, nbra), kab({NTTB}*ncb, nbra)")
     o.append(f"      real(dp), intent(in)  :: kp(7, nket), kcd({NTTK}*nck, nket), gc(3), cutoff")
     o.append(f"      real(dp), intent(out) :: res({NCOMP}, ncb*nck)")
     o.append("      logical,  intent(out) :: any")
@@ -482,7 +492,8 @@ end module cint_rotaxis_boys
 """
 
 
-def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT, max_terms=0):
+def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT, max_terms=0,
+                    order="lexicographic"):
     """The gradient kernels: d/dA of every component, in libcint's ip1
     layout -- three derivative directions slowest, then (i,j,k,l) with i
     fastest -- and NEGATED, because int2e_ip1 is <nabla i|, which is minus
@@ -493,7 +504,7 @@ def emit_grad_files(classes, unroll_limit=UNROLL_LIMIT, max_terms=0):
     try:
         Derivation.all_components = Derivation.all_grad_components
         for k in classes:
-            f = Factorised(Derivation(*k, extra=1))
+            f = Factorised(Derivation(*k, extra=1, order=order))
             if max_terms and sum(len(r) for r, _ in f.r_list) > max_terms:
                 continue          # declined; supported() will say so
             facts.append(f)
@@ -609,10 +620,10 @@ def emit_class_file(f, unroll_limit=UNROLL_LIMIT):
     return "\n".join(o) + "\n"
 
 
-def emit_files(classes, unroll_limit=UNROLL_LIMIT):
+def emit_files(classes, unroll_limit=UNROLL_LIMIT, order="lexicographic"):
     """Return {relative path: text} for everything the generator writes."""
     from .derive import KIND_LMAX
-    facts = [Factorised(Derivation(*k)) for k in classes]
+    facts = [Factorised(Derivation(*k, order=order)) for k in classes]
     files = {"src/rotaxis/cint_rotaxis_boys.f90": BOYS_MODULE}
     for f in facts:
         files[f"src/rotaxis/rotaxis_{lname(f.d.kinds)}.f90"] = emit_class_file(f, unroll_limit)
