@@ -44,10 +44,518 @@ program backend_check
                                 cint3c2e_ip2_cart,  cint3c2e_ip2_sph,  &
                                 cint2c2e_ip1_cart,  cint2c2e_ip1_sph,  &
                                 CINTcgto_cart,    CINTcgto_spheric, &
-                                ATM_SLOTS, BAS_SLOTS, PTR_ENV_START, ANG_OF
+                                ATM_SLOTS, BAS_SLOTS, PTR_ENV_START, ANG_OF, &
+                                PTR_COMMON_ORIG, PTR_RINV_ORIG
    use libcint_fortran
    use cint_test_systems
    implicit none
+
+   ! libcint's own entry points for the integrals libcint_interface does not
+   ! declare, here rather than there: other checks `use libcint_interface`
+   ! whole and declare some of these names themselves.
+   interface
+      ! Dipole about PTR_COMMON_ORIG (Spherical)
+      function cint1e_r_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_r_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_r_sph
+      end function cint1e_r_sph
+
+      ! Dipole about PTR_COMMON_ORIG (Cartesian)
+      function cint1e_r_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_r_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_r_cart
+      end function cint1e_r_cart
+
+      ! Second moment about PTR_COMMON_ORIG (Spherical)
+      function cint1e_rr_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_rr_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_rr_sph
+      end function cint1e_rr_sph
+
+      ! Second moment about PTR_COMMON_ORIG (Cartesian)
+      function cint1e_rr_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_rr_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_rr_cart
+      end function cint1e_rr_cart
+
+      ! Third moment about PTR_COMMON_ORIG (Spherical)
+      function cint1e_rrr_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_rrr_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_rrr_sph
+      end function cint1e_rrr_sph
+
+      ! Third moment about PTR_COMMON_ORIG (Cartesian)
+      function cint1e_rrr_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_rrr_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_rrr_cart
+      end function cint1e_rrr_cart
+
+      ! <i| r nabla |j>, the dipole's nuclear derivative (Spherical)
+      function cint1e_irp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_irp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_irp_sph
+      end function cint1e_irp_sph
+
+      ! <i| r nabla |j>, the dipole's nuclear derivative (Cartesian)
+      function cint1e_irp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_irp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_irp_cart
+      end function cint1e_irp_cart
+
+      ! Overlap, second derivative on the bra (Spherical)
+      function cint1e_ipipovlp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipovlp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipovlp_sph
+      end function cint1e_ipipovlp_sph
+
+      ! Overlap, second derivative on the bra (Cartesian)
+      function cint1e_ipipovlp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipovlp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipovlp_cart
+      end function cint1e_ipipovlp_cart
+
+      ! Overlap, first derivative on bra and ket (Spherical)
+      function cint1e_ipovlpip_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipovlpip_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipovlpip_sph
+      end function cint1e_ipovlpip_sph
+
+      ! Overlap, first derivative on bra and ket (Cartesian)
+      function cint1e_ipovlpip_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipovlpip_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipovlpip_cart
+      end function cint1e_ipovlpip_cart
+
+      ! Kinetic, second derivative on the bra (Spherical)
+      function cint1e_ipipkin_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipkin_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipkin_sph
+      end function cint1e_ipipkin_sph
+
+      ! Kinetic, second derivative on the bra (Cartesian)
+      function cint1e_ipipkin_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipkin_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipkin_cart
+      end function cint1e_ipipkin_cart
+
+      ! Kinetic, first derivative on bra and ket (Spherical)
+      function cint1e_ipkinip_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipkinip_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipkinip_sph
+      end function cint1e_ipkinip_sph
+
+      ! Kinetic, first derivative on bra and ket (Cartesian)
+      function cint1e_ipkinip_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipkinip_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipkinip_cart
+      end function cint1e_ipkinip_cart
+
+      ! Nuclear attraction, second derivative on the bra (Spherical)
+      function cint1e_ipipnuc_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipnuc_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipnuc_sph
+      end function cint1e_ipipnuc_sph
+
+      ! Nuclear attraction, second derivative on the bra (Cartesian)
+      function cint1e_ipipnuc_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipipnuc_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipipnuc_cart
+      end function cint1e_ipipnuc_cart
+
+      ! Nuclear attraction, first derivative on bra and ket (Spherical)
+      function cint1e_ipnucip_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipnucip_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipnucip_sph
+      end function cint1e_ipnucip_sph
+
+      ! Nuclear attraction, first derivative on bra and ket (Cartesian)
+      function cint1e_ipnucip_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipnucip_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipnucip_cart
+      end function cint1e_ipnucip_cart
+
+      ! 1/|r-R| about PTR_RINV_ORIG, second derivative on the bra (Spherical)
+      function cint1e_ipiprinv_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipiprinv_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipiprinv_sph
+      end function cint1e_ipiprinv_sph
+
+      ! 1/|r-R| about PTR_RINV_ORIG, second derivative on the bra (Cartesian)
+      function cint1e_ipiprinv_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ipiprinv_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ipiprinv_cart
+      end function cint1e_ipiprinv_cart
+
+      ! 1/|r-R| about PTR_RINV_ORIG, first derivative on bra and ket (Spherical)
+      function cint1e_iprinvip_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_iprinvip_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_iprinvip_sph
+      end function cint1e_iprinvip_sph
+
+      ! 1/|r-R| about PTR_RINV_ORIG, first derivative on bra and ket (Cartesian)
+      function cint1e_iprinvip_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_iprinvip_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_iprinvip_cart
+      end function cint1e_iprinvip_cart
+
+      ! ERI, second derivative on the first centre (Spherical)
+      function cint2e_ipip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ipip1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ipip1_sph
+      end function cint2e_ipip1_sph
+
+      ! ERI, second derivative on the first centre (Cartesian)
+      function cint2e_ipip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ipip1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ipip1_cart
+      end function cint2e_ipip1_cart
+
+      ! ERI, first derivative on the first two centres (Spherical)
+      function cint2e_ipvip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ipvip1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ipvip1_sph
+      end function cint2e_ipvip1_sph
+
+      ! ERI, first derivative on the first two centres (Cartesian)
+      function cint2e_ipvip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ipvip1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ipvip1_cart
+      end function cint2e_ipvip1_cart
+
+      ! ERI, first derivative on the first and on the second electron (Spherical)
+      function cint2e_ip1ip2_sph(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ip1ip2_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ip1ip2_sph
+      end function cint2e_ip1ip2_sph
+
+      ! ERI, first derivative on the first and on the second electron (Cartesian)
+      function cint2e_ip1ip2_cart(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ip1ip2_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         integer(c_int) :: cint2e_ip1ip2_cart
+      end function cint2e_ip1ip2_cart
+
+      ! Field of a point charge at PTR_RINV_ORIG, derivative on the charge (Spherical).
+      ! libcint has no CINT2 spelling of this one, so it is the CINT3 form:
+      ! dims, opt and cache may all be null.
+      function int1e_drinv_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int1e_drinv_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int1e_drinv_sph
+      end function int1e_drinv_sph
+
+      ! Field of a point charge at PTR_RINV_ORIG, derivative on the charge (Cartesian).
+      ! libcint has no CINT2 spelling of this one, so it is the CINT3 form:
+      ! dims, opt and cache may all be null.
+      function int1e_drinv_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int1e_drinv_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int1e_drinv_cart
+      end function int1e_drinv_cart
+
+      ! 1/|r-R_g| over the grid at env(PTR_GRIDS); shls(3:4) is the 0-based half-open range (Spherical).
+      ! libcint has no CINT2 spelling of this one, so it is the CINT3 form:
+      ! dims, opt and cache may all be null.
+      function int1e_grids_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int1e_grids_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int1e_grids_sph
+      end function int1e_grids_sph
+
+      ! 1/|r-R_g| over the grid at env(PTR_GRIDS); shls(3:4) is the 0-based half-open range (Cartesian).
+      ! libcint has no CINT2 spelling of this one, so it is the CINT3 form:
+      ! dims, opt and cache may all be null.
+      function int1e_grids_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int1e_grids_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int1e_grids_cart
+      end function int1e_grids_cart
+   end interface
 
    integer(c_int), allocatable :: atm(:,:), bas(:,:)
    real(c_double), allocatable :: env(:)
@@ -58,9 +566,12 @@ program backend_check
    real(dp) :: worst
    character(len=80) :: wat
    type(c_ptr) :: opt
+   integer, parameter :: NGRID = 5
+   integer :: g
 
    allocate(atm(ATM_SLOTS, 8), bas(BAS_SLOTS, 200), env(20000))
-   allocate(cbuf(400000), fbuf(400000))
+   ! 15^4 * 9: a Cartesian g quartet of a second derivative
+   allocate(cbuf(460000), fbuf(460000))
    ncmp = 0; nbad = 0; nexact = 0; nloose = 0; worst = 0; wat = "(none)"
 
    do ibasis = 1, n_reference_basis
@@ -68,6 +579,15 @@ program backend_check
       off = PTR_ENV_START
       call setup_c2h6_geometry(atm, env, off)
       call setup_reference_basis(ibasis, bas, env, nbas, off)
+      ! Off-centre origins, so a multipole or a point-charge field read from
+      ! the wrong env slot -- or about zero -- cannot agree by accident.
+      env(PTR_COMMON_ORIG+1:PTR_COMMON_ORIG+3) = [0.31_dp, -0.47_dp, 0.83_dp]
+      env(PTR_RINV_ORIG+1:PTR_RINV_ORIG+3)     = [-0.62_dp, 0.25_dp, -0.39_dp]
+      env(LIBCINT_PTR_GRIDS+1) = real(off, dp)
+      do g = 0, NGRID-1
+         env(off+3*g+1:off+3*g+3) = [0.4_dp*g - 0.7_dp, 0.9_dp - 0.3_dp*g, 0.2_dp*g]
+      end do
+      off = off + 3*NGRID
 
       ! The bookkeeping first: if these disagree the buffers are the wrong
       ! size and every comparison below is meaningless.
@@ -158,6 +678,140 @@ program backend_check
                ret = libcint_2c2e_ip1_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
             end if
             call cmp(cbuf, fbuf, di*dj*3, "2c2e_ip1", ibasis, sph, i, j, 0, 0, 1)
+
+            ! ---- multipoles, the point-charge field, second derivatives ----
+            if (sph == 1) then
+               ret = cint1e_r_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_r_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_r_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_r_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "r", ibasis, sph, i, j, 0, 0, 1)
+
+            if (sph == 1) then
+               ret = cint1e_rr_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_rr_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_rr_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_rr_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "rr", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_rrr_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_rrr_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_rrr_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_rrr_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*27, "rrr", ibasis, sph, i, j, 0, 0, 3)
+
+            if (sph == 1) then
+               ret = cint1e_irp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_irp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_irp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_irp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "irp", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipipovlp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipovlp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipipovlp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipovlp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipipovlp", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipovlpip_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipovlpip_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipovlpip_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipovlpip_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipovlpip", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipipkin_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipkin_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipipkin_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipkin_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipipkin", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipkinip_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipkinip_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipkinip_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipkinip_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipkinip", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipipnuc_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipnuc_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipipnuc_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipipnuc_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipipnuc", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipnucip_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipnucip_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipnucip_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipnucip_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipnucip", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_ipiprinv_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipiprinv_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ipiprinv_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ipiprinv_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "ipiprinv", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_iprinvip_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_iprinvip_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_iprinvip_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_iprinvip_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "iprinvip", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = int1e_drinv_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                                     c_null_ptr, c_null_ptr)
+               ret = libcint_1e_drinv_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int1e_drinv_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                                      c_null_ptr, c_null_ptr)
+               ret = libcint_1e_drinv_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "drinv", ibasis, sph, i, j, 0, 0, 1)
+
+            ! a range that starts past the first point, so an offset dropped
+            ! in either direction shows
+            shls(3) = 1; shls(4) = NGRID
+            if (sph == 1) then
+               ret = int1e_grids_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                                     c_null_ptr, c_null_ptr)
+               ret = libcint_1e_grids_sph(fbuf, shls, atm, 8_ip, bas, nbas, env)
+            else
+               ret = int1e_grids_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                                      c_null_ptr, c_null_ptr)
+               ret = libcint_1e_grids_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*(NGRID-1), "grids", ibasis, sph, i, j, 0, 0)
          end do
          end do
 
@@ -215,6 +869,33 @@ program backend_check
                   ret = libcint_2e_ip1_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
                end if
                call cmp(cbuf, fbuf, di*dj*dk*dl*3, "2e_ip1", ibasis, sph, i, j, k, l, 1)
+
+               if (sph == 1) then
+                  ret = cint2e_ipip1_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ipip1_sph(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               else
+                  ret = cint2e_ipip1_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ipip1_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               end if
+               call cmp(cbuf, fbuf, di*dj*dk*dl*9, "2e_ipip1", ibasis, sph, i, j, k, l, 2)
+
+               if (sph == 1) then
+                  ret = cint2e_ipvip1_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ipvip1_sph(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               else
+                  ret = cint2e_ipvip1_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ipvip1_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               end if
+               call cmp(cbuf, fbuf, di*dj*dk*dl*9, "2e_ipvip1", ibasis, sph, i, j, k, l, 2)
+
+               if (sph == 1) then
+                  ret = cint2e_ip1ip2_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ip1ip2_sph(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               else
+                  ret = cint2e_ip1ip2_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ip1ip2_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               end if
+               call cmp(cbuf, fbuf, di*dj*dk*dl*9, "2e_ip1ip2", ibasis, sph, i, j, k, l, 2)
             end do
          end do
          end do

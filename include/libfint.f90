@@ -49,7 +49,7 @@ module libcint_fortran
     use cint_rotaxis_grad_2e, only: int2e_ip1_rotaxis_cart, int2e_ip1_rotaxis_sph, &
                                     rotaxis_grad_supported
     use cint_hgp_grad_2e, only: int2e_ip1_hgp_cart, int2e_ip1_hgp_sph, hgp_grad_supported
-    use cint_envs,      only: cint_opt_t
+    use cint_envs,      only: cint_opt_t, PTR_GRIDS
     use cint_opt,       only: cint_del_optimizer
     use cint_g1e,       only: cint_all_1e_optimizer
     use cint_g2e,       only: cint_all_2e_optimizer, cint_all_3c2e_optimizer, &
@@ -78,6 +78,25 @@ module libcint_fortran
     use cint_1e,        only: int1e_nuc_cart, int1e_nuc_sph, &
                               int1e_ovlp_cart, int1e_ovlp_sph
     use cint_gen_intor1, only: int1e_kin_cart, int1e_kin_sph
+    ! The multipoles, their nuclear derivative, the field and field gradient of
+    ! a point charge, and the second derivatives a Hessian needs.  Every one of
+    ! them was already in the port and already behind a C entry point in
+    ! cint_c_abi; what a Fortran caller lacked was a way in that is not a
+    ! hand-written bind(C) interface and c_loc at every call.
+    use cint_gen_intor1, only: int1e_r_cart, int1e_r_sph, int1e_rr_cart, int1e_rr_sph, &
+                               int1e_rrr_cart, int1e_rrr_sph, int1e_irp_cart, &
+                               int1e_irp_sph, int1e_drinv_cart, int1e_drinv_sph
+    use cint_gen_hess,   only: int1e_ipipovlp_cart, int1e_ipipovlp_sph, &
+                               int1e_ipovlpip_cart, int1e_ipovlpip_sph, &
+                               int1e_ipipkin_cart, int1e_ipipkin_sph, &
+                               int1e_ipkinip_cart, int1e_ipkinip_sph, &
+                               int1e_ipipnuc_cart, int1e_ipipnuc_sph, &
+                               int1e_ipnucip_cart, int1e_ipnucip_sph, &
+                               int1e_ipiprinv_cart, int1e_ipiprinv_sph, &
+                               int1e_iprinvip_cart, int1e_iprinvip_sph, &
+                               int2e_ipip1_cart, int2e_ipip1_sph, int2e_ipvip1_cart, &
+                               int2e_ipvip1_sph, int2e_ip1ip2_cart, int2e_ip1ip2_sph
+    use cint_1e_grids,   only: int1e_grids_cart, int1e_grids_sph
     ! the ip-derivatives live with the other gradients, in grad1.c's module
     use cint_gen_grad1,  only: int1e_ipovlp_cart, int1e_ipovlp_sph, &
                                int1e_ipkin_cart,  int1e_ipkin_sph
@@ -94,6 +113,7 @@ module libcint_fortran
     public :: LIBCINT_KAPPA_OF, LIBCINT_PTR_EXP, LIBCINT_PTR_COEFF
     public :: LIBCINT_PTR_EXPCUTOFF, LIBCINT_PTR_COMMON_ORIG, LIBCINT_PTR_RINV_ORIG
     public :: LIBCINT_PTR_RINV_ZETA, LIBCINT_PTR_RANGE_OMEGA, LIBCINT_PTR_ENV_START
+    public :: LIBCINT_PTR_GRIDS
 
     public :: libcint_cgto_cart, libcint_cgto_sph, libcint_cgto_spinor
     public :: libcint_tot_cgto_sph, libcint_tot_cgto_cart, libcint_tot_pgto_sph
@@ -107,6 +127,24 @@ module libcint_fortran
     public :: libcint_1e_ipkin_cart, libcint_1e_ipnuc_cart, libcint_1e_iprinv_cart
     public :: libcint_1e_ipkin_sph, libcint_1e_ipnuc_sph, libcint_1e_iprinv_sph
     public :: libcint_1e_spnucsp
+    ! multipoles, point-charge field, and the second derivatives
+    public :: libcint_1e_r_cart, libcint_1e_r_sph
+    public :: libcint_1e_rr_cart, libcint_1e_rr_sph
+    public :: libcint_1e_rrr_cart, libcint_1e_rrr_sph
+    public :: libcint_1e_irp_cart, libcint_1e_irp_sph
+    public :: libcint_1e_drinv_cart, libcint_1e_drinv_sph
+    public :: libcint_1e_ipipovlp_cart, libcint_1e_ipipovlp_sph
+    public :: libcint_1e_ipovlpip_cart, libcint_1e_ipovlpip_sph
+    public :: libcint_1e_ipipkin_cart, libcint_1e_ipipkin_sph
+    public :: libcint_1e_ipkinip_cart, libcint_1e_ipkinip_sph
+    public :: libcint_1e_ipipnuc_cart, libcint_1e_ipipnuc_sph
+    public :: libcint_1e_ipnucip_cart, libcint_1e_ipnucip_sph
+    public :: libcint_1e_ipiprinv_cart, libcint_1e_ipiprinv_sph
+    public :: libcint_1e_iprinvip_cart, libcint_1e_iprinvip_sph
+    public :: libcint_1e_grids_cart, libcint_1e_grids_sph
+    public :: libcint_2e_ipip1_cart, libcint_2e_ipip1_sph
+    public :: libcint_2e_ipvip1_cart, libcint_2e_ipvip1_sph
+    public :: libcint_2e_ip1ip2_cart, libcint_2e_ip1ip2_sph
 
     public :: libcint_2e_cart, libcint_2e_sph
     public :: libcint_2e_rotaxis_cart, libcint_2e_rotaxis_sph, libcint_rotaxis_supported
@@ -162,9 +200,21 @@ module libcint_fortran
     integer(c_int), parameter :: LIBCINT_PTR_RINV_ZETA = PTR_RINV_ZETA
     integer(c_int), parameter :: LIBCINT_PTR_RANGE_OMEGA = PTR_RANGE_OMEGA
     integer(c_int), parameter :: LIBCINT_PTR_ENV_START = PTR_ENV_START
+    ! Where libcint_1e_grids finds its points: env(LIBCINT_PTR_GRIDS + 1) holds
+    ! the 0-based env offset of the first one.  A 0-based offset like the
+    ! other PTR_ slots, and taken from the port so it cannot drift from it.
+    integer(c_int), parameter :: LIBCINT_PTR_GRIDS = PTR_GRIDS
 
     ! Which integral a dispatcher should evaluate.
     integer, parameter :: K_OVLP = 1, K_KIN = 2, K_NUC = 3, K_IPOVLP = 4, K_IPKIN = 5
+    integer, parameter :: K_R = 6, K_RR = 7, K_RRR = 8, K_IRP = 9
+    integer, parameter :: K_DRINV = 10, K_IPIPOVLP = 11, K_IPOVLPIP = 12
+    integer, parameter :: K_IPIPKIN = 13, K_IPKINIP = 14, K_IPIPNUC = 15
+    integer, parameter :: K_IPNUCIP = 16, K_IPIPRINV = 17, K_IPRINVIP = 18
+    ! Components per shell pair, indexed by the code above: the Cartesian tensor
+    ! in full, so 9 for rr and 27 for rrr rather than the 6 and 10 unique ones.
+    integer, parameter :: NCOMP_1E(18) = [1, 1, 1, 3, 3, 3, 9, 27, 9, 3, 9, 9, 9, 9, 9, 9, 9, 9]
+    integer, parameter :: K2_IPIP1 = 1, K2_IPVIP1 = 2, K2_IP1IP2 = 3
 
     ! Scratch, reused across calls.  One per thread: metalquicha runs OpenMP
     ! over shell pairs, and a shared workspace would have two threads bump-
@@ -403,8 +453,7 @@ contains
         else
             di = cint_cgto_spheric(fshls(0), bas); dj = cint_cgto_spheric(fshls(1), bas)
         end if
-        ncomp = 1
-        if (which == K_IPOVLP .or. which == K_IPKIN) ncomp = 3
+        ncomp = NCOMP_1E(which)
         dims = [di, dj, 1, 1]
         nenv = env_extent(shls, 2_ip, atm, natm, bas, nbas)
 
@@ -448,6 +497,110 @@ contains
             else
                 hv = int1e_ipkin_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
                                      bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_R)
+            if (cart) then
+                hv = int1e_r_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_r_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_RR)
+            if (cart) then
+                hv = int1e_rr_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_rr_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_RRR)
+            if (cart) then
+                hv = int1e_rrr_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_rrr_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IRP)
+            if (cart) then
+                hv = int1e_irp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_irp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_DRINV)
+            if (cart) then
+                hv = int1e_drinv_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_drinv_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPIPOVLP)
+            if (cart) then
+                hv = int1e_ipipovlp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipipovlp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPOVLPIP)
+            if (cart) then
+                hv = int1e_ipovlpip_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipovlpip_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPIPKIN)
+            if (cart) then
+                hv = int1e_ipipkin_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipipkin_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPKINIP)
+            if (cart) then
+                hv = int1e_ipkinip_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipkinip_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPIPNUC)
+            if (cart) then
+                hv = int1e_ipipnuc_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipipnuc_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPNUCIP)
+            if (cart) then
+                hv = int1e_ipnucip_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipnucip_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPIPRINV)
+            if (cart) then
+                hv = int1e_ipiprinv_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ipiprinv_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IPRINVIP)
+            if (cart) then
+                hv = int1e_iprinvip_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_iprinvip_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
             end if
         case default
             error stop "libcint_fortran: unknown 1e integral"
@@ -509,6 +662,101 @@ contains
         end select
         ret = merge(1_ip, 0_ip, hv)
     end function run2e
+
+    ! The three four-centre second derivatives a Hessian's two-electron term is
+    ! built from.  Nine components each, the derivative pair fastest-varying
+    ! after the four shells, as libcint lays them out.
+    function run2e_hess(which, cart, buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        integer,     intent(in) :: which
+        logical,     intent(in) :: cart
+        integer(ip), intent(in) :: natm, nbas
+        real(dp),    intent(out), target :: buf(*)
+        integer(ip), intent(in),  target :: shls(4)
+        integer(ip), intent(in),  target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in),  target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        real(dp),    intent(in),  target :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), i, n, nenv
+        logical :: hv
+
+        call ws_bind_opt(opt)
+        do i = 1, 4
+            fshls(i-1) = shls(i)
+            if (cart) then
+                dims(i-1) = cint_cgto_cart(fshls(i-1), bas)
+            else
+                dims(i-1) = cint_cgto_spheric(fshls(i-1), bas)
+            end if
+        end do
+        n = product(dims) * 9
+        nenv = env_extent(shls, 4_ip, atm, natm, bas, nbas)
+
+        select case (which)
+        case (K2_IPIP1)
+            if (cart) then
+                hv = int2e_ipip1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2e_ipip1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K2_IPVIP1)
+            if (cart) then
+                hv = int2e_ipvip1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2e_ipvip1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K2_IP1IP2)
+            if (cart) then
+                hv = int2e_ip1ip2_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2e_ip1ip2_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case default
+            error stop "libcint_fortran: unknown 2e second derivative"
+        end select
+        ret = merge(1_ip, 0_ip, hv)
+    end function run2e_hess
+
+    ! `<i| 1/|r - R_g| |j>` for every grid point R_g in a half-open range.
+    !
+    ! Not the shape of the other one-electron integrals: `shls` carries four
+    ! entries -- the two shells, then the first grid point and one past the
+    ! last, both 0-based -- and the block is di*dj*ngrids.  The points are
+    ! read from env: env(PTR_GRIDS) is the 0-based offset of the first one's
+    ! x, and the points follow as consecutive (x, y, z) triples, so env has to
+    ! reach three past the last point named as well as the shells' own data.
+    function run1e_grids(cart, buf, shls, atm, natm, bas, nbas, env) result(ret)
+        logical,     intent(in) :: cart
+        integer(ip), intent(in) :: natm, nbas
+        real(dp),    intent(out), target :: buf(*)
+        integer(ip), intent(in),  target :: shls(4)
+        integer(ip), intent(in),  target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in),  target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        real(dp),    intent(in),  target :: env(*)
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), di, dj, ngrids, nenv
+        logical :: hv
+
+        ws%opt => null()
+        fshls = shls
+        ngrids = fshls(3) - fshls(2)
+        if (cart) then
+            di = cint_cgto_cart(fshls(0), bas);    dj = cint_cgto_cart(fshls(1), bas)
+        else
+            di = cint_cgto_spheric(fshls(0), bas); dj = cint_cgto_spheric(fshls(1), bas)
+        end if
+        dims = [di, dj, ngrids, 1]
+        nenv = max(env_extent(shls(1:2), 2_ip, atm, natm, bas, nbas), &
+                   int(env(PTR_GRIDS + 1)) + 3*fshls(3))
+        if (cart) then
+            hv = int1e_grids_cart(buf(1:di*dj*ngrids), dims, fshls, atm, natm, &
+                                  bas, nbas, env(1:nenv), ws)
+        else
+            hv = int1e_grids_sph(buf(1:di*dj*ngrids), dims, fshls, atm, natm, &
+                                 bas, nbas, env(1:nenv), ws)
+        end if
+        ret = merge(1_ip, 0_ip, hv)
+    end function run1e_grids
 
     ! ========================================================================
     ! One-electron entry points
@@ -1681,5 +1929,435 @@ contains
         hv = int2e_spsp1_spinor(buf(1:n), dims, fshls, atm, natm, bas, nbas, &
                                 env(1:nenv), ws)
     end subroutine libcint_2e_spsp1
+
+    ! ========================================================================
+    ! Multipoles, the point-charge field, and second derivatives.
+    !
+    ! The same integrals cint_c_abi exports under libcint's C names, here so a
+    ! Fortran caller reaches them the way it reaches the overlap: (SLOTS, *)
+    ! tables, no c_loc, the output shape derived from the shells.
+    !
+    ! r, rr and rrr are expanded about env(PTR_COMMON_ORIG); drinv, ipiprinv and
+    ! iprinvip about env(PTR_RINV_ORIG).  Those are libcint's 0-based offsets,
+    ! so a Fortran caller writes env(LIBCINT_PTR_COMMON_ORIG + 1) -- unlike the
+    ! atm and bas column constants, which are already 1-based.
+    !
+    ! Components run slowest, one di*dj block each.  irp is <i| r nabla |j>,
+    ! the nuclear derivative of the dipole: the nabla index varies fastest.
+    ! ========================================================================
+
+    function libcint_1e_r_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_R, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_r_cart
+
+    function libcint_1e_r_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_R, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_r_sph
+
+    function libcint_1e_rr_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_RR, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_rr_cart
+
+    function libcint_1e_rr_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_RR, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_rr_sph
+
+    function libcint_1e_rrr_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_RRR, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_rrr_cart
+
+    function libcint_1e_rrr_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_RRR, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_rrr_sph
+
+    function libcint_1e_irp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IRP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_irp_cart
+
+    function libcint_1e_irp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IRP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_irp_sph
+
+    function libcint_1e_drinv_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_DRINV, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_drinv_cart
+
+    function libcint_1e_drinv_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_DRINV, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_drinv_sph
+
+    function libcint_1e_ipipovlp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPOVLP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipovlp_cart
+
+    function libcint_1e_ipipovlp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPOVLP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipovlp_sph
+
+    function libcint_1e_ipovlpip_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPOVLPIP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipovlpip_cart
+
+    function libcint_1e_ipovlpip_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPOVLPIP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipovlpip_sph
+
+    function libcint_1e_ipipkin_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPKIN, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipkin_cart
+
+    function libcint_1e_ipipkin_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPKIN, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipkin_sph
+
+    function libcint_1e_ipkinip_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPKINIP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipkinip_cart
+
+    function libcint_1e_ipkinip_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPKINIP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipkinip_sph
+
+    function libcint_1e_ipipnuc_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPNUC, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipnuc_cart
+
+    function libcint_1e_ipipnuc_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPNUC, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipipnuc_sph
+
+    function libcint_1e_ipnucip_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPNUCIP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipnucip_cart
+
+    function libcint_1e_ipnucip_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPNUCIP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipnucip_sph
+
+    function libcint_1e_ipiprinv_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPRINV, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipiprinv_cart
+
+    function libcint_1e_ipiprinv_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPIPRINV, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ipiprinv_sph
+
+    function libcint_1e_iprinvip_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPRINVIP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_iprinvip_cart
+
+    function libcint_1e_iprinvip_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IPRINVIP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_iprinvip_sph
+
+    function libcint_1e_grids_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e_grids(.true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_grids_cart
+
+    function libcint_1e_grids_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e_grids(.false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_grids_sph
+
+    function libcint_2e_ipip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IPIP1, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ipip1_cart
+
+    function libcint_2e_ipip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IPIP1, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ipip1_sph
+
+    function libcint_2e_ipvip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IPVIP1, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ipvip1_cart
+
+    function libcint_2e_ipvip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IPVIP1, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ipvip1_sph
+
+    function libcint_2e_ip1ip2_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IP1IP2, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ip1ip2_cart
+
+    function libcint_2e_ip1ip2_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(4)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run2e_hess(K2_IP1IP2, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2e_ip1ip2_sph
 
 end module libcint_fortran
