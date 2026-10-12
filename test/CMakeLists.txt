@@ -111,15 +111,21 @@ add_executable(quad_const_check quad_const_check.f90)
 target_link_libraries(quad_const_check fint)
 add_test(NAME quad_const_check COMMAND $<TARGET_FILE:quad_const_check>)
 
+# `cint` goes BEFORE `fint` on every link line that has both.  libfint
+# exports libcint's C names too (src/cint_c_abi.f90), and fint is static: with
+# fint first, the linker meets a test's undefined `cint2e_sph` while scanning
+# libfint.a, pulls cint_c_abi.o in to satisfy it, and never asks libcint.so.
+# The check then compares libfint with itself and passes whatever it does.
+# `nm` on the executable is the proof either way: the C names must be `U`.
 add_executable(catalogue_check ${PROJECT_BINARY_DIR}/catalogue_check.F90)
-target_link_libraries(catalogue_check fint fint_test_systems cint m)
+target_link_libraries(catalogue_check cint fint fint_test_systems m)
 target_include_directories(catalogue_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME catalogue_check COMMAND $<TARGET_FILE:catalogue_check>)
 
 foreach(chk ${LIBFINT_CHECKS})
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${chk}.F90)
     add_executable(${chk} ${chk}.F90)
-    target_link_libraries(${chk} fint fint_test_systems cint m)
+    target_link_libraries(${chk} cint fint fint_test_systems m)
     target_include_directories(${chk} PRIVATE ${PROJECT_BINARY_DIR}/include)
     add_test(NAME ${chk} COMMAND $<TARGET_FILE:${chk}>)
   endif()
@@ -181,19 +187,19 @@ add_test(NAME l_shell_check COMMAND $<TARGET_FILE:l_shell_check>)
 # libcint only for the shared basis-set helper (CINTgto_norm), and the same
 # tolerance argument l_shell_check makes.
 add_executable(rotaxis_check rotaxis_check.F90)
-target_link_libraries(rotaxis_check fint fint_test_systems cint m)
+target_link_libraries(rotaxis_check cint fint fint_test_systems m)
 target_include_directories(rotaxis_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_check COMMAND $<TARGET_FILE:rotaxis_check>)
 
 # The rotated-axis gradients against libfint's own int2e_ip1.
 add_executable(rotaxis_grad_check rotaxis_grad_check.F90)
-target_link_libraries(rotaxis_grad_check fint fint_test_systems cint m)
+target_link_libraries(rotaxis_grad_check cint fint fint_test_systems m)
 target_include_directories(rotaxis_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME rotaxis_grad_check COMMAND $<TARGET_FILE:rotaxis_grad_check>)
 
 # The HGP gradients against libfint's own int2e_ip1.
 add_executable(hgp_grad_check hgp_grad_check.F90)
-target_link_libraries(hgp_grad_check fint fint_test_systems cint m)
+target_link_libraries(hgp_grad_check cint fint fint_test_systems m)
 target_include_directories(hgp_grad_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME hgp_grad_check COMMAND $<TARGET_FILE:hgp_grad_check>)
 
@@ -208,7 +214,7 @@ add_test(NAME rotaxis_grad_molecule COMMAND $<TARGET_FILE:rotaxis_grad_molecule>
 # rotaxis_check: two exact algorithms, so a scaled tolerance, not bit
 # identity.
 add_executable(hgp_check hgp_check.F90)
-target_link_libraries(hgp_check fint fint_test_systems cint m)
+target_link_libraries(hgp_check cint fint fint_test_systems m)
 target_include_directories(hgp_check PRIVATE ${PROJECT_BINARY_DIR}/include)
 add_test(NAME hgp_check COMMAND $<TARGET_FILE:hgp_check>)
 
@@ -245,14 +251,14 @@ add_test(NAME l_shell_grad_check COMMAND $<TARGET_FILE:l_shell_grad_check>)
 foreach(chk spinor_check)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${chk}.f90)
     add_executable(${chk} ${chk}.f90)
-    target_link_libraries(${chk} fint cint m)
+    target_link_libraries(${chk} cint fint m)
     add_test(NAME ${chk} COMMAND $<TARGET_FILE:${chk}>)
   endif()
 endforeach()
 
 if(WITH_F12)
   add_executable(f12_check f12_check.F90)
-  target_link_libraries(f12_check fint fint_test_systems cint m)
+  target_link_libraries(f12_check cint fint fint_test_systems m)
   add_test(NAME f12_check COMMAND $<TARGET_FILE:f12_check>)
 endif()
 
