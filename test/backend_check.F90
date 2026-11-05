@@ -555,6 +555,202 @@ program backend_check
          type(c_ptr), value, intent(in) :: cache
          integer(c_int) :: int1e_grids_cart
       end function int1e_grids_cart
+
+      ! The fitting integrals' second derivatives.  libcint has no CINT2
+      ! spelling of these, so they are the CINT3 form: dims, opt and cache may
+      ! all be null.
+      function int3c2e_ipip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipip1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipip1_sph
+      end function int3c2e_ipip1_sph
+
+      function int3c2e_ipip1_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipip1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipip1_cart
+      end function int3c2e_ipip1_cart
+
+      function int3c2e_ipvip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipvip1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipvip1_sph
+      end function int3c2e_ipvip1_sph
+
+      function int3c2e_ipvip1_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipvip1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipvip1_cart
+      end function int3c2e_ipvip1_cart
+
+      function int3c2e_ip1ip2_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ip1ip2_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ip1ip2_sph
+      end function int3c2e_ip1ip2_sph
+
+      function int3c2e_ip1ip2_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ip1ip2_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ip1ip2_cart
+      end function int3c2e_ip1ip2_cart
+
+      function int3c2e_ipip2_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipip2_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipip2_sph
+      end function int3c2e_ipip2_sph
+
+      function int3c2e_ipip2_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int3c2e_ipip2_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int3c2e_ipip2_cart
+      end function int3c2e_ipip2_cart
+
+      function int2c2e_ipip1_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int2c2e_ipip1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int2c2e_ipip1_sph
+      end function int2c2e_ipip1_sph
+
+      function int2c2e_ipip1_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int2c2e_ipip1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int2c2e_ipip1_cart
+      end function int2c2e_ipip1_cart
+
+      function int2c2e_ip1ip2_sph(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int2c2e_ip1ip2_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int2c2e_ip1ip2_sph
+      end function int2c2e_ip1ip2_sph
+
+      function int2c2e_ip1ip2_cart(buf, dims, shls, atm, natm, bas, nbas, env, opt, cache) &
+              bind(C, name='int2c2e_ip1ip2_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         type(c_ptr), value, intent(in) :: dims
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value, intent(in) :: opt
+         type(c_ptr), value, intent(in) :: cache
+         integer(c_int) :: int2c2e_ip1ip2_cart
+      end function int2c2e_ip1ip2_cart
+
    end interface
 
    integer(c_int), allocatable :: atm(:,:), bas(:,:)
@@ -678,6 +874,28 @@ program backend_check
                ret = libcint_2c2e_ip1_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
             end if
             call cmp(cbuf, fbuf, di*dj*3, "2c2e_ip1", ibasis, sph, i, j, 0, 0, 1)
+
+            if (sph == 1) then
+               ret = int2c2e_ipip1_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_2c2e_ipip1_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int2c2e_ipip1_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_2c2e_ipip1_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "2c2e_ipip1", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = int2c2e_ip1ip2_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_2c2e_ip1ip2_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int2c2e_ip1ip2_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_2c2e_ip1ip2_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "2c2e_ip1ip2", ibasis, sph, i, j, 0, 0, 2)
 
             ! ---- multipoles, the point-charge field, second derivatives ----
             if (sph == 1) then
@@ -848,6 +1066,50 @@ program backend_check
                ret = libcint_3c2e_ip2_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
             end if
             call cmp(cbuf, fbuf, di*dj*dk*3, "3c2e_ip2", ibasis, sph, i, j, k, 0, 1)
+
+            if (sph == 1) then
+               ret = int3c2e_ipip1_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipip1_sph(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int3c2e_ipip1_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipip1_cart(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*dk*9, "3c2e_ipip1", ibasis, sph, i, j, k, 0, 2)
+
+            if (sph == 1) then
+               ret = int3c2e_ipvip1_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipvip1_sph(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int3c2e_ipvip1_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipvip1_cart(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*dk*9, "3c2e_ipvip1", ibasis, sph, i, j, k, 0, 2)
+
+            if (sph == 1) then
+               ret = int3c2e_ip1ip2_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ip1ip2_sph(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int3c2e_ip1ip2_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ip1ip2_cart(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*dk*9, "3c2e_ip1ip2", ibasis, sph, i, j, k, 0, 2)
+
+            if (sph == 1) then
+               ret = int3c2e_ipip2_sph(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                             c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipip2_sph(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            else
+               ret = int3c2e_ipip2_cart(cbuf, c_null_ptr, shls, atm, 8_c_int, bas, nbas, env, &
+                              c_null_ptr, c_null_ptr)
+               ret = libcint_3c2e_ipip2_cart(fbuf, shls(1:3), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*dk*9, "3c2e_ipip2", ibasis, sph, i, j, k, 0, 2)
 
             do l = 0, nbas-1, stride
                call dims1(sph, l, bas, dl)
