@@ -37,6 +37,14 @@ module cint_gen_grad1
    public :: int1e_ipovlp_optimizer
    public :: int1e_ovlpip_cart, int1e_ovlpip_sph, int1e_ovlpip_spinor
    public :: int1e_ovlpip_optimizer
+   public :: int1e_ipr_origj_cart, int1e_ipr_origj_sph, int1e_ipr_origj_spinor
+   public :: int1e_ipr_origj_optimizer
+   public :: int1e_r_origj_ip_cart, int1e_r_origj_ip_sph, int1e_r_origj_ip_spinor
+   public :: int1e_r_origj_ip_optimizer
+   public :: int1e_iprr_origj_cart, int1e_iprr_origj_sph, int1e_iprr_origj_spinor
+   public :: int1e_iprr_origj_optimizer
+   public :: int1e_rr_origj_ip_cart, int1e_rr_origj_ip_sph, int1e_rr_origj_ip_spinor
+   public :: int1e_rr_origj_ip_optimizer
    public :: int1e_ipkin_cart, int1e_ipkin_sph, int1e_ipkin_spinor
    public :: int1e_ipkin_optimizer
    public :: int1e_kinip_cart, int1e_kinip_sph, int1e_kinip_spinor
@@ -245,6 +253,628 @@ contains
       envs%f_gout => CINTgout1e_int1e_ovlpip
       has_value = cint_1e_spinor_drv(out, dims, envs, ws, .false., .false., 0)
    end function int1e_ovlpip_spinor
+
+   ! <NABLA i|OVLP |R j>
+   subroutine int1e_ipr_origj_optimizer(opt, atm, natm, bas, nbas, env)
+      type(cint_opt_t), intent(inout) :: opt
+      integer,  intent(in) :: natm, nbas
+      integer,  intent(in) :: atm(0:), bas(0:)
+      real(dp), intent(in) :: env(0:)
+      integer, parameter :: ng(0:7) = [1, 1, 0, 0, 2, 1, 1, 9]
+      call cint_all_1e_optimizer(opt, ng, atm, natm, bas, nbas, env)
+   end subroutine int1e_ipr_origj_optimizer
+
+   subroutine CINTgout1e_int1e_ipr_origj(gout, g, idx, envs, gout_empty)
+      real(dp), intent(inout) :: gout(0:*)
+      real(dp), intent(inout), target :: g(0:)
+      integer,  intent(in)    :: idx(0:*)
+      type(cint_env_vars), intent(in) :: envs
+      integer,  intent(in)    :: gout_empty
+      integer  :: nf, ix, iy, iz, n
+      integer  :: g0, g1, g2, g3
+      real(dp), pointer, contiguous :: g0p(:), g1p(:), g2p(:), g3p(:)
+      real(dp) :: s(0:8)
+
+      nf = envs%nf
+      g0 = 0
+      g1 = g0 + envs%g_size * 3
+      g2 = g1 + envs%g_size * 3
+      g3 = g2 + envs%g_size * 3
+      g1 = g0 + envs%g_stride_j
+      call cint_nabla1i_1e(g, g2, g0, envs%i_l+0, envs%j_l, 0, envs)
+      call cint_nabla1i_1e(g, g3, g1, envs%i_l+0, envs%j_l, 0, envs)
+      g0p(0:) => g(g0:)
+      g1p(0:) => g(g1:)
+      g2p(0:) => g(g2:)
+      g3p(0:) => g(g3:)
+
+      do n = 0, nf - 1
+         ix = idx(0+n*3)
+         iy = idx(1+n*3)
+         iz = idx(2+n*3)
+         s(0) = + g3p(ix+0)*g0p(iy+0)*g0p(iz+0)
+         s(1) = + g2p(ix+0)*g1p(iy+0)*g0p(iz+0)
+         s(2) = + g2p(ix+0)*g0p(iy+0)*g1p(iz+0)
+         s(3) = + g1p(ix+0)*g2p(iy+0)*g0p(iz+0)
+         s(4) = + g0p(ix+0)*g3p(iy+0)*g0p(iz+0)
+         s(5) = + g0p(ix+0)*g2p(iy+0)*g1p(iz+0)
+         s(6) = + g1p(ix+0)*g0p(iy+0)*g2p(iz+0)
+         s(7) = + g0p(ix+0)*g1p(iy+0)*g2p(iz+0)
+         s(8) = + g0p(ix+0)*g0p(iy+0)*g3p(iz+0)
+         if (gout_empty /= 0) then
+            gout(n*9+0) = + s(0)
+            gout(n*9+1) = + s(1)
+            gout(n*9+2) = + s(2)
+            gout(n*9+3) = + s(3)
+            gout(n*9+4) = + s(4)
+            gout(n*9+5) = + s(5)
+            gout(n*9+6) = + s(6)
+            gout(n*9+7) = + s(7)
+            gout(n*9+8) = + s(8)
+         else
+            gout(n*9+0) = gout(n*9+0) + ( + s(0) )
+            gout(n*9+1) = gout(n*9+1) + ( + s(1) )
+            gout(n*9+2) = gout(n*9+2) + ( + s(2) )
+            gout(n*9+3) = gout(n*9+3) + ( + s(3) )
+            gout(n*9+4) = gout(n*9+4) + ( + s(4) )
+            gout(n*9+5) = gout(n*9+5) + ( + s(5) )
+            gout(n*9+6) = gout(n*9+6) + ( + s(6) )
+            gout(n*9+7) = gout(n*9+7) + ( + s(7) )
+            gout(n*9+8) = gout(n*9+8) + ( + s(8) )
+         end if
+      end do
+   end subroutine CINTgout1e_int1e_ipr_origj
+
+   function int1e_ipr_origj_cart(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 1, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_ipr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_CART_1E, 0)
+   end function int1e_ipr_origj_cart
+
+   function int1e_ipr_origj_sph(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 1, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_ipr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_SPH_1E, 0)
+   end function int1e_ipr_origj_sph
+
+   function int1e_ipr_origj_spinor(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      complex(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), natm, nbas
+      integer,  target        :: atm(0:), bas(0:)
+      real(dp), target        :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 1, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_ipr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_spinor_drv(out, dims, envs, ws, .false., .false., 0)
+   end function int1e_ipr_origj_spinor
+
+   ! <i|OVLP |NABLA R j>
+   subroutine int1e_r_origj_ip_optimizer(opt, atm, natm, bas, nbas, env)
+      type(cint_opt_t), intent(inout) :: opt
+      integer,  intent(in) :: natm, nbas
+      integer,  intent(in) :: atm(0:), bas(0:)
+      real(dp), intent(in) :: env(0:)
+      integer, parameter :: ng(0:7) = [0, 2, 0, 0, 2, 1, 1, 9]
+      call cint_all_1e_optimizer(opt, ng, atm, natm, bas, nbas, env)
+   end subroutine int1e_r_origj_ip_optimizer
+
+   subroutine CINTgout1e_int1e_r_origj_ip(gout, g, idx, envs, gout_empty)
+      real(dp), intent(inout) :: gout(0:*)
+      real(dp), intent(inout), target :: g(0:)
+      integer,  intent(in)    :: idx(0:*)
+      type(cint_env_vars), intent(in) :: envs
+      integer,  intent(in)    :: gout_empty
+      integer  :: nf, ix, iy, iz, n
+      integer  :: g0, g1, g2, g3
+      real(dp), pointer, contiguous :: g0p(:), g1p(:), g2p(:), g3p(:)
+      real(dp) :: s(0:8)
+
+      nf = envs%nf
+      g0 = 0
+      g1 = g0 + envs%g_size * 3
+      g2 = g1 + envs%g_size * 3
+      g3 = g2 + envs%g_size * 3
+      g1 = g0 + envs%g_stride_j
+      call cint_nabla1j_1e(g, g2, g0, envs%i_l+0, envs%j_l+1, 0, envs)
+      g3 = g2 + envs%g_stride_j
+      g0p(0:) => g(g0:)
+      g1p(0:) => g(g1:)
+      g2p(0:) => g(g2:)
+      g3p(0:) => g(g3:)
+
+      do n = 0, nf - 1
+         ix = idx(0+n*3)
+         iy = idx(1+n*3)
+         iz = idx(2+n*3)
+         s(0) = + g3p(ix+0)*g0p(iy+0)*g0p(iz+0)
+         s(1) = + g2p(ix+0)*g1p(iy+0)*g0p(iz+0)
+         s(2) = + g2p(ix+0)*g0p(iy+0)*g1p(iz+0)
+         s(3) = + g1p(ix+0)*g2p(iy+0)*g0p(iz+0)
+         s(4) = + g0p(ix+0)*g3p(iy+0)*g0p(iz+0)
+         s(5) = + g0p(ix+0)*g2p(iy+0)*g1p(iz+0)
+         s(6) = + g1p(ix+0)*g0p(iy+0)*g2p(iz+0)
+         s(7) = + g0p(ix+0)*g1p(iy+0)*g2p(iz+0)
+         s(8) = + g0p(ix+0)*g0p(iy+0)*g3p(iz+0)
+         if (gout_empty /= 0) then
+            gout(n*9+0) = + s(0)
+            gout(n*9+1) = + s(1)
+            gout(n*9+2) = + s(2)
+            gout(n*9+3) = + s(3)
+            gout(n*9+4) = + s(4)
+            gout(n*9+5) = + s(5)
+            gout(n*9+6) = + s(6)
+            gout(n*9+7) = + s(7)
+            gout(n*9+8) = + s(8)
+         else
+            gout(n*9+0) = gout(n*9+0) + ( + s(0) )
+            gout(n*9+1) = gout(n*9+1) + ( + s(1) )
+            gout(n*9+2) = gout(n*9+2) + ( + s(2) )
+            gout(n*9+3) = gout(n*9+3) + ( + s(3) )
+            gout(n*9+4) = gout(n*9+4) + ( + s(4) )
+            gout(n*9+5) = gout(n*9+5) + ( + s(5) )
+            gout(n*9+6) = gout(n*9+6) + ( + s(6) )
+            gout(n*9+7) = gout(n*9+7) + ( + s(7) )
+            gout(n*9+8) = gout(n*9+8) + ( + s(8) )
+         end if
+      end do
+   end subroutine CINTgout1e_int1e_r_origj_ip
+
+   function int1e_r_origj_ip_cart(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 2, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_r_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_CART_1E, 0)
+   end function int1e_r_origj_ip_cart
+
+   function int1e_r_origj_ip_sph(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 2, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_r_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_SPH_1E, 0)
+   end function int1e_r_origj_ip_sph
+
+   function int1e_r_origj_ip_spinor(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      complex(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), natm, nbas
+      integer,  target        :: atm(0:), bas(0:)
+      real(dp), target        :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 2, 0, 0, 2, 1, 1, 9]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_r_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_spinor_drv(out, dims, envs, ws, .false., .false., 0)
+   end function int1e_r_origj_ip_spinor
+
+   ! <NABLA i|OVLP |R R j>
+   subroutine int1e_iprr_origj_optimizer(opt, atm, natm, bas, nbas, env)
+      type(cint_opt_t), intent(inout) :: opt
+      integer,  intent(in) :: natm, nbas
+      integer,  intent(in) :: atm(0:), bas(0:)
+      real(dp), intent(in) :: env(0:)
+      integer, parameter :: ng(0:7) = [1, 2, 0, 0, 3, 1, 1, 27]
+      call cint_all_1e_optimizer(opt, ng, atm, natm, bas, nbas, env)
+   end subroutine int1e_iprr_origj_optimizer
+
+   subroutine CINTgout1e_int1e_iprr_origj(gout, g, idx, envs, gout_empty)
+      real(dp), intent(inout) :: gout(0:*)
+      real(dp), intent(inout), target :: g(0:)
+      integer,  intent(in)    :: idx(0:*)
+      type(cint_env_vars), intent(in) :: envs
+      integer,  intent(in)    :: gout_empty
+      integer  :: nf, ix, iy, iz, n
+      integer  :: g0, g1, g2, g3, g4, g5, g6, g7
+      real(dp), pointer, contiguous :: g0p(:), g1p(:), g2p(:), g3p(:), g4p(:), g5p(:)
+      real(dp), pointer, contiguous :: g6p(:), g7p(:)
+      real(dp) :: s(0:26)
+
+      nf = envs%nf
+      g0 = 0
+      g1 = g0 + envs%g_size * 3
+      g2 = g1 + envs%g_size * 3
+      g3 = g2 + envs%g_size * 3
+      g4 = g3 + envs%g_size * 3
+      g5 = g4 + envs%g_size * 3
+      g6 = g5 + envs%g_size * 3
+      g7 = g6 + envs%g_size * 3
+      g1 = g0 + envs%g_stride_j
+      g2 = g0 + envs%g_stride_j
+      g3 = g2 + envs%g_stride_j
+      call cint_nabla1i_1e(g, g4, g0, envs%i_l+0, envs%j_l, 0, envs)
+      call cint_nabla1i_1e(g, g5, g1, envs%i_l+0, envs%j_l, 0, envs)
+      call cint_nabla1i_1e(g, g6, g2, envs%i_l+0, envs%j_l, 0, envs)
+      call cint_nabla1i_1e(g, g7, g3, envs%i_l+0, envs%j_l, 0, envs)
+      g0p(0:) => g(g0:)
+      g1p(0:) => g(g1:)
+      g2p(0:) => g(g2:)
+      g3p(0:) => g(g3:)
+      g4p(0:) => g(g4:)
+      g5p(0:) => g(g5:)
+      g6p(0:) => g(g6:)
+      g7p(0:) => g(g7:)
+
+      do n = 0, nf - 1
+         ix = idx(0+n*3)
+         iy = idx(1+n*3)
+         iz = idx(2+n*3)
+         s(0) = + g7p(ix+0)*g0p(iy+0)*g0p(iz+0)
+         s(1) = + g6p(ix+0)*g1p(iy+0)*g0p(iz+0)
+         s(2) = + g6p(ix+0)*g0p(iy+0)*g1p(iz+0)
+         s(3) = + g5p(ix+0)*g2p(iy+0)*g0p(iz+0)
+         s(4) = + g4p(ix+0)*g3p(iy+0)*g0p(iz+0)
+         s(5) = + g4p(ix+0)*g2p(iy+0)*g1p(iz+0)
+         s(6) = + g5p(ix+0)*g0p(iy+0)*g2p(iz+0)
+         s(7) = + g4p(ix+0)*g1p(iy+0)*g2p(iz+0)
+         s(8) = + g4p(ix+0)*g0p(iy+0)*g3p(iz+0)
+         s(9) = + g3p(ix+0)*g4p(iy+0)*g0p(iz+0)
+         s(10) = + g2p(ix+0)*g5p(iy+0)*g0p(iz+0)
+         s(11) = + g2p(ix+0)*g4p(iy+0)*g1p(iz+0)
+         s(12) = + g1p(ix+0)*g6p(iy+0)*g0p(iz+0)
+         s(13) = + g0p(ix+0)*g7p(iy+0)*g0p(iz+0)
+         s(14) = + g0p(ix+0)*g6p(iy+0)*g1p(iz+0)
+         s(15) = + g1p(ix+0)*g4p(iy+0)*g2p(iz+0)
+         s(16) = + g0p(ix+0)*g5p(iy+0)*g2p(iz+0)
+         s(17) = + g0p(ix+0)*g4p(iy+0)*g3p(iz+0)
+         s(18) = + g3p(ix+0)*g0p(iy+0)*g4p(iz+0)
+         s(19) = + g2p(ix+0)*g1p(iy+0)*g4p(iz+0)
+         s(20) = + g2p(ix+0)*g0p(iy+0)*g5p(iz+0)
+         s(21) = + g1p(ix+0)*g2p(iy+0)*g4p(iz+0)
+         s(22) = + g0p(ix+0)*g3p(iy+0)*g4p(iz+0)
+         s(23) = + g0p(ix+0)*g2p(iy+0)*g5p(iz+0)
+         s(24) = + g1p(ix+0)*g0p(iy+0)*g6p(iz+0)
+         s(25) = + g0p(ix+0)*g1p(iy+0)*g6p(iz+0)
+         s(26) = + g0p(ix+0)*g0p(iy+0)*g7p(iz+0)
+         if (gout_empty /= 0) then
+            gout(n*27+0) = + s(0)
+            gout(n*27+1) = + s(1)
+            gout(n*27+2) = + s(2)
+            gout(n*27+3) = + s(3)
+            gout(n*27+4) = + s(4)
+            gout(n*27+5) = + s(5)
+            gout(n*27+6) = + s(6)
+            gout(n*27+7) = + s(7)
+            gout(n*27+8) = + s(8)
+            gout(n*27+9) = + s(9)
+            gout(n*27+10) = + s(10)
+            gout(n*27+11) = + s(11)
+            gout(n*27+12) = + s(12)
+            gout(n*27+13) = + s(13)
+            gout(n*27+14) = + s(14)
+            gout(n*27+15) = + s(15)
+            gout(n*27+16) = + s(16)
+            gout(n*27+17) = + s(17)
+            gout(n*27+18) = + s(18)
+            gout(n*27+19) = + s(19)
+            gout(n*27+20) = + s(20)
+            gout(n*27+21) = + s(21)
+            gout(n*27+22) = + s(22)
+            gout(n*27+23) = + s(23)
+            gout(n*27+24) = + s(24)
+            gout(n*27+25) = + s(25)
+            gout(n*27+26) = + s(26)
+         else
+            gout(n*27+0) = gout(n*27+0) + ( + s(0) )
+            gout(n*27+1) = gout(n*27+1) + ( + s(1) )
+            gout(n*27+2) = gout(n*27+2) + ( + s(2) )
+            gout(n*27+3) = gout(n*27+3) + ( + s(3) )
+            gout(n*27+4) = gout(n*27+4) + ( + s(4) )
+            gout(n*27+5) = gout(n*27+5) + ( + s(5) )
+            gout(n*27+6) = gout(n*27+6) + ( + s(6) )
+            gout(n*27+7) = gout(n*27+7) + ( + s(7) )
+            gout(n*27+8) = gout(n*27+8) + ( + s(8) )
+            gout(n*27+9) = gout(n*27+9) + ( + s(9) )
+            gout(n*27+10) = gout(n*27+10) + ( + s(10) )
+            gout(n*27+11) = gout(n*27+11) + ( + s(11) )
+            gout(n*27+12) = gout(n*27+12) + ( + s(12) )
+            gout(n*27+13) = gout(n*27+13) + ( + s(13) )
+            gout(n*27+14) = gout(n*27+14) + ( + s(14) )
+            gout(n*27+15) = gout(n*27+15) + ( + s(15) )
+            gout(n*27+16) = gout(n*27+16) + ( + s(16) )
+            gout(n*27+17) = gout(n*27+17) + ( + s(17) )
+            gout(n*27+18) = gout(n*27+18) + ( + s(18) )
+            gout(n*27+19) = gout(n*27+19) + ( + s(19) )
+            gout(n*27+20) = gout(n*27+20) + ( + s(20) )
+            gout(n*27+21) = gout(n*27+21) + ( + s(21) )
+            gout(n*27+22) = gout(n*27+22) + ( + s(22) )
+            gout(n*27+23) = gout(n*27+23) + ( + s(23) )
+            gout(n*27+24) = gout(n*27+24) + ( + s(24) )
+            gout(n*27+25) = gout(n*27+25) + ( + s(25) )
+            gout(n*27+26) = gout(n*27+26) + ( + s(26) )
+         end if
+      end do
+   end subroutine CINTgout1e_int1e_iprr_origj
+
+   function int1e_iprr_origj_cart(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 2, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_iprr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_CART_1E, 0)
+   end function int1e_iprr_origj_cart
+
+   function int1e_iprr_origj_sph(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 2, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_iprr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_SPH_1E, 0)
+   end function int1e_iprr_origj_sph
+
+   function int1e_iprr_origj_spinor(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      complex(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), natm, nbas
+      integer,  target        :: atm(0:), bas(0:)
+      real(dp), target        :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [1, 2, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_iprr_origj
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_spinor_drv(out, dims, envs, ws, .false., .false., 0)
+   end function int1e_iprr_origj_spinor
+
+   ! <i|OVLP |NABLA R R j>
+   subroutine int1e_rr_origj_ip_optimizer(opt, atm, natm, bas, nbas, env)
+      type(cint_opt_t), intent(inout) :: opt
+      integer,  intent(in) :: natm, nbas
+      integer,  intent(in) :: atm(0:), bas(0:)
+      real(dp), intent(in) :: env(0:)
+      integer, parameter :: ng(0:7) = [0, 3, 0, 0, 3, 1, 1, 27]
+      call cint_all_1e_optimizer(opt, ng, atm, natm, bas, nbas, env)
+   end subroutine int1e_rr_origj_ip_optimizer
+
+   subroutine CINTgout1e_int1e_rr_origj_ip(gout, g, idx, envs, gout_empty)
+      real(dp), intent(inout) :: gout(0:*)
+      real(dp), intent(inout), target :: g(0:)
+      integer,  intent(in)    :: idx(0:*)
+      type(cint_env_vars), intent(in) :: envs
+      integer,  intent(in)    :: gout_empty
+      integer  :: nf, ix, iy, iz, n
+      integer  :: g0, g1, g2, g3, g4, g5, g6, g7
+      real(dp), pointer, contiguous :: g0p(:), g1p(:), g2p(:), g3p(:), g4p(:), g5p(:)
+      real(dp), pointer, contiguous :: g6p(:), g7p(:)
+      real(dp) :: s(0:26)
+
+      nf = envs%nf
+      g0 = 0
+      g1 = g0 + envs%g_size * 3
+      g2 = g1 + envs%g_size * 3
+      g3 = g2 + envs%g_size * 3
+      g4 = g3 + envs%g_size * 3
+      g5 = g4 + envs%g_size * 3
+      g6 = g5 + envs%g_size * 3
+      g7 = g6 + envs%g_size * 3
+      g1 = g0 + envs%g_stride_j
+      g2 = g0 + envs%g_stride_j
+      g3 = g2 + envs%g_stride_j
+      call cint_nabla1j_1e(g, g4, g0, envs%i_l+0, envs%j_l+2, 0, envs)
+      g5 = g4 + envs%g_stride_j
+      g6 = g4 + envs%g_stride_j
+      g7 = g6 + envs%g_stride_j
+      g0p(0:) => g(g0:)
+      g1p(0:) => g(g1:)
+      g2p(0:) => g(g2:)
+      g3p(0:) => g(g3:)
+      g4p(0:) => g(g4:)
+      g5p(0:) => g(g5:)
+      g6p(0:) => g(g6:)
+      g7p(0:) => g(g7:)
+
+      do n = 0, nf - 1
+         ix = idx(0+n*3)
+         iy = idx(1+n*3)
+         iz = idx(2+n*3)
+         s(0) = + g7p(ix+0)*g0p(iy+0)*g0p(iz+0)
+         s(1) = + g6p(ix+0)*g1p(iy+0)*g0p(iz+0)
+         s(2) = + g6p(ix+0)*g0p(iy+0)*g1p(iz+0)
+         s(3) = + g5p(ix+0)*g2p(iy+0)*g0p(iz+0)
+         s(4) = + g4p(ix+0)*g3p(iy+0)*g0p(iz+0)
+         s(5) = + g4p(ix+0)*g2p(iy+0)*g1p(iz+0)
+         s(6) = + g5p(ix+0)*g0p(iy+0)*g2p(iz+0)
+         s(7) = + g4p(ix+0)*g1p(iy+0)*g2p(iz+0)
+         s(8) = + g4p(ix+0)*g0p(iy+0)*g3p(iz+0)
+         s(9) = + g3p(ix+0)*g4p(iy+0)*g0p(iz+0)
+         s(10) = + g2p(ix+0)*g5p(iy+0)*g0p(iz+0)
+         s(11) = + g2p(ix+0)*g4p(iy+0)*g1p(iz+0)
+         s(12) = + g1p(ix+0)*g6p(iy+0)*g0p(iz+0)
+         s(13) = + g0p(ix+0)*g7p(iy+0)*g0p(iz+0)
+         s(14) = + g0p(ix+0)*g6p(iy+0)*g1p(iz+0)
+         s(15) = + g1p(ix+0)*g4p(iy+0)*g2p(iz+0)
+         s(16) = + g0p(ix+0)*g5p(iy+0)*g2p(iz+0)
+         s(17) = + g0p(ix+0)*g4p(iy+0)*g3p(iz+0)
+         s(18) = + g3p(ix+0)*g0p(iy+0)*g4p(iz+0)
+         s(19) = + g2p(ix+0)*g1p(iy+0)*g4p(iz+0)
+         s(20) = + g2p(ix+0)*g0p(iy+0)*g5p(iz+0)
+         s(21) = + g1p(ix+0)*g2p(iy+0)*g4p(iz+0)
+         s(22) = + g0p(ix+0)*g3p(iy+0)*g4p(iz+0)
+         s(23) = + g0p(ix+0)*g2p(iy+0)*g5p(iz+0)
+         s(24) = + g1p(ix+0)*g0p(iy+0)*g6p(iz+0)
+         s(25) = + g0p(ix+0)*g1p(iy+0)*g6p(iz+0)
+         s(26) = + g0p(ix+0)*g0p(iy+0)*g7p(iz+0)
+         if (gout_empty /= 0) then
+            gout(n*27+0) = + s(0)
+            gout(n*27+1) = + s(1)
+            gout(n*27+2) = + s(2)
+            gout(n*27+3) = + s(3)
+            gout(n*27+4) = + s(4)
+            gout(n*27+5) = + s(5)
+            gout(n*27+6) = + s(6)
+            gout(n*27+7) = + s(7)
+            gout(n*27+8) = + s(8)
+            gout(n*27+9) = + s(9)
+            gout(n*27+10) = + s(10)
+            gout(n*27+11) = + s(11)
+            gout(n*27+12) = + s(12)
+            gout(n*27+13) = + s(13)
+            gout(n*27+14) = + s(14)
+            gout(n*27+15) = + s(15)
+            gout(n*27+16) = + s(16)
+            gout(n*27+17) = + s(17)
+            gout(n*27+18) = + s(18)
+            gout(n*27+19) = + s(19)
+            gout(n*27+20) = + s(20)
+            gout(n*27+21) = + s(21)
+            gout(n*27+22) = + s(22)
+            gout(n*27+23) = + s(23)
+            gout(n*27+24) = + s(24)
+            gout(n*27+25) = + s(25)
+            gout(n*27+26) = + s(26)
+         else
+            gout(n*27+0) = gout(n*27+0) + ( + s(0) )
+            gout(n*27+1) = gout(n*27+1) + ( + s(1) )
+            gout(n*27+2) = gout(n*27+2) + ( + s(2) )
+            gout(n*27+3) = gout(n*27+3) + ( + s(3) )
+            gout(n*27+4) = gout(n*27+4) + ( + s(4) )
+            gout(n*27+5) = gout(n*27+5) + ( + s(5) )
+            gout(n*27+6) = gout(n*27+6) + ( + s(6) )
+            gout(n*27+7) = gout(n*27+7) + ( + s(7) )
+            gout(n*27+8) = gout(n*27+8) + ( + s(8) )
+            gout(n*27+9) = gout(n*27+9) + ( + s(9) )
+            gout(n*27+10) = gout(n*27+10) + ( + s(10) )
+            gout(n*27+11) = gout(n*27+11) + ( + s(11) )
+            gout(n*27+12) = gout(n*27+12) + ( + s(12) )
+            gout(n*27+13) = gout(n*27+13) + ( + s(13) )
+            gout(n*27+14) = gout(n*27+14) + ( + s(14) )
+            gout(n*27+15) = gout(n*27+15) + ( + s(15) )
+            gout(n*27+16) = gout(n*27+16) + ( + s(16) )
+            gout(n*27+17) = gout(n*27+17) + ( + s(17) )
+            gout(n*27+18) = gout(n*27+18) + ( + s(18) )
+            gout(n*27+19) = gout(n*27+19) + ( + s(19) )
+            gout(n*27+20) = gout(n*27+20) + ( + s(20) )
+            gout(n*27+21) = gout(n*27+21) + ( + s(21) )
+            gout(n*27+22) = gout(n*27+22) + ( + s(22) )
+            gout(n*27+23) = gout(n*27+23) + ( + s(23) )
+            gout(n*27+24) = gout(n*27+24) + ( + s(24) )
+            gout(n*27+25) = gout(n*27+25) + ( + s(25) )
+            gout(n*27+26) = gout(n*27+26) + ( + s(26) )
+         end if
+      end do
+   end subroutine CINTgout1e_int1e_rr_origj_ip
+
+   function int1e_rr_origj_ip_cart(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 3, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_rr_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_CART_1E, 0)
+   end function int1e_rr_origj_ip_cart
+
+   function int1e_rr_origj_ip_sph(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      real(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), atm(0:), bas(0:)
+      integer,  intent(in)    :: natm, nbas
+      real(dp), intent(in)    :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 3, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_rr_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_drv(out, dims, envs, ws, C2S_SPH_1E, 0)
+   end function int1e_rr_origj_ip_sph
+
+   function int1e_rr_origj_ip_spinor(out, dims, shls, atm, natm, bas, nbas, env, ws) &
+         result(has_value)
+      complex(dp), intent(inout) :: out(0:)
+      integer,  intent(in)    :: dims(0:), shls(0:), natm, nbas
+      integer,  target        :: atm(0:), bas(0:)
+      real(dp), target        :: env(0:)
+      type(cint_ws), intent(inout) :: ws
+      logical :: has_value
+      type(cint_env_vars) :: envs
+      integer, parameter :: ng(0:7) = [0, 3, 0, 0, 3, 1, 1, 27]
+
+      call cint_init_int1e_envvars(envs, ng, shls, atm, natm, bas, nbas, env)
+      envs%f_gout => CINTgout1e_int1e_rr_origj_ip
+      envs%common_factor = envs%common_factor * (-1_dp)
+      has_value = cint_1e_spinor_drv(out, dims, envs, ws, .false., .false., 0)
+   end function int1e_rr_origj_ip_spinor
 
    ! <NABLA i|OVLP |P DOT P j>
    subroutine int1e_ipkin_optimizer(opt, atm, natm, bas, nbas, env)
