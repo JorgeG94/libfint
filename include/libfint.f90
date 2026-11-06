@@ -68,7 +68,13 @@ module libcint_fortran
     use cint_ecp_num,     only: AS_ECPBAS_OFFSET, AS_NECPBAS
     use cint_gen_int3c2e, only: int3c2e_ip1_cart, int3c2e_ip1_sph, &
                                 int3c2e_ip2_cart, int3c2e_ip2_sph, &
-                                int2c2e_ip1_cart, int2c2e_ip1_sph
+                                int2c2e_ip1_cart, int2c2e_ip1_sph, &
+                                int3c2e_ipip1_cart, int3c2e_ipip1_sph, &
+                                int3c2e_ipvip1_cart, int3c2e_ipvip1_sph, &
+                                int3c2e_ip1ip2_cart, int3c2e_ip1ip2_sph, &
+                                int3c2e_ipip2_cart, int3c2e_ipip2_sph, &
+                                int2c2e_ipip1_cart, int2c2e_ipip1_sph, &
+                                int2c2e_ip1ip2_cart, int2c2e_ip1ip2_sph
     use cint_gen_intor3,  only: int1e_spnucsp_spinor
     use cint_gen_intor4,  only: int2e_spsp1_spinor
     use cint_bas,       only: KAPPA_SP_SHELL, &
@@ -158,6 +164,12 @@ module libcint_fortran
     public :: libcint_3c2e_ip1_cart, libcint_3c2e_ip1_sph
     public :: libcint_3c2e_ip2_cart, libcint_3c2e_ip2_sph
     public :: libcint_2c2e_ip1_cart, libcint_2c2e_ip1_sph
+    public :: libcint_3c2e_ipip1_cart, libcint_3c2e_ipip1_sph
+    public :: libcint_3c2e_ipvip1_cart, libcint_3c2e_ipvip1_sph
+    public :: libcint_3c2e_ip1ip2_cart, libcint_3c2e_ip1ip2_sph
+    public :: libcint_3c2e_ipip2_cart, libcint_3c2e_ipip2_sph
+    public :: libcint_2c2e_ipip1_cart, libcint_2c2e_ipip1_sph
+    public :: libcint_2c2e_ip1ip2_cart, libcint_2c2e_ip1ip2_sph
     public :: libcint_2e_spsp1
 
     public :: libcint_2e_cart_optimizer, libcint_2e_sph_optimizer
@@ -215,6 +227,8 @@ module libcint_fortran
     ! in full, so 9 for rr and 27 for rrr rather than the 6 and 10 unique ones.
     integer, parameter :: NCOMP_1E(18) = [1, 1, 1, 3, 3, 3, 9, 27, 9, 3, 9, 9, 9, 9, 9, 9, 9, 9]
     integer, parameter :: K2_IPIP1 = 1, K2_IPVIP1 = 2, K2_IP1IP2 = 3
+    integer, parameter :: K3_IPIP1 = 1, K3_IPVIP1 = 2, K3_IP1IP2 = 3, K3_IPIP2 = 4
+    integer, parameter :: K2C_IPIP1 = 5, K2C_IP1IP2 = 6
 
     ! Scratch, reused across calls.  One per thread: metalquicha runs OpenMP
     ! over shell pairs, and a shared workspace would have two threads bump-
@@ -716,6 +730,84 @@ contains
         end select
         ret = merge(1_ip, 0_ip, hv)
     end function run2e_hess
+
+    ! The second derivatives of the fitting integrals a density-fitted Hessian
+    ! is built from: four three-centre `(ij|P)` kernels and two two-centre
+    ! `(P|Q)` ones.  Nine components each, the derivative pair fastest-varying
+    ! after the shells, as libcint lays them out.  `ncen` is 3 for the K3_
+    ! kernels and 2 for the K2C_ ones; nothing checks the two agree beyond the
+    ! case table, which is why the wrappers are the only callers.
+    function run_fit_hess(which, ncen, cart, buf, shls, atm, natm, bas, nbas, env, opt) &
+            result(ret)
+        integer,     intent(in) :: which
+        integer(ip), intent(in) :: ncen, natm, nbas
+        logical,     intent(in) :: cart
+        real(dp),    intent(out), target :: buf(*)
+        integer(ip), intent(in),  target :: shls(ncen)
+        integer(ip), intent(in),  target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in),  target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        real(dp),    intent(in),  target :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), i, n, nenv
+        logical :: hv
+
+        call ws_bind_opt(opt)
+        fshls = 0
+        dims = 1
+        do i = 1, ncen
+            fshls(i-1) = shls(i)
+            if (cart) then
+                dims(i-1) = cint_cgto_cart(fshls(i-1), bas)
+            else
+                dims(i-1) = cint_cgto_spheric(fshls(i-1), bas)
+            end if
+        end do
+        n = product(dims) * 9
+        nenv = env_extent(shls, ncen, atm, natm, bas, nbas)
+
+        select case (which)
+        case (K3_IPIP1)
+            if (cart) then
+                hv = int3c2e_ipip1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int3c2e_ipip1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K3_IPVIP1)
+            if (cart) then
+                hv = int3c2e_ipvip1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int3c2e_ipvip1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K3_IP1IP2)
+            if (cart) then
+                hv = int3c2e_ip1ip2_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int3c2e_ip1ip2_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K3_IPIP2)
+            if (cart) then
+                hv = int3c2e_ipip2_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int3c2e_ipip2_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K2C_IPIP1)
+            if (cart) then
+                hv = int2c2e_ipip1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2c2e_ipip1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case (K2C_IP1IP2)
+            if (cart) then
+                hv = int2c2e_ip1ip2_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            else
+                hv = int2c2e_ip1ip2_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+            end if
+        case default
+            error stop "libcint_fortran: unknown fitting-integral second derivative"
+        end select
+        ret = merge(1_ip, 0_ip, hv)
+    end function run_fit_hess
 
     ! `<i| 1/|r - R_g| |j>` for every grid point R_g in a half-open range.
     !
@@ -2359,5 +2451,161 @@ contains
         integer(ip) :: ret
         ret = run2e_hess(K2_IP1IP2, .false., buf, shls, atm, natm, bas, nbas, env, opt)
     end function libcint_2e_ip1ip2_sph
+
+    function libcint_3c2e_ipip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPIP1, 3_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipip1_cart
+
+    function libcint_3c2e_ipip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPIP1, 3_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipip1_sph
+
+    function libcint_3c2e_ipvip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPVIP1, 3_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipvip1_cart
+
+    function libcint_3c2e_ipvip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPVIP1, 3_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipvip1_sph
+
+    function libcint_3c2e_ip1ip2_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IP1IP2, 3_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ip1ip2_cart
+
+    function libcint_3c2e_ip1ip2_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IP1IP2, 3_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ip1ip2_sph
+
+    function libcint_3c2e_ipip2_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPIP2, 3_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipip2_cart
+
+    function libcint_3c2e_ipip2_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(3)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K3_IPIP2, 3_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_3c2e_ipip2_sph
+
+    function libcint_2c2e_ipip1_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K2C_IPIP1, 2_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2c2e_ipip1_cart
+
+    function libcint_2c2e_ipip1_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K2C_IPIP1, 2_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2c2e_ipip1_sph
+
+    function libcint_2c2e_ip1ip2_cart(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K2C_IP1IP2, 2_ip, .true., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2c2e_ip1ip2_cart
+
+    function libcint_2c2e_ip1ip2_sph(buf, shls, atm, natm, bas, nbas, env, opt) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        type(c_ptr), intent(in), optional :: opt
+        integer(ip) :: ret
+        ret = run_fit_hess(K2C_IP1IP2, 2_ip, .false., buf, shls, atm, natm, bas, nbas, env, opt)
+    end function libcint_2c2e_ip1ip2_sph
 
 end module libcint_fortran
