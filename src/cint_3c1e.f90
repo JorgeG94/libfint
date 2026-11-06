@@ -178,8 +178,8 @@ contains
       real(dp), intent(in)    :: ai, aj, ak
       type(cint_env_vars), intent(in) :: envs
       integer  :: li, lj, lk, nmax, mmax, gx, gy, gz, gs, dj, dk, i, j, k, off
-      real(dp) :: aijk, aijk1, rjrk0, rjrk1, rjrk2, r0, r1, r2
-      real(dp) :: rirj0, rirj1, rirj2
+      real(dp) :: aijk, aijk1, p0, p1, p2
+      real(dp) :: ppi0, ppi1, ppi2, ppj0, ppj1, ppj2, ppk0, ppk1, ppk2
       real(dp), pointer, contiguous :: gxp(:), gyp(:), gzp(:)
 
       li = envs%li_ceil; lj = envs%lj_ceil; lk = envs%lk_ceil
@@ -197,31 +197,36 @@ contains
       dk = envs%g_stride_k
       aijk = ai + aj + ak
       aijk1 = 0.5_dp / aijk
-      rjrk0 = envs%rj(0) - envs%rk(0)
-      rjrk1 = envs%rj(1) - envs%rk(1)
-      rjrk2 = envs%rj(2) - envs%rk(2)
+      ! Expanded about the product centre P rather than rj, as libcint has
+      ! done since its #137: with rj as the origin, the transfer to i and k
+      ! cancels catastrophically when P is far from rj -- a diffuse j shell on
+      ! another atom than tight i and k shells, where libcint measured int3c1e
+      ! off by a factor of 1e5.
       ! division, not a reciprocal multiply: x/aijk and x*(1/aijk) round
       ! differently and the port has to match the C bit for bit
-      r0 = envs%rj(0) - (ai*envs%ri(0) + aj*envs%rj(0) + ak*envs%rk(0)) / aijk
-      r1 = envs%rj(1) - (ai*envs%ri(1) + aj*envs%rj(1) + ak*envs%rk(1)) / aijk
-      r2 = envs%rj(2) - (ai*envs%ri(2) + aj*envs%rj(2) + ak*envs%rk(2)) / aijk
-      rirj0 = envs%rirj(0); rirj1 = envs%rirj(1); rirj2 = envs%rirj(2)
+      p0 = (ai*envs%ri(0) + aj*envs%rj(0) + ak*envs%rk(0)) / aijk
+      p1 = (ai*envs%ri(1) + aj*envs%rj(1) + ak*envs%rk(1)) / aijk
+      p2 = (ai*envs%ri(2) + aj*envs%rj(2) + ak*envs%rk(2)) / aijk
+      ppi0 = p0 - envs%ri(0); ppi1 = p1 - envs%ri(1); ppi2 = p2 - envs%ri(2)
+      ppj0 = p0 - envs%rj(0); ppj1 = p1 - envs%rj(1); ppj2 = p2 - envs%rj(2)
+      ppk0 = p0 - envs%rk(0); ppk1 = p1 - envs%rk(1); ppk2 = p2 - envs%rk(2)
 
-      gxp(dj) = -r0 * gxp(0)
-      gyp(dj) = -r1 * gyp(0)
-      gzp(dj) = -r2 * gzp(0)
+      ! the moments of (x-P)^j, whose odd ones vanish
+      gxp(dj) = 0.0_dp
+      gyp(dj) = 0.0_dp
+      gzp(dj) = 0.0_dp
 
       do j = 1, nmax - 1
-         gxp((j+1)*dj) = aijk1*j*gxp((j-1)*dj) - r0*gxp(j*dj)
-         gyp((j+1)*dj) = aijk1*j*gyp((j-1)*dj) - r1*gyp(j*dj)
-         gzp((j+1)*dj) = aijk1*j*gzp((j-1)*dj) - r2*gzp(j*dj)
+         gxp((j+1)*dj) = aijk1*j*gxp((j-1)*dj)
+         gyp((j+1)*dj) = aijk1*j*gyp((j-1)*dj)
+         gzp((j+1)*dj) = aijk1*j*gzp((j-1)*dj)
       end do
 
       do i = 1, li
          do j = 0, nmax - i
-            gxp(i+j*dj) = gxp(i-1+(j+1)*dj) - rirj0*gxp(i-1+j*dj)
-            gyp(i+j*dj) = gyp(i-1+(j+1)*dj) - rirj1*gyp(i-1+j*dj)
-            gzp(i+j*dj) = gzp(i-1+(j+1)*dj) - rirj2*gzp(i-1+j*dj)
+            gxp(i+j*dj) = gxp(i-1+(j+1)*dj) + ppi0*gxp(i-1+j*dj)
+            gyp(i+j*dj) = gyp(i-1+(j+1)*dj) + ppi1*gyp(i-1+j*dj)
+            gzp(i+j*dj) = gzp(i-1+(j+1)*dj) + ppi2*gzp(i-1+j*dj)
          end do
       end do
 
@@ -231,12 +236,14 @@ contains
          do j = 0, mmax - k
             off = k*dk + j*dj
             do i = off, off + li
-               gxp(i) = gxp(i+dj-dk) + rjrk0*gxp(i-dk)
-               gyp(i) = gyp(i+dj-dk) + rjrk1*gyp(i-dk)
-               gzp(i) = gzp(i+dj-dk) + rjrk2*gzp(i-dk)
+               gxp(i) = gxp(i+dj-dk) + ppk0*gxp(i-dk)
+               gyp(i) = gyp(i+dj-dk) + ppk1*gyp(i-dk)
+               gzp(i) = gzp(i+dj-dk) + ppk2*gzp(i-dk)
             end do
          end do
       end do
+
+      call shift_j_to_rj(gxp, gyp, gzp, li, lj, lk, dj, dk, ppj0, ppj1, ppj2)
    end subroutine cint_g3c1e_ovlp
 
    ! The same recursion at one Rys root of the 1/r kernel.  t2 is that root
@@ -248,8 +255,8 @@ contains
       real(dp), intent(in)    :: ai, aj, ak, rijk(0:2), cr(0:2), t2
       type(cint_env_vars), intent(in) :: envs
       integer  :: li, lj, lk, nmax, mmax, gx, gy, gz, gs, dj, dk, i, j, k, off
-      real(dp) :: aijk, aijk1, rjrk0, rjrk1, rjrk2, r0, r1, r2
-      real(dp) :: rirj0, rirj1, rirj2
+      real(dp) :: aijk, aijk1, q0, q1, q2
+      real(dp) :: qri0, qri1, qri2, qrj0, qrj1, qrj2, qrk0, qrk1, qrk2
       real(dp), pointer, contiguous :: gxp(:), gyp(:), gzp(:)
 
       li = envs%li_ceil; lj = envs%lj_ceil; lk = envs%lk_ceil
@@ -266,30 +273,33 @@ contains
       dj = li + 1
       dk = envs%g_stride_k
       aijk = ai + aj + ak
-      rjrk0 = envs%rj(0) - envs%rk(0)
-      rjrk1 = envs%rj(1) - envs%rk(1)
-      rjrk2 = envs%rj(2) - envs%rk(2)
-      r0 = envs%rj(0) - (rijk(0) + t2 * (cr(0) - rijk(0)))
-      r1 = envs%rj(1) - (rijk(1) + t2 * (cr(1) - rijk(1)))
-      r2 = envs%rj(2) - (rijk(2) + t2 * (cr(2) - rijk(2)))
-      rirj0 = envs%rirj(0); rirj1 = envs%rirj(1); rirj2 = envs%rirj(2)
+      ! Expanded about the Rys point r0 rather than rj, for the reason given
+      ! in cint_g3c1e_ovlp; libcint measured int3c1e_rinv and int3c1e_iprinv
+      ! off by 1e4 to 1e7 without it.
+      q0 = rijk(0) + t2 * (cr(0) - rijk(0))
+      q1 = rijk(1) + t2 * (cr(1) - rijk(1))
+      q2 = rijk(2) + t2 * (cr(2) - rijk(2))
+      qri0 = q0 - envs%ri(0); qri1 = q1 - envs%ri(1); qri2 = q2 - envs%ri(2)
+      qrj0 = q0 - envs%rj(0); qrj1 = q1 - envs%rj(1); qrj2 = q2 - envs%rj(2)
+      qrk0 = q0 - envs%rk(0); qrk1 = q1 - envs%rk(1); qrk2 = q2 - envs%rk(2)
 
-      gxp(dj) = -r0 * gxp(0)
-      gyp(dj) = -r1 * gyp(0)
-      gzp(dj) = -r2 * gzp(0)
+      ! the moments of (x-r0)^j, whose odd ones vanish
+      gxp(dj) = 0.0_dp
+      gyp(dj) = 0.0_dp
+      gzp(dj) = 0.0_dp
 
       aijk1 = 0.5_dp * (1.0_dp - t2) / aijk
       do j = 1, nmax - 1
-         gxp((j+1)*dj) = aijk1*j*gxp((j-1)*dj) - r0*gxp(j*dj)
-         gyp((j+1)*dj) = aijk1*j*gyp((j-1)*dj) - r1*gyp(j*dj)
-         gzp((j+1)*dj) = aijk1*j*gzp((j-1)*dj) - r2*gzp(j*dj)
+         gxp((j+1)*dj) = aijk1*j*gxp((j-1)*dj)
+         gyp((j+1)*dj) = aijk1*j*gyp((j-1)*dj)
+         gzp((j+1)*dj) = aijk1*j*gzp((j-1)*dj)
       end do
 
       do i = 1, li
          do j = 0, nmax - i
-            gxp(i+j*dj) = gxp(i-1+(j+1)*dj) - rirj0*gxp(i-1+j*dj)
-            gyp(i+j*dj) = gyp(i-1+(j+1)*dj) - rirj1*gyp(i-1+j*dj)
-            gzp(i+j*dj) = gzp(i-1+(j+1)*dj) - rirj2*gzp(i-1+j*dj)
+            gxp(i+j*dj) = gxp(i-1+(j+1)*dj) + qri0*gxp(i-1+j*dj)
+            gyp(i+j*dj) = gyp(i-1+(j+1)*dj) + qri1*gyp(i-1+j*dj)
+            gzp(i+j*dj) = gzp(i-1+(j+1)*dj) + qri2*gzp(i-1+j*dj)
          end do
       end do
 
@@ -298,13 +308,39 @@ contains
          do j = 0, mmax - k
             off = k*dk + j*dj
             do i = off, off + li
-               gxp(i) = gxp(i+dj-dk) + rjrk0*gxp(i-dk)
-               gyp(i) = gyp(i+dj-dk) + rjrk1*gyp(i-dk)
-               gzp(i) = gzp(i+dj-dk) + rjrk2*gzp(i-dk)
+               gxp(i) = gxp(i+dj-dk) + qrk0*gxp(i-dk)
+               gyp(i) = gyp(i+dj-dk) + qrk1*gyp(i-dk)
+               gzp(i) = gzp(i+dj-dk) + qrk2*gzp(i-dk)
             end do
          end do
       end do
+
+      call shift_j_to_rj(gxp, gyp, gzp, li, lj, lk, dj, dk, qrj0, qrj1, qrj2)
    end subroutine cint_g3c1e_nuc
+
+   ! The j index of a block built about some centre C, moved to rj: a Taylor
+   ! shift, (x-C)^j to (x-rj)^j, applied in place with rjc = C - rj.  The
+   ! last step of both kernels above, in the C's own loop order, so the
+   ! rounding is the C's.
+   subroutine shift_j_to_rj(gxp, gyp, gzp, li, lj, lk, dj, dk, rjc0, rjc1, rjc2)
+      real(dp), intent(inout) :: gxp(0:), gyp(0:), gzp(0:)
+      integer,  intent(in)    :: li, lj, lk, dj, dk
+      real(dp), intent(in)    :: rjc0, rjc1, rjc2
+      integer :: i, j, k, n, off
+
+      do k = 0, lk
+         do i = 0, li
+            off = k*dk + i
+            do n = 0, lj - 1
+               do j = lj, n + 1, -1
+                  gxp(off+j*dj) = gxp(off+j*dj) + rjc0*gxp(off+(j-1)*dj)
+                  gyp(off+j*dj) = gyp(off+j*dj) + rjc1*gyp(off+(j-1)*dj)
+                  gzp(off+j*dj) = gzp(off+j*dj) + rjc2*gzp(off+(j-1)*dj)
+               end do
+            end do
+         end do
+      end do
+   end subroutine shift_j_to_rj
 
    ! No Rys sum here: the 1/r root loop is outside, in the driver, because
    ! each root needs its own g array.

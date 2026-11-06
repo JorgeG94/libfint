@@ -163,7 +163,6 @@ def emit(entries, out):
    complex(c_double_complex), allocatable :: cz(:), fz(:)
    integer :: ib, di, dj, dk, dl, nq, nb2, dims(0:3), fshls(0:3), stride, ii
    integer :: ncmp, nbad, nexact, nchecked, nrpoly
-   integer :: ng76
    real(dp) :: worst
    character(len=90) :: wat
    real(dp), parameter :: CANARY = 1.2345678901e300_dp
@@ -175,7 +174,7 @@ def emit(entries, out):
 
    allocate(atm(ATM_SLOTS, 8), bas(BAS_SLOTS, 200), env(20000))
    ncmp = 0; nbad = 0; nexact = 0; nrpoly = 0
-   ng76 = 0; nchecked = 0; worst = 0.0_dp; wat = "(none)"
+   nchecked = 0; worst = 0.0_dp; wat = "(none)"
 
    ! basis 1 is 6-31G (contracted, s and p); basis 3 is cc-pVDZ, which adds d
    ! and so the general 2D-to-4D path.  Between them every branch in the
@@ -248,15 +247,7 @@ def emit(entries, out):
    print '(A,ES10.2)', "  worst diff / block   : ", worst
    print '(A,I0)',     "  inexact              : ", nexact
    print '(A,I0)',     "  r-poly last-bit      : ", nrpoly
-   print '(A,I0)',     "  upstream g76 defect  : ", ng76
    print '(A,I0)',     "  over tolerance       : ", nbad
-   if (ng76 > 0) then
-      print '(A)', "  NOTE: the reference libcint is missing the g76 fix in"
-      print '(A)', "        CINTgout1e_int3c1e_ip1_r6_origk (src/cint3c1e_a.c)."
-      print '(A)', "        libfint is right and the C is wrong there; the"
-      print '(A)', "        difference above is expected until that is merged."
-      print '(A)', "        If this count is 0, delete the special case."
-   end if
    if (nbad > 0 .or. nexact > 0) then
       print '(A,A)',   "  worst at             : ", trim(wat)
       stop 1
@@ -304,14 +295,6 @@ contains
       rpoly = index(what, "_r2_orig") > 0 .or. index(what, "_r4_orig") > 0 .or. &
               index(what, "_r6_orig") > 0
       if (rpoly) tol = max(tol, 1.0e-14_dp)
-      ! CINTgout1e_int3c1e_ip1_r6_origk reads a g block it never writes, so an
-      ! unpatched libcint returns a wrong value here.  Counted rather than
-      ! tolerated: this is the C being wrong, not the two disagreeing, and the
-      ! count is how you find out the fix has landed upstream.
-      if (index(what, "int3c1e_ip1_r6_orig") > 0 .and. r > tol) then
-         ng76 = ng76 + 1
-         return
-      end if
       if (r > worst) worst = r
       if (r > tol) then
          nbad = nbad + 1

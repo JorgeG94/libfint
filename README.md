@@ -120,10 +120,10 @@ explicitly. It tracks a specific upstream version rather than diverging: when
 libcint adds an integral, the description is copied into the Fortran
 generator and the suite re-run.
 
-One deliberate difference from stock libcint 6.1.3: a missing
-`G1E_D_I(g76, ...)` in `src/cint3c1e_a.c`, which is a real bug in the C.
-libfint has it fixed, so `int3c1e_a` differs from an unpatched libcint. The
-patch has been offered upstream.
+libfint carried one deliberate difference from libcint up to 6.1.3: a missing
+`G1E_D_I(g76, ...)` in `src/cint3c1e_a.c`, a real bug in the C that libfint
+had fixed. libcint fixed it too in 6.2.0 (sunqm/libcint#132), so the two now
+agree there as everywhere else.
 
 ## License
 
