@@ -1,7 +1,7 @@
 # fpm prepends "lib" to the package name, so this is "fint" and the archive
 # is libfint.a.
 name = "fint"
-version = "6.1.3"
+version = "0.7.0"
 license = "Apache-2.0"
 description = "General GTO integrals for quantum chemistry, in Fortran"
 categories = ["numerical", "chemistry"]
