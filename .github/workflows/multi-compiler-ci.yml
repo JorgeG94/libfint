@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   Build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.toolchain.os || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +46,12 @@ jobs:
           # is not something to drop; eight files depend on it.  If nvidia ever
           # ships real128 this job turns green on its own and tells us.
           - {compiler: nvidia-hpc, version: 'latest', allow-failure: true}
-          - {compiler: aocc, version: '5.1.0'}
+          # AOCC runs on 24.04, not ubuntu-latest.  AMD's aocc-compiler-5.1.0
+          # package depends on libxml2, which is not installable on Ubuntu
+          # 26.04, and setup-fortran fixes that only in its v2 betas
+          # (fortran-lang/setup-fortran#286).  Move this back to ubuntu-latest
+          # once a stable setup-fortran carries that fix.
+          - {compiler: aocc, version: '5.1.0', os: ubuntu-24.04}
 
     # A red square here is a real finding for every compiler except nvfortran,
     # which cannot build this library at all -- see the matrix note.
@@ -65,7 +70,7 @@ jobs:
       run: pip install --upgrade ninja
 
     - name: Setup Fortran compiler
-      uses: fortran-lang/setup-fortran@v1.10.0
+      uses: fortran-lang/setup-fortran@v1.11.0
       id: setup-fortran
       with:
         compiler: ${{ matrix.toolchain.compiler }}

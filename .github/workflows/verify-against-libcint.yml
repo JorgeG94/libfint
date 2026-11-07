@@ -84,7 +84,7 @@ jobs:
       run: pip install --upgrade ninja
 
     - name: Setup Fortran compiler
-      uses: fortran-lang/setup-fortran@v1.10.0
+      uses: fortran-lang/setup-fortran@v1.11.0
       id: setup-fortran
       with:
         compiler: ${{ matrix.toolchain.compiler }}
