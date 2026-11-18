@@ -43,8 +43,8 @@ set(LIBFINT_CHECKS
 #
 # Everything in that list links `cint` and compares against libcint at run
 # time.  These cannot and need not: libcint has no ECP code, so their
-# references are committed (generated from PySCF by gen_ecp_check.py and
-# gen_ecp_num_check.py) and they link `fint` alone.  Keeping them separate is
+# references are committed (generated from PySCF by gen_ecp_check.py,
+# gen_ecp_num_check.py and gen_ecp_deriv_check.py) and they link `fint` alone.  Keeping them separate is
 # what would let them run in the toolchain lanes that never fetch libcint.
 #
 # ecp_abi_check is C, and drives ECPscalar_sph/ECPscalar_cart through
@@ -52,7 +52,12 @@ set(LIBFINT_CHECKS
 # directly and so cannot reach the bind(C) layer -- which is exactly where the
 # two faults fixed in "Fix the radial grid size, and two latent faults in the
 # C ABI" lived, invisible to every test at the time.
-foreach(chk ecp_num_check ecp_check)
+#
+# ecp_deriv_check reaches the derivative entry points' bind(C) layer from
+# Fortran, through interface blocks naming the C symbols, and holds it to the
+# module bit for bit.  That covers the link names, the sizing and the
+# placement, which is what that layer does.
+foreach(chk ecp_num_check ecp_check ecp_deriv_check)
   add_executable(${chk} ${chk}.F90)
   target_link_libraries(${chk} fint m)
   target_include_directories(${chk} PRIVATE ${PROJECT_BINARY_DIR}/include)

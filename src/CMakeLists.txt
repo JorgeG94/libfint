@@ -34,6 +34,7 @@ set(cintFortranSrc
   cint_ecp_rad.f90
   cint_ecp.f90
   cint_ecp_drv.f90
+  cint_ecp_deriv.f90
   cint_envs.f90
   cint_screen.f90
   cint_workspace.f90
