@@ -66,7 +66,7 @@ module libcint_fortran
     ! `bind(C)` interface so that the caller needs no C marshalling of its own.
     use cint_ecp_drv,     only: ecp_scalar_cart, ecp_scalar_sph
     use cint_ecp_deriv,   only: ecp_deriv1
-    use cint_ecp_num,     only: AS_ECPBAS_OFFSET, AS_NECPBAS
+    use cint_ecp_num,     only: AS_ECPBAS_OFFSET, AS_NECPBAS, AS_RINV_ORIG_ATOM
     use cint_gen_int3c2e, only: int3c2e_ip1_cart, int3c2e_ip1_sph, &
                                 int3c2e_ip2_cart, int3c2e_ip2_sph, &
                                 int2c2e_ip1_cart, int2c2e_ip1_sph, &
@@ -119,6 +119,7 @@ module libcint_fortran
     public :: LIBCINT_ATOM_OF, LIBCINT_ANG_OF, LIBCINT_NPRIM_OF, LIBCINT_NCTR_OF
     public :: LIBCINT_KAPPA_OF, LIBCINT_PTR_EXP, LIBCINT_PTR_COEFF
     public :: LIBCINT_PTR_EXPCUTOFF, LIBCINT_PTR_COMMON_ORIG, LIBCINT_PTR_RINV_ORIG
+    public :: LIBCINT_AS_RINV_ORIG_ATOM, LIBCINT_AS_ECPBAS_OFFSET, LIBCINT_AS_NECPBAS
     public :: LIBCINT_PTR_RINV_ZETA, LIBCINT_PTR_RANGE_OMEGA, LIBCINT_PTR_ENV_START
     public :: LIBCINT_PTR_GRIDS
 
@@ -213,6 +214,12 @@ module libcint_fortran
     integer(c_int), parameter :: LIBCINT_PTR_COMMON_ORIG = PTR_COMMON_ORIG
     integer(c_int), parameter :: LIBCINT_PTR_RINV_ORIG = PTR_RINV_ORIG
     integer(c_int), parameter :: LIBCINT_PTR_RINV_ZETA = PTR_RINV_ZETA
+    ! The three env slots the ECP integrals read, zero-based like the rest:
+    ! the atom a one-atom integral (libcint_ecp_iprinv_*) refers to, itself
+    ! zero-based; the first ECP row of `bas`; and how many rows there are.
+    integer(c_int), parameter :: LIBCINT_AS_RINV_ORIG_ATOM = AS_RINV_ORIG_ATOM
+    integer(c_int), parameter :: LIBCINT_AS_ECPBAS_OFFSET = AS_ECPBAS_OFFSET
+    integer(c_int), parameter :: LIBCINT_AS_NECPBAS = AS_NECPBAS
     integer(c_int), parameter :: LIBCINT_PTR_RANGE_OMEGA = PTR_RANGE_OMEGA
     integer(c_int), parameter :: LIBCINT_PTR_ENV_START = PTR_ENV_START
     ! Where libcint_1e_grids finds its points: env(LIBCINT_PTR_GRIDS + 1) holds
@@ -1029,9 +1036,9 @@ contains
     !
     ! `ipnuc` is < nabla mu | U | nu > with U summed over every ECP centre;
     ! `iprinv` is the same with the potential of one atom alone, the atom
-    ! being the zero-based index in `env` slot 18 (AS_RINV_ORIG_ATOM + 1 in
-    ! this file's one-based view), which is where PySCF's
-    ! `with_rinv_at_nucleus` puts it. `buf` receives three blocks, x then y
+    ! being the zero-based index at `env(LIBCINT_AS_RINV_ORIG_ATOM + 1)`,
+    ! which is where PySCF's `with_rinv_at_nucleus` puts it. `buf` receives
+    ! three blocks, x then y
     ! then z, each (di, dj). nabla acts on the electron, so the derivative
     ! with respect to the centre of mu is minus this.
 
