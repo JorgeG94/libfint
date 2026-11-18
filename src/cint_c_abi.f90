@@ -87,6 +87,7 @@ module cint_c_abi
                               int2e_ipvip1ipvip2_cart, int2e_ipvip1ipvip2_sph
    use cint_1e_grids,   only: int1e_grids_cart, int1e_grids_sph
    use cint_ecp_drv,    only: ecp_scalar_cart, ecp_scalar_sph
+   use cint_ecp_deriv,  only: ecp_deriv1
    use cint_ecp_num,    only: AS_ECPBAS_OFFSET, AS_NECPBAS
    ! The Fock-build set: overlap, kinetic and nuclear for the core Hamiltonian,
    ! the four-centre integral itself, the two- and three-centre ones density
@@ -3572,5 +3573,82 @@ contains
                                    int(nbas), penv), c_int)
       end if
    end function c_ECPscalar_cart
+
+   ! First derivatives of the scalar ECP: three components, so `out` is three
+   ! times the block (or three times dims(0)*dims(1)).  The one-atom forms
+   ! read their atom from env slot AS_RINV_ORIG_ATOM, as the C does.
+   function ecp_deriv_abi(cart, one_atom, out, dims, shls, atm, natm, bas, nbas, env) &
+         result(ret)
+      logical,        intent(in) :: cart, one_atom
+      type(c_ptr),    intent(in) :: out, dims, shls, atm, bas, env
+      integer(c_int), intent(in) :: natm, nbas
+      integer(c_int)        :: ret
+      integer(c_int), pointer :: pshls(:), patm(:), pbas(:), pdims(:)
+      real(c_double), pointer :: pout(:), penv(:)
+      integer :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all
+
+      ret = 0_c_int
+      ! A NULL `out` asks for a cache size; see c_ECPscalar_sph.
+      if (.not. c_associated(out)) return
+
+      call c_f_pointer(shls, pshls, [2])
+      call c_f_pointer(atm,  patm,  [ATM_SLOTS*natm])
+      call c_f_pointer(env,  penv,  [PTR_ENV_START])
+      ecpoff  = int(penv(AS_ECPBAS_OFFSET + 1))
+      necpbas = int(penv(AS_NECPBAS + 1))
+      nb_all  = int(nbas)
+      if (necpbas > 0) nb_all = max(int(nbas), ecpoff + necpbas)
+      call c_f_pointer(bas, pbas, [BAS_SLOTS*nb_all])
+      fshls(0) = int(pshls(1)); fshls(1) = int(pshls(2))
+      if (cart) then
+         di = cint_cgto_cart(fshls(0), int(pbas)); dj = cint_cgto_cart(fshls(1), int(pbas))
+      else
+         di = cint_cgto_spheric(fshls(0), int(pbas)); dj = cint_cgto_spheric(fshls(1), int(pbas))
+      end if
+      call c_f_pointer(env, penv, [ecp_env_len(pshls, int(pbas), int(nbas), ecpoff, &
+                                               max(necpbas, 0))])
+      if (c_associated(dims)) then
+         call c_f_pointer(dims, pdims, [2])
+         call c_f_pointer(out, pout, [3*int(pdims(1))*int(pdims(2))])
+         ret = int(ecp_deriv1(cart, one_atom, pout, fshls, int(patm), int(natm), int(pbas), &
+                              penv, [int(pdims(1)), int(pdims(2))]), c_int)
+      else
+         call c_f_pointer(out, pout, [3*di*dj])
+         ret = int(ecp_deriv1(cart, one_atom, pout, fshls, int(patm), int(natm), int(pbas), &
+                              penv), c_int)
+      end if
+   end function ecp_deriv_abi
+
+   function c_ECPscalar_ipnuc_sph(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                               cache) result(ret) bind(C, name="ECPscalar_ipnuc_sph")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      ret = ecp_deriv_abi(.false., .false., out, dims, shls, atm, natm, bas, nbas, env)
+   end function c_ECPscalar_ipnuc_sph
+
+   function c_ECPscalar_ipnuc_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                               cache) result(ret) bind(C, name="ECPscalar_ipnuc_cart")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      ret = ecp_deriv_abi(.true., .false., out, dims, shls, atm, natm, bas, nbas, env)
+   end function c_ECPscalar_ipnuc_cart
+
+   function c_ECPscalar_iprinv_sph(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                               cache) result(ret) bind(C, name="ECPscalar_iprinv_sph")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      ret = ecp_deriv_abi(.false., .true., out, dims, shls, atm, natm, bas, nbas, env)
+   end function c_ECPscalar_iprinv_sph
+
+   function c_ECPscalar_iprinv_cart(out, dims, shls, atm, natm, bas, nbas, env, opt, &
+                               cache) result(ret) bind(C, name="ECPscalar_iprinv_cart")
+      type(c_ptr),    value :: out, dims, shls, atm, bas, env, opt, cache
+      integer(c_int), value :: natm, nbas
+      integer(c_int)        :: ret
+      ret = ecp_deriv_abi(.true., .true., out, dims, shls, atm, natm, bas, nbas, env)
+   end function c_ECPscalar_iprinv_cart
 
 end module cint_c_abi

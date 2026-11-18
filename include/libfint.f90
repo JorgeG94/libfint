@@ -65,6 +65,7 @@ module libcint_fortran
     ! metalquicha side is for. Reached here rather than through a hand-written
     ! `bind(C)` interface so that the caller needs no C marshalling of its own.
     use cint_ecp_drv,     only: ecp_scalar_cart, ecp_scalar_sph
+    use cint_ecp_deriv,   only: ecp_deriv1
     use cint_ecp_num,     only: AS_ECPBAS_OFFSET, AS_NECPBAS
     use cint_gen_int3c2e, only: int3c2e_ip1_cart, int3c2e_ip1_sph, &
                                 int3c2e_ip2_cart, int3c2e_ip2_sph, &
@@ -128,6 +129,8 @@ module libcint_fortran
     public :: libcint_1e_ovlp_cart, libcint_1e_kin_cart, libcint_1e_nuc_cart
     public :: libcint_1e_ipovlp_cart
     public :: libcint_ecp_cart, libcint_ecp_sph
+    public :: libcint_ecp_ipnuc_cart, libcint_ecp_ipnuc_sph
+    public :: libcint_ecp_iprinv_cart, libcint_ecp_iprinv_sph
     public :: libcint_1e_ovlp_sph, libcint_1e_kin_sph, libcint_1e_nuc_sph
     public :: libcint_1e_ipovlp_sph
     public :: libcint_1e_ipkin_cart, libcint_1e_ipnuc_cart, libcint_1e_iprinv_cart
@@ -1020,6 +1023,103 @@ contains
         integer(ip) :: ret
         ret = run_ecp(.false., buf, shls, atm, natm, bas, nbas, env)
     end function libcint_ecp_sph
+
+    ! ========================================================================
+    ! First derivatives of the scalar ECP over a shell pair.
+    !
+    ! `ipnuc` is < nabla mu | U | nu > with U summed over every ECP centre;
+    ! `iprinv` is the same with the potential of one atom alone, the atom
+    ! being the zero-based index in `env` slot 18 (AS_RINV_ORIG_ATOM + 1 in
+    ! this file's one-based view), which is where PySCF's
+    ! `with_rinv_at_nucleus` puts it. `buf` receives three blocks, x then y
+    ! then z, each (di, dj). nabla acts on the electron, so the derivative
+    ! with respect to the centre of mu is minus this.
+
+    function run_ecp_deriv(cart, one_atom, buf, shls, atm, natm, bas, nbas, env) result(ret)
+        logical,     intent(in)  :: cart, one_atom
+        integer(ip), intent(in)  :: natm, nbas
+        real(dp),    intent(out) :: buf(*)
+        integer(ip), intent(in)  :: shls(2)
+        integer(ip), intent(in)  :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in)  :: bas(*)
+        real(dp),    intent(in)  :: env(*)
+        integer(ip) :: ret
+
+        integer(ip) :: fshls(0:1), di, dj, ecpoff, necpbas, nb_all, nenv
+
+        fshls(0) = shls(1); fshls(1) = shls(2)
+        ecpoff  = int(env(AS_ECPBAS_OFFSET + 1), ip)
+        necpbas = int(env(AS_NECPBAS + 1), ip)
+        ! With no ECP shells the rows past `nbas` do not exist, so the block
+        ! is sized from the orbital shells alone and zeroed here.
+        nb_all = nbas
+        if (necpbas > 0) nb_all = max(nbas, ecpoff + necpbas)
+        if (cart) then
+            di = cint_cgto_cart(fshls(0), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+            dj = cint_cgto_cart(fshls(1), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+        else
+            di = cint_cgto_spheric(fshls(0), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+            dj = cint_cgto_spheric(fshls(1), bas(1:LIBCINT_BAS_SLOTS*nb_all))
+        end if
+        if (necpbas <= 0) then
+            buf(1:3*di*dj) = 0.0_dp
+            ret = 0_ip
+            return
+        end if
+        nenv = ecp_env_extent(shls, atm, natm, bas(1:LIBCINT_BAS_SLOTS*nb_all), &
+                              nbas, ecpoff, necpbas)
+
+        ret = int(ecp_deriv1(cart, one_atom, buf(1:3*di*dj), fshls, atm, natm, &
+                             bas(1:LIBCINT_BAS_SLOTS*nb_all), env(1:nenv)), ip)
+    end function run_ecp_deriv
+
+    function libcint_ecp_ipnuc_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp_deriv(.true., .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_ipnuc_cart
+
+    function libcint_ecp_ipnuc_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp_deriv(.false., .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_ipnuc_sph
+
+    function libcint_ecp_iprinv_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp_deriv(.true., .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_iprinv_cart
+
+    function libcint_ecp_iprinv_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run_ecp_deriv(.false., .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_ecp_iprinv_sph
 
     function libcint_1e_ovlp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
         real(dp), intent(out) :: buf(*)

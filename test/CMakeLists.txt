@@ -52,7 +52,7 @@ set(LIBFINT_CHECKS
 # directly and so cannot reach the bind(C) layer -- which is exactly where the
 # two faults fixed in "Fix the radial grid size, and two latent faults in the
 # C ABI" lived, invisible to every test at the time.
-foreach(chk ecp_num_check ecp_check)
+foreach(chk ecp_num_check ecp_check ecp_deriv_check)
   add_executable(${chk} ${chk}.F90)
   target_link_libraries(${chk} fint m)
   target_include_directories(${chk} PRIVATE ${PROJECT_BINARY_DIR}/include)

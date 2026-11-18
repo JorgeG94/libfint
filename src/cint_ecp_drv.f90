@@ -34,6 +34,7 @@ module cint_ecp_drv
    public :: ECP_TERM_TYPE1, ECP_TERM_TYPE2, ECP_TERM_SCALAR
    public :: ecp_scalar_cart_block, ecp_scalar_sph_block
    public :: ecp_scalar_cart, ecp_scalar_sph
+   public :: ecp_cart_to_sph, ecp_distribute
 
    !> Which ECP term a driver should evaluate
    integer, parameter :: ECP_TERM_TYPE1 = 1
@@ -96,8 +97,8 @@ contains
       real(dp), intent(in) :: env(0:)
       integer :: has_value
 
-      integer :: ish, jsh, li, lj, nfi, nfj, nci, ncj, ngcart, di, dji, nij, j, loc
-      real(dp), allocatable :: gcart(:), gtmp(:)
+      integer :: ish, jsh, li, lj, nfi, nfj, nci, ncj, ngcart, nij
+      real(dp), allocatable :: gcart(:)
 
       ish = shls(0); jsh = shls(1)
       li = bas(ANG_OF + ish*BAS_SLOTS)
@@ -113,8 +114,6 @@ contains
          return
       end if
 
-      di = nfi*nci
-      dji = di*(lj*2 + 1)
       nij = (li*2 + 1)*(lj*2 + 1)*nci*ncj
 
       allocate (gcart(0:ngcart - 1))
@@ -122,20 +121,7 @@ contains
       has_value = cart_kernel(term, gcart, shls, ecpbas, necpbas, atm, natm, bas, nbas, env)
 
       if (has_value /= 0) then
-         if (li < 2) then
-            do j = 0, ncj - 1
-               loc = cint_c2s_ket_sph_copy(gctr(j*dji:), gcart(j*nfj*di:), di, di, lj)
-            end do
-         else if (lj < 2) then
-            loc = cint_c2s_bra_sph(gctr, (lj*2 + 1)*nci*ncj, gcart, li)
-         else
-            allocate (gtmp(0:di*(lj*2 + 1)*ncj - 1))
-            do j = 0, ncj - 1
-               loc = cint_c2s_ket_sph_copy(gtmp(j*dji:), gcart(j*nfj*di:), di, di, lj)
-            end do
-            loc = cint_c2s_bra_sph(gctr, (lj*2 + 1)*nci*ncj, gtmp, li)
-            deallocate (gtmp)
-         end if
+         call ecp_cart_to_sph(gctr, gcart, li, lj, nci, ncj)
       else
          gctr(0:nij - 1) = 0.0_dp
       end if
@@ -143,8 +129,43 @@ contains
       deallocate (gcart)
    end function ecp_scalar_sph_block
 
+   !> Transform one Cartesian shell-pair block to the spherical basis
+   !>
+   !> `gcart` is `(nfi*nci, nfj*ncj)` and `gsph` is `((2li+1)*nci, (2lj+1)*ncj)`,
+   !> both column-major and zero-based.  s and p shells are already spherical
+   !> in libcint's ordering, so a side with `l < 2` is copied.
+   subroutine ecp_cart_to_sph(gsph, gcart, li, lj, nci, ncj)
+      real(dp), intent(out) :: gsph(0:)
+      real(dp), intent(in) :: gcart(0:)
+      integer, intent(in) :: li, lj, nci, ncj
+
+      integer :: nfi, nfj, di, dji, j, loc
+      real(dp), allocatable :: gtmp(:)
+
+      nfi = cint_len_cart(li); nfj = cint_len_cart(lj)
+      di = nfi*nci
+      dji = di*(lj*2 + 1)
+
+      if (li < 2 .and. lj < 2) then
+         gsph(0:di*nfj*ncj - 1) = gcart(0:di*nfj*ncj - 1)
+      else if (li < 2) then
+         do j = 0, ncj - 1
+            loc = cint_c2s_ket_sph_copy(gsph(j*dji:), gcart(j*nfj*di:), di, di, lj)
+         end do
+      else if (lj < 2) then
+         loc = cint_c2s_bra_sph(gsph, (lj*2 + 1)*nci*ncj, gcart, li)
+      else
+         allocate (gtmp(0:di*(lj*2 + 1)*ncj - 1))
+         do j = 0, ncj - 1
+            loc = cint_c2s_ket_sph_copy(gtmp(j*dji:), gcart(j*nfj*di:), di, di, lj)
+         end do
+         loc = cint_c2s_bra_sph(gsph, (lj*2 + 1)*nci*ncj, gtmp, li)
+         deallocate (gtmp)
+      end if
+   end subroutine ecp_cart_to_sph
+
    !> Copy a block into a larger matrix, or straight out when `dims` is absent
-   subroutine distribute(out, gctr, dims, di, dj, zero_only)
+   subroutine ecp_distribute(out, gctr, dims, di, dj, zero_only)
       real(dp), intent(inout) :: out(0:)
       real(dp), intent(in) :: gctr(0:)
       integer, intent(in), optional :: dims(0:1)
@@ -171,7 +192,7 @@ contains
             end do
          end do
       end if
-   end subroutine distribute
+   end subroutine ecp_distribute
 
    pure subroutine ecpbas_from_env(env, bas, offset, necpbas)
       real(dp), intent(in) :: env(0:)
@@ -204,7 +225,7 @@ contains
 
       has_value = ecp_scalar_sph_block(ECP_TERM_SCALAR, buf, shls, bas(offset:), &
                                        necpbas, atm, natm, bas, nbas, env)
-      call distribute(out, buf, dims, di, dj, has_value == 0)
+      call ecp_distribute(out, buf, dims, di, dj, has_value == 0)
       deallocate (buf)
    end function ecp_scalar_sph
 
@@ -227,7 +248,7 @@ contains
 
       has_value = ecp_scalar_cart_block(ECP_TERM_SCALAR, buf, shls, bas(offset:), &
                                         necpbas, atm, natm, bas, nbas, env)
-      call distribute(out, buf, dims, di, dj, has_value == 0)
+      call ecp_distribute(out, buf, dims, di, dj, has_value == 0)
       deallocate (buf)
    end function ecp_scalar_cart
 
