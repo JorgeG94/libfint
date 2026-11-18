@@ -15,7 +15,7 @@ What each system is for:
 
   Cu/H in LANL2DZ, spherical and Cartesian
       s, p and d orbital shells, so the raised shell reaches f and all three
-      branches of the s/p normalisation in `l_down` and `l_up` are taken;
+      branches of the s/p normalisation in `l_down` are taken;
       contracted shells; the one-atom integral on the atom that has an ECP and
       on the atom that has none.  The second has to come back zero and say
       so, and PySCF is not the reference for it: its entry point returns
@@ -24,13 +24,20 @@ What each system is for:
   Na/Cl in LANL2DZ
       two atoms with an ECP, so the one-atom integral has to find a block of
       shells that does not start at row zero, and the two one-atom integrals
-      have to add up to the whole.
+      have to add up to the whole.  An f function is added on chlorine, which no
+      LANL2DZ set has: it is the only bra here above d, and so the only thing
+      that reaches the general branch of `l_up` and a raised shell of g.
 
   I/H at 25 bohr in def2-SVP
       projected channels up to lc = 2, and an overlap screen that rejects.
 
 The tolerance and how it is stated follow gen_ecp_check.py: relative to the
 largest element of the matrix, 1e-11.
+
+A reference array is written in pieces of at most CHUNK_LINES continuation
+lines and joined in a constant expression.  One statement per array ran to 961
+continuation lines, and a compiler is entitled to stop at 255; Intel's stops
+at 511.
 """
 import os
 import sys
@@ -50,11 +57,34 @@ SYSTEMS = [
     ("cu", "Cu 0 0 0; H 0.4 -0.3 1.9", "lanl2dz", "Cu/H LANL2DZ", 0,
      [("ipnuc", False, None), ("ipnuc", True, None),
       ("iprinv", False, 0), ("iprinv", True, 0), ("iprinv", False, 1)]),
-    ("nacl", "Na 0 0 0; Cl 0.5 0.3 4.4", "lanl2dz", "Na/Cl LANL2DZ", 0,
+    ("nacl", "Na 0 0 0; Cl 0.5 0.3 4.4", "lanl2dz+f", "Na/Cl LANL2DZ+f", 0,
      [("ipnuc", False, None), ("iprinv", False, 0), ("iprinv", False, 1)]),
     ("i", "I 0 0 0; H 3.0 -4.0 24.5", "def2-svp", "I/H(far) def2-SVP", 0,
      [("ipnuc", False, None)]),
 ]
+
+
+#: Continuation lines per statement, kept under the 255 the standard promises.
+CHUNK_LINES = 200
+
+#: The f primitive added to chlorine where a basis name ends in "+f".
+EXTRA_F = [[3, [0.8, 1.0]]]
+
+
+def reference_lines(name, values, per_line=3):
+    """Declarations for one reference array, split so no statement is long."""
+    size = CHUNK_LINES * per_line
+    chunks = [values[i:i + size] for i in range(0, len(values), size)]
+    if len(chunks) == 1:
+        return ["   real(dp), parameter :: %s(%d) = [ &" % (name, len(values)),
+                wrap(values, per_line=per_line) + "]"]
+    lines = []
+    for k, chunk in enumerate(chunks):
+        lines += ["   real(dp), parameter :: %s_P%d(%d) = [ &" % (name, k, len(chunk)),
+                  wrap(chunk, per_line=per_line) + "]"]
+    lines.append("   real(dp), parameter :: %s(%d) = [ &" % (name, len(values)))
+    lines.append(wrap(["%s_P%d" % (name, k) for k in range(len(chunks))], per_line=4) + "]")
+    return lines
 
 
 def wrap(values, indent="      ", per_line=3):
@@ -68,7 +98,12 @@ def emit_system(tag, geom, basis, label, spin, integrals):
     import numpy as np
     from pyscf import gto
 
-    mol = gto.M(atom=geom, basis=basis, ecp=basis, spin=spin, unit="bohr", verbose=0)
+    ecp = basis
+    orbital = basis
+    if basis.endswith("+f"):
+        ecp = basis[:-2]
+        orbital = {"Na": ecp, "Cl": gto.basis.load(ecp, "Cl") + EXTRA_F}
+    mol = gto.M(atom=geom, basis=orbital, ecp=ecp, spin=spin, unit="bohr", verbose=0)
     mol.intor("ECPscalar_sph")                # fills env[18], env[19]
     bas = np.vstack((mol._bas, mol._ecpbas))
     u = tag.upper()
@@ -108,11 +143,9 @@ def emit_system(tag, geom, basis, label, spin, integrals):
         if expect_zero:
             lines.append("   real(dp), parameter :: %s(%d) = 0.0_dp" % (ref_name, ref.size))
         else:
-            lines += [
-                "   real(dp), parameter :: %s(%d) = [ &" % (ref_name, ref.size),
-                # (comp, i, j) -> comp slowest, then column-major within a component
-                wrap(["%.17e_dp" % v for v in ref.transpose(0, 2, 1).ravel()]) + "]",
-            ]
+            # (comp, i, j) -> comp slowest, then column-major within a component
+            lines += reference_lines(
+                ref_name, ["%.17e_dp" % v for v in ref.transpose(0, 2, 1).ravel()])
         what = "%s %s%s" % (label, intor.replace("ECPscalar_", ""),
                             "" if atom is None else " atom %d" % atom)
         calls.append(
@@ -143,7 +176,7 @@ def main():
             '   call check_layers("%s", %d, %s_NATM, %s_NBAS, %s_ATM, %s_BAS, %s_ENV, bad)'
             % (label, atom, u, u, u, u, u)
             for label, atom, u in (("Cu/H LANL2DZ", 0, "CU"), ("Cu/H LANL2DZ", 1, "CU"),
-                                   ("Na/Cl LANL2DZ", 1, "NACL"))),
+                                   ("Na/Cl LANL2DZ+f", 1, "NACL"))),
     }
     with open(os.path.join(HERE, "ecp_deriv_check.F90"), "w") as fh:
         fh.write(src)
@@ -163,7 +196,7 @@ PROGRAM = '''!
 program ecp_deriv_check
    use cint_const, only: dp
    use cint_bas, only: ANG_OF, NCTR_OF, BAS_SLOTS
-   use cint_ecp_num, only: AS_RINV_ORIG_ATOM
+   use cint_ecp_num, only: AS_RINV_ORIG_ATOM, AS_NECPBAS
    use cint_ecp_deriv, only: ecp_ipnuc_sph, ecp_ipnuc_cart, ecp_iprinv_sph, ecp_iprinv_cart
    use libcint_fortran, only: libcint_ecp_ipnuc_sph, libcint_ecp_ipnuc_cart, &
                               libcint_ecp_iprinv_sph, libcint_ecp_iprinv_cart
@@ -212,6 +245,7 @@ program ecp_deriv_check
    bad = 0
 %(calls)s
 %(abi_calls)s
+   call check_no_ecp(CU_NATM, CU_NBAS, CU_ATM, CU_BAS, CU_ENV, bad)
 
    if (bad > 0) then
       write (*, '(a,i0,a)') "ecp_deriv_check: FAILED (", bad, " problem(s))"
@@ -470,6 +504,19 @@ contains
                              /= blk(c*di*dj + j*di:c*di*dj + j*di + di - 1))) nwrong = nwrong + 1
                   end do
                end do
+               ! Outside the block's corner the caller's matrix is the caller's:
+               ! the extra row and the two extra columns keep their poison.
+               do c = 0, 2
+                  do j = 0, dj + 1
+                     if (cplaced(c*(di + 1)*(dj + 2) + j*(di + 1) + di + 1) /= 4.0_dp) &
+                        nwrong = nwrong + 1
+                     if (j >= dj) then
+                        if (any(cplaced(c*(di + 1)*(dj + 2) + j*(di + 1) + 1: &
+                                        c*(di + 1)*(dj + 2) + j*(di + 1) + di) /= 4.0_dp)) &
+                           nwrong = nwrong + 1
+                     end if
+                  end do
+               end do
                deallocate (blk, cblk, fblk, cplaced)
             end do
          end do
@@ -482,6 +529,82 @@ contains
          bad = bad + 1
       end if
    end subroutine check_layers
+
+   !> A molecule with no ECP rows: every layer zeroes its block and returns 0
+   !>
+   !> Cu/H with env's row count set to zero, and `bas` cut back to the orbital
+   !> shells so that a layer reaching past them is a bounds error, not luck.
+   subroutine check_no_ecp(natm, nbas, atm, bas_in, env_in, bad)
+      integer, intent(in) :: natm, nbas
+      integer, intent(in) :: atm(0:), bas_in(0:)
+      real(dp), intent(in) :: env_in(0:)
+      integer, intent(inout) :: bad
+
+      integer(c_int), allocatable, target :: catm(:), cbas(:)
+      integer(c_int), target :: cshls(2)
+      real(c_double), allocatable, target :: env(:), cblk(:)
+      integer, allocatable :: bas(:)
+      real(dp), allocatable :: blk(:), fblk(:)
+      integer :: kind, ish, jsh, di, dj, hv, hvc, hvf, nwrong
+      logical :: one_atom, cart
+
+      allocate (bas(0:nbas*BAS_SLOTS - 1), env(0:size(env_in) - 1))
+      bas = bas_in(0:nbas*BAS_SLOTS - 1)
+      env = env_in
+      env(AS_NECPBAS) = 0.0_dp
+      env(AS_RINV_ORIG_ATOM) = 0.0_dp
+      allocate (catm(size(atm)), cbas(size(bas)))
+      catm = int(atm, c_int)
+      cbas = int(bas, c_int)
+
+      nwrong = 0
+      do kind = 1, 4
+         one_atom = kind > 2
+         cart = mod(kind, 2) == 0
+         do ish = 0, nbas - 1
+            do jsh = 0, nbas - 1
+               di = shell_dim(cart, ish, bas)
+               dj = shell_dim(cart, jsh, bas)
+               allocate (blk(0:3*di*dj - 1), cblk(3*di*dj), fblk(3*di*dj))
+               blk = 1.0_dp; cblk = 2.0_dp; fblk = 3.0_dp
+               cshls = int([ish, jsh], c_int)
+               hv = one_block(one_atom, cart, blk, [ish, jsh], atm, natm, bas, nbas, env)
+               select case (kind)
+               case (1)
+                  hvc = c_ipnuc_sph(c_loc(cblk), c_null_ptr, c_loc(cshls), c_loc(catm), &
+                                    int(natm, c_int), c_loc(cbas), int(nbas, c_int), &
+                                    c_loc(env), c_null_ptr, c_null_ptr)
+                  hvf = libcint_ecp_ipnuc_sph(fblk, [ish, jsh], atm, natm, bas, nbas, env)
+               case (2)
+                  hvc = c_ipnuc_cart(c_loc(cblk), c_null_ptr, c_loc(cshls), c_loc(catm), &
+                                     int(natm, c_int), c_loc(cbas), int(nbas, c_int), &
+                                     c_loc(env), c_null_ptr, c_null_ptr)
+                  hvf = libcint_ecp_ipnuc_cart(fblk, [ish, jsh], atm, natm, bas, nbas, env)
+               case (3)
+                  hvc = c_iprinv_sph(c_loc(cblk), c_null_ptr, c_loc(cshls), c_loc(catm), &
+                                     int(natm, c_int), c_loc(cbas), int(nbas, c_int), &
+                                     c_loc(env), c_null_ptr, c_null_ptr)
+                  hvf = libcint_ecp_iprinv_sph(fblk, [ish, jsh], atm, natm, bas, nbas, env)
+               case default
+                  hvc = c_iprinv_cart(c_loc(cblk), c_null_ptr, c_loc(cshls), c_loc(catm), &
+                                      int(natm, c_int), c_loc(cbas), int(nbas, c_int), &
+                                      c_loc(env), c_null_ptr, c_null_ptr)
+                  hvf = libcint_ecp_iprinv_cart(fblk, [ish, jsh], atm, natm, bas, nbas, env)
+               end select
+               if (hv /= 0 .or. hvc /= 0 .or. hvf /= 0) nwrong = nwrong + 1
+               if (any(blk /= 0.0_dp) .or. any(cblk /= 0.0_dp) .or. any(fblk /= 0.0_dp)) &
+                  nwrong = nwrong + 1
+               deallocate (blk, cblk, fblk)
+            end do
+         end do
+      end do
+
+      write (*, '(a,i0)') "  no ECP (necpbas = 0): blocks not zeroed or not reported empty ", nwrong
+      if (nwrong > 0) then
+         write (*, '(a)') "FAIL no ECP: a layer gave a value for an empty potential"
+         bad = bad + 1
+      end if
+   end subroutine check_no_ecp
 
 end program ecp_deriv_check
 '''

@@ -51,8 +51,10 @@ module cint_ecp_deriv
    !> Components of a first derivative
    integer, parameter :: NCOMP = 3
 
-   !> The factor the kernels fold into an s shell, 1/sqrt(4 pi)
-   real(dp), parameter :: FAC_S = 0.282094791773878143_dp
+   !> Highest total angular momentum the angular code's tables hold: CART_CUM
+   !> in cint_ecp_ang is the count of Cartesian functions through l = 12.
+   integer, parameter :: ANG_LMAX = 12
+
    !> The factor the kernels fold into a p shell, sqrt(3/(4 pi))
    real(dp), parameter :: FAC_P = 0.488602511902919921_dp
 
@@ -219,6 +221,12 @@ contains
 
       ish = shls(0); jsh = shls(1)
       li = bas(ANG_OF + ish*BAS_SLOTS); lj = bas(ANG_OF + jsh*BAS_SLOTS)
+      ! The raised bra takes the angular code to li + lj + 1, and its tables
+      ! stop at ANG_LMAX.  Only a pair of i shells gets there; the C has no
+      ! guard and writes past its tables for one.
+      if (li + lj + 1 > ANG_LMAX) then
+         error stop "cint_ecp_deriv: li + lj + 1 exceeds the ECP angular tables (two i shells)"
+      end if
       npi = bas(NPRIM_OF + ish*BAS_SLOTS); npj = bas(NPRIM_OF + jsh*BAS_SLOTS)
       nci = bas(NCTR_OF + ish*BAS_SLOTS); ncj = bas(NCTR_OF + jsh*BAS_SLOTS)
       nfi = cint_len_cart(li); nfj = cint_len_cart(lj)
@@ -324,6 +332,21 @@ contains
       end if
    end function deriv1_driver
 
+   !> The ECP rows of the atom `env` names
+   pure subroutine atom_shells(env, bas, first, nsh)
+      real(dp), intent(in) :: env(0:)
+      integer, intent(in) :: bas(0:)
+      integer, intent(out) :: first, nsh
+      integer :: offset, necpbas
+
+      first = -1
+      nsh = 0
+      necpbas = int(env(AS_NECPBAS))
+      if (necpbas <= 0) return
+      offset = int(env(AS_ECPBAS_OFFSET))*BAS_SLOTS
+      call one_atom_ecpbas(int(env(AS_RINV_ORIG_ATOM)), bas(offset:), necpbas, first, nsh)
+   end subroutine atom_shells
+
    !> Either first-derivative integral over a shell pair, in either basis
    !>
    !> `one_atom` selects `iprinv`, the potential of the atom in
@@ -406,20 +429,5 @@ contains
 
       has_value = ecp_deriv1(.true., .true., out, shls, atm, natm, bas, env, dims)
    end function ecp_iprinv_cart
-
-   !> The ECP rows of the atom `env` names
-   pure subroutine atom_shells(env, bas, first, nsh)
-      real(dp), intent(in) :: env(0:)
-      integer, intent(in) :: bas(0:)
-      integer, intent(out) :: first, nsh
-      integer :: offset, necpbas
-
-      first = -1
-      nsh = 0
-      necpbas = int(env(AS_NECPBAS))
-      if (necpbas <= 0) return
-      offset = int(env(AS_ECPBAS_OFFSET))*BAS_SLOTS
-      call one_atom_ecpbas(int(env(AS_RINV_ORIG_ATOM)), bas(offset:), necpbas, first, nsh)
-   end subroutine atom_shells
 
 end module cint_ecp_deriv

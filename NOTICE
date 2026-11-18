@@ -20,9 +20,10 @@ https://github.com/pyscf/pyscf
 Licensed under the Apache License, Version 2.0.
 
 The effective core potential integrals -- src/cint_ecp_num.f90,
-cint_ecp_ang.f90, cint_ecp_rad.f90, cint_ecp.f90 and cint_ecp_drv.f90, and the
-ECPscalar entry points in cint_c_abi.f90 -- come from PySCF and not from
-libcint, which has no ECP code.  They are a translation of
-pyscf/lib/gto/nr_ecp.c and are verified against PySCF rather than against the
-C this library otherwise ports.  The same licence applies; the copyright is a
+cint_ecp_ang.f90, cint_ecp_rad.f90, cint_ecp.f90, cint_ecp_drv.f90 and
+cint_ecp_deriv.f90, and the ECPscalar entry points in cint_c_abi.f90 -- come
+from PySCF and not from libcint, which has no ECP code.  They are a
+translation of pyscf/lib/gto/nr_ecp.c and, for the first derivatives, of
+pyscf/lib/gto/nr_ecp_deriv.c, and are verified against PySCF rather than
+against the C this library otherwise ports.  The same licence applies; the copyright is a
 different one, which is why it is named separately here.
