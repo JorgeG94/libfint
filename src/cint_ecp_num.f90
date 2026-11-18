@@ -30,7 +30,7 @@ module cint_ecp_num
    public :: ECP_SIM_ZERO, ECP_EXPCUTOFF, ECP_CUTOFF
    public :: RADI_POWER, SO_TYPE_OF
    public :: AS_RINV_ORIG_ATOM, AS_ECPBAS_OFFSET, AS_NECPBAS
-   public :: ecp_gauss_chebyshev
+   public :: ecp_gauss_chebyshev, ecp_radial_grid
    public :: ecp_sph_ine
    public :: ecp_factorial, ecp_factorial2, ecp_binom
 
@@ -118,6 +118,19 @@ module cint_ecp_num
       1.6783438527143608e+21_dp, 8.2007945326378929e+21_dp, &
       6.3777066403145712e+22_dp, 3.1983098677287775e+23_dp]
 
+   ! The full radial grid, built once per thread and copied out afterwards.
+   !
+   ! Every kernel integrates on the same ECP_NRS points, and building them is
+   ! a sine and a logarithm per point: about two fifths of a first-derivative
+   ! integral, which calls the kernels up to four times per primitive pair,
+   ! was this.  One per thread for the reason the workspaces in libfint.f90
+   ! and cint_c_abi.f90 are: callers run OpenMP over shell pairs.  With
+   ! OpenMP off the directive is a comment and these are ordinary saved
+   ! variables, which is right for one thread.
+   real(dp), save :: grid_rs(0:ECP_NRS - 1), grid_ws(0:ECP_NRS - 1)
+   logical, save :: grid_ready = .false.
+   !$omp threadprivate(grid_rs, grid_ws, grid_ready)
+
 contains
 
    !> n!, and 1 outside the tabulated range the C indexes
@@ -166,6 +179,21 @@ contains
    !>
    !> This is the routine the C's 2047-point table was generated from; it is
    !> called instead of carrying the table.
+   !> The ECP_NRS-point radial grid: abscissae in `rs`, weights in `ws`
+   !>
+   !> The values are `ecp_gauss_chebyshev`'s to the last bit; this only saves
+   !> generating them again.
+   subroutine ecp_radial_grid(rs, ws)
+      real(dp), intent(out) :: rs(0:), ws(0:)
+
+      if (.not. grid_ready) then
+         call ecp_gauss_chebyshev(grid_rs, grid_ws, ECP_NRS)
+         grid_ready = .true.
+      end if
+      rs(0:ECP_NRS - 1) = grid_rs
+      ws(0:ECP_NRS - 1) = grid_ws
+   end subroutine ecp_radial_grid
+
    pure subroutine ecp_gauss_chebyshev(rs, ws, n)
       real(dp), intent(out) :: rs(0:), ws(0:)
       integer, intent(in) :: n

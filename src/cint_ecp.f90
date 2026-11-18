@@ -25,7 +25,7 @@ module cint_ecp
    use cint_bas, only: ATOM_OF, ANG_OF, NPRIM_OF, NCTR_OF, PTR_EXP, PTR_COEFF, &
                        BAS_SLOTS, PTR_COORD, ATM_SLOTS, cint_len_cart
    use cint_g1e, only: cint_common_fac_sp
-   use cint_ecp_num, only: ecp_gauss_chebyshev, ECP_EXPCUTOFF, ECP_LEVEL0, &
+   use cint_ecp_num, only: ecp_radial_grid, ECP_EXPCUTOFF, ECP_LEVEL0, &
                            ECP_LEVEL_MAX, SO_TYPE_OF, ECP_LMAX, ECP_NRS
    use cint_ecp_ang, only: ecp_type1_rad_ang, ecp_type2_facs_ang, CART_POW_Y, CART_POW_Z
    use cint_ecp_rad, only: ecp_rad_part, ecp_type1_rad_part, ecp_type1_static_facs, &
@@ -234,7 +234,7 @@ contains
 
       nrs_full = ECP_NRS
       allocate (rs(0:nrs_full - 1), ws(0:nrs_full - 1))
-      call ecp_gauss_chebyshev(rs, ws, nrs_full)
+      call ecp_radial_grid(rs, ws)
 
       allocate (ecploc(0:necpbas))
       call ecp_loc_ecpbas(ecploc, nslots, ecpbas, necpbas)
@@ -432,7 +432,7 @@ contains
       lilj1 = li + lj + 1
       nrs_full = ECP_NRS
       allocate (rs(0:nrs_full - 1), ws(0:nrs_full - 1))
-      call ecp_gauss_chebyshev(rs, ws, nrs_full)
+      call ecp_radial_grid(rs, ws)
 
       allocate (ecploc(0:necpbas))
       call ecp_loc_ecpbas(ecploc, nslots, ecpbas, necpbas)
