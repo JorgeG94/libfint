@@ -93,6 +93,20 @@ module libcint_fortran
     use cint_gen_intor1, only: int1e_r_cart, int1e_r_sph, int1e_rr_cart, int1e_rr_sph, &
                                int1e_rrr_cart, int1e_rrr_sph, int1e_irp_cart, &
                                int1e_irp_sph, int1e_drinv_cart, int1e_drinv_sph
+    ! The integrals a nuclear magnetic shielding over gauge-including orbitals
+    ! is built from: the overlap, kinetic, nuclear-attraction and two-electron
+    ! integrals differentiated through the London phase, and the diamagnetic
+    ! and paramagnetic nuclear-moment operators.  Generated with everything
+    ! else and, until now, reachable only by using the generated module
+    ! directly, workspace and all.
+    use cint_gen_intor1, only: int1e_igovlp_cart, int1e_igovlp_sph, &
+                               int1e_igkin_cart, int1e_igkin_sph, &
+                               int1e_ignuc_cart, int1e_ignuc_sph, &
+                               int1e_giao_irjxp_cart, int1e_giao_irjxp_sph, &
+                               int1e_giao_a11part_cart, int1e_giao_a11part_sph, &
+                               int1e_a01gp_cart, int1e_a01gp_sph, &
+                               int1e_prinvxp_cart, int1e_prinvxp_sph
+    use cint_gen_intor2, only: int2e_ig1_cart, int2e_ig1_sph
     use cint_gen_hess,   only: int1e_ipipovlp_cart, int1e_ipipovlp_sph, &
                                int1e_ipovlpip_cart, int1e_ipovlpip_sph, &
                                int1e_ipipkin_cart, int1e_ipipkin_sph, &
@@ -143,6 +157,15 @@ module libcint_fortran
     public :: libcint_1e_rrr_cart, libcint_1e_rrr_sph
     public :: libcint_1e_irp_cart, libcint_1e_irp_sph
     public :: libcint_1e_drinv_cart, libcint_1e_drinv_sph
+    ! magnetic: gauge-including (London) orbitals and nuclear moments
+    public :: libcint_1e_igovlp_cart, libcint_1e_igovlp_sph
+    public :: libcint_1e_igkin_cart, libcint_1e_igkin_sph
+    public :: libcint_1e_ignuc_cart, libcint_1e_ignuc_sph
+    public :: libcint_1e_giao_irjxp_cart, libcint_1e_giao_irjxp_sph
+    public :: libcint_1e_giao_a11part_cart, libcint_1e_giao_a11part_sph
+    public :: libcint_1e_a01gp_cart, libcint_1e_a01gp_sph
+    public :: libcint_1e_prinvxp_cart, libcint_1e_prinvxp_sph
+    public :: libcint_2e_ig1_cart, libcint_2e_ig1_sph
     public :: libcint_1e_ipipovlp_cart, libcint_1e_ipipovlp_sph
     public :: libcint_1e_ipovlpip_cart, libcint_1e_ipovlpip_sph
     public :: libcint_1e_ipipkin_cart, libcint_1e_ipipkin_sph
@@ -233,9 +256,14 @@ module libcint_fortran
     integer, parameter :: K_DRINV = 10, K_IPIPOVLP = 11, K_IPOVLPIP = 12
     integer, parameter :: K_IPIPKIN = 13, K_IPKINIP = 14, K_IPIPNUC = 15
     integer, parameter :: K_IPNUCIP = 16, K_IPIPRINV = 17, K_IPRINVIP = 18
+    integer, parameter :: K_IGOVLP = 19, K_IGKIN = 20, K_IGNUC = 21, K_GIAO_IRJXP = 22
+    integer, parameter :: K_GIAO_A11PART = 23, K_A01GP = 24, K_PRINVXP = 25
     ! Components per shell pair, indexed by the code above: the Cartesian tensor
     ! in full, so 9 for rr and 27 for rrr rather than the 6 and 10 unique ones.
-    integer, parameter :: NCOMP_1E(18) = [1, 1, 1, 3, 3, 3, 9, 27, 9, 3, 9, 9, 9, 9, 9, 9, 9, 9]
+    ! The magnetic ones: three for a derivative with respect to the field or
+    ! a cross product, nine for the field-by-moment tensors, row-major.
+    integer, parameter :: NCOMP_1E(25) = [1, 1, 1, 3, 3, 3, 9, 27, 9, 3, 9, 9, 9, 9, 9, 9, 9, 9, &
+                                          3, 3, 3, 3, 9, 9, 3]
     integer, parameter :: K2_IPIP1 = 1, K2_IPVIP1 = 2, K2_IP1IP2 = 3
     integer, parameter :: K3_IPIP1 = 1, K3_IPVIP1 = 2, K3_IP1IP2 = 3, K3_IPIP2 = 4
     integer, parameter :: K2C_IPIP1 = 5, K2C_IP1IP2 = 6
@@ -624,6 +652,62 @@ contains
                                     bas, nbas, env(1:nenv), ws)
             else
                 hv = int1e_iprinvip_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IGOVLP)
+            if (cart) then
+                hv = int1e_igovlp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_igovlp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IGKIN)
+            if (cart) then
+                hv = int1e_igkin_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_igkin_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_IGNUC)
+            if (cart) then
+                hv = int1e_ignuc_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_ignuc_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_GIAO_IRJXP)
+            if (cart) then
+                hv = int1e_giao_irjxp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_giao_irjxp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_GIAO_A11PART)
+            if (cart) then
+                hv = int1e_giao_a11part_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_giao_a11part_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_A01GP)
+            if (cart) then
+                hv = int1e_a01gp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_a01gp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                   bas, nbas, env(1:nenv), ws)
+            end if
+        case (K_PRINVXP)
+            if (cart) then
+                hv = int1e_prinvxp_cart(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
+                                    bas, nbas, env(1:nenv), ws)
+            else
+                hv = int1e_prinvxp_sph(buf(1:di*dj*ncomp), dims, fshls, atm, natm, &
                                    bas, nbas, env(1:nenv), ws)
             end if
         case default
@@ -2240,6 +2324,231 @@ contains
         integer(ip) :: ret
         ret = run1e(K_IRP, .false., buf, shls, atm, natm, bas, nbas, env)
     end function libcint_1e_irp_sph
+
+    ! ---- magnetic: gauge-including orbitals and nuclear moments -----------
+    !
+    ! Each is the real matrix multiplying i, with libcint's sign and
+    ! libcint's component order.  The three that carry 1/r read its origin
+    ! from env(LIBCINT_PTR_RINV_ORIG + 1 : + 3), as iprinv does.  None is
+    ! symmetric: igovlp, ignuc and prinvxp are antisymmetric, the rest
+    ! neither, so a caller computes both (i, j) and (j, i).
+    function libcint_1e_igovlp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGOVLP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_igovlp_cart
+
+    function libcint_1e_igovlp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGOVLP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_igovlp_sph
+
+    function libcint_1e_igkin_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGKIN, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_igkin_cart
+
+    function libcint_1e_igkin_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGKIN, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_igkin_sph
+
+    function libcint_1e_ignuc_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGNUC, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ignuc_cart
+
+    function libcint_1e_ignuc_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_IGNUC, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_ignuc_sph
+
+    function libcint_1e_giao_irjxp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_GIAO_IRJXP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_giao_irjxp_cart
+
+    function libcint_1e_giao_irjxp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_GIAO_IRJXP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_giao_irjxp_sph
+
+    function libcint_1e_giao_a11part_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_GIAO_A11PART, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_giao_a11part_cart
+
+    function libcint_1e_giao_a11part_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_GIAO_A11PART, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_giao_a11part_sph
+
+    function libcint_1e_a01gp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_A01GP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_a01gp_cart
+
+    function libcint_1e_a01gp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_A01GP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_a01gp_sph
+
+    function libcint_1e_prinvxp_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_PRINVXP, .true., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_prinvxp_cart
+
+    function libcint_1e_prinvxp_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out) :: buf(*)
+        integer(ip), intent(in) :: shls(2)
+        integer(ip), intent(in) :: atm(LIBCINT_ATM_SLOTS, *)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in) :: bas(LIBCINT_BAS_SLOTS, *)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in) :: env(*)
+        integer(ip) :: ret
+        ret = run1e(K_PRINVXP, .false., buf, shls, atm, natm, bas, nbas, env)
+    end function libcint_1e_prinvxp_sph
+
+    ! (g i j|k l): the two-electron integral differentiated through the
+    ! gauge factor of the first pair.  Three components, the field's.
+    ! Antisymmetric in (i, j) and symmetric in (k, l).
+    function libcint_2e_ig1_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out), target :: buf(*)
+        integer(ip), intent(in), target :: shls(4)
+        integer(ip), intent(in), target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in), target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in), target :: env(*)
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), i, n, nenv
+        logical :: hv
+        ws%opt => null()
+        do i = 1, 4
+            fshls(i-1) = shls(i)
+            dims(i-1) = cint_cgto_cart(fshls(i-1), bas)
+        end do
+        n = product(dims) * 3
+        nenv = env_extent(shls, 4_ip, atm, natm, bas, nbas)
+        hv = int2e_ig1_cart(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+        ret = merge(1_ip, 0_ip, hv)
+    end function libcint_2e_ig1_cart
+
+    ! (g i j|k l): the two-electron integral differentiated through the
+    ! gauge factor of the first pair.  Three components, the field's.
+    ! Antisymmetric in (i, j) and symmetric in (k, l).
+    function libcint_2e_ig1_sph(buf, shls, atm, natm, bas, nbas, env) result(ret)
+        real(dp), intent(out), target :: buf(*)
+        integer(ip), intent(in), target :: shls(4)
+        integer(ip), intent(in), target :: atm(0:LIBCINT_ATM_SLOTS*natm - 1)
+        integer(ip), intent(in) :: natm
+        integer(ip), intent(in), target :: bas(0:LIBCINT_BAS_SLOTS*nbas - 1)
+        integer(ip), intent(in) :: nbas
+        real(dp), intent(in), target :: env(*)
+        integer(ip) :: ret
+        integer :: dims(0:3), fshls(0:3), i, n, nenv
+        logical :: hv
+        ws%opt => null()
+        do i = 1, 4
+            fshls(i-1) = shls(i)
+            dims(i-1) = cint_cgto_spheric(fshls(i-1), bas)
+        end do
+        n = product(dims) * 3
+        nenv = env_extent(shls, 4_ip, atm, natm, bas, nbas)
+        hv = int2e_ig1_sph(buf(1:n), dims, fshls, atm, natm, bas, nbas, env(1:nenv), ws)
+        ret = merge(1_ip, 0_ip, hv)
+    end function libcint_2e_ig1_sph
 
     function libcint_1e_drinv_cart(buf, shls, atm, natm, bas, nbas, env) result(ret)
         real(dp), intent(out) :: buf(*)

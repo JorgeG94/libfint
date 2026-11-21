@@ -166,6 +166,218 @@ program backend_check
          integer(c_int) :: cint1e_irp_cart
       end function cint1e_irp_cart
 
+      ! The magnetic integrals: gauge-including orbitals and nuclear moments
+      function cint1e_igovlp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_igovlp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_igovlp_sph
+      end function cint1e_igovlp_sph
+
+      function cint1e_igovlp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_igovlp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_igovlp_cart
+      end function cint1e_igovlp_cart
+
+      function cint1e_igkin_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_igkin_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_igkin_sph
+      end function cint1e_igkin_sph
+
+      function cint1e_igkin_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_igkin_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_igkin_cart
+      end function cint1e_igkin_cart
+
+      function cint1e_ignuc_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ignuc_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ignuc_sph
+      end function cint1e_ignuc_sph
+
+      function cint1e_ignuc_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_ignuc_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_ignuc_cart
+      end function cint1e_ignuc_cart
+
+      function cint1e_giao_irjxp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_giao_irjxp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_giao_irjxp_sph
+      end function cint1e_giao_irjxp_sph
+
+      function cint1e_giao_irjxp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_giao_irjxp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_giao_irjxp_cart
+      end function cint1e_giao_irjxp_cart
+
+      function cint1e_giao_a11part_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_giao_a11part_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_giao_a11part_sph
+      end function cint1e_giao_a11part_sph
+
+      function cint1e_giao_a11part_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_giao_a11part_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_giao_a11part_cart
+      end function cint1e_giao_a11part_cart
+
+      function cint1e_a01gp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_a01gp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_a01gp_sph
+      end function cint1e_a01gp_sph
+
+      function cint1e_a01gp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_a01gp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_a01gp_cart
+      end function cint1e_a01gp_cart
+
+      function cint1e_prinvxp_sph(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_prinvxp_sph')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_prinvxp_sph
+      end function cint1e_prinvxp_sph
+
+      function cint1e_prinvxp_cart(buf, shls, atm, natm, bas, nbas, env) &
+              bind(C, name='cint1e_prinvxp_cart')
+         import :: c_double, c_int
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         integer(c_int) :: cint1e_prinvxp_cart
+      end function cint1e_prinvxp_cart
+
+      function cint2e_ig1_sph(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ig1_sph')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value :: opt
+         integer(c_int) :: cint2e_ig1_sph
+      end function cint2e_ig1_sph
+
+      function cint2e_ig1_cart(buf, shls, atm, natm, bas, nbas, env, opt) &
+              bind(C, name='cint2e_ig1_cart')
+         import :: c_double, c_int, c_ptr
+         real(c_double), intent(out) :: buf(*)
+         integer(c_int), intent(in) :: shls(*)
+         integer(c_int), intent(in) :: atm(*)
+         integer(c_int), value, intent(in) :: natm
+         integer(c_int), intent(in) :: bas(*)
+         integer(c_int), value, intent(in) :: nbas
+         real(c_double), intent(in) :: env(*)
+         type(c_ptr), value :: opt
+         integer(c_int) :: cint2e_ig1_cart
+      end function cint2e_ig1_cart
+
+
       ! Overlap, second derivative on the bra (Spherical)
       function cint1e_ipipovlp_sph(buf, shls, atm, natm, bas, nbas, env) &
               bind(C, name='cint1e_ipipovlp_sph')
@@ -934,6 +1146,74 @@ program backend_check
             end if
             call cmp(cbuf, fbuf, di*dj*9, "irp", ibasis, sph, i, j, 0, 0, 2)
 
+            ! ---- magnetic: London orbitals and nuclear moments ------------
+            ! Not symmetric in (i, j), so every ordered pair is compared, as
+            ! this loop already visits them. The 1/r origin is whatever the
+            ! environment carries, the same for both libraries.
+            if (sph == 1) then
+               ret = cint1e_igovlp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_igovlp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_igovlp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_igovlp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "igovlp", ibasis, sph, i, j, 0, 0, 1)
+
+            if (sph == 1) then
+               ret = cint1e_igkin_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_igkin_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_igkin_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_igkin_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "igkin", ibasis, sph, i, j, 0, 0, 3)
+
+            if (sph == 1) then
+               ret = cint1e_ignuc_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ignuc_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_ignuc_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_ignuc_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "ignuc", ibasis, sph, i, j, 0, 0, 1)
+
+            if (sph == 1) then
+               ret = cint1e_giao_irjxp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_giao_irjxp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_giao_irjxp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_giao_irjxp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "giao_irjxp", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_giao_a11part_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_giao_a11part_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_giao_a11part_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_giao_a11part_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "giao_a11part", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_a01gp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_a01gp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_a01gp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_a01gp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*9, "a01gp", ibasis, sph, i, j, 0, 0, 2)
+
+            if (sph == 1) then
+               ret = cint1e_prinvxp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_prinvxp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            else
+               ret = cint1e_prinvxp_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env)
+               ret = libcint_1e_prinvxp_cart(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
+            end if
+            call cmp(cbuf, fbuf, di*dj*3, "prinvxp", ibasis, sph, i, j, 0, 0, 2)
+
+
             if (sph == 1) then
                ret = cint1e_ipipovlp_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env)
                ret = libcint_1e_ipipovlp_sph(fbuf, shls(1:2), atm, 8_ip, bas, nbas, env)
@@ -1131,6 +1411,17 @@ program backend_check
                   ret = libcint_2e_ip1_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
                end if
                call cmp(cbuf, fbuf, di*dj*dk*dl*3, "2e_ip1", ibasis, sph, i, j, k, l, 1)
+
+               ! (g i j|k l), the two-electron integral through the gauge
+               ! factor of the first pair.
+               if (sph == 1) then
+                  ret = cint2e_ig1_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ig1_sph(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               else
+                  ret = cint2e_ig1_cart(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
+                  ret = libcint_2e_ig1_cart(fbuf, shls, atm, 8_ip, bas, nbas, env)
+               end if
+               call cmp(cbuf, fbuf, di*dj*dk*dl*3, "2e_ig1", ibasis, sph, i, j, k, l, 1)
 
                if (sph == 1) then
                   ret = cint2e_ipip1_sph(cbuf, shls, atm, 8_c_int, bas, nbas, env, c_null_ptr)
